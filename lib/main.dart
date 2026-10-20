@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import 'package:pinput/pinput.dart';
 void main() {
   runApp(const ADHDCompanionApp());
 }
@@ -61,7 +64,7 @@ class WelcomeScreen extends StatelessWidget {
                   'MΛZID',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 29,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF5F4EC2),
                   ),
@@ -72,6 +75,7 @@ class WelcomeScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     color: Color(0x89001244),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 45),
@@ -91,7 +95,7 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 appButton(
-                  text: 'Create Account',
+                  text: 'Get Started',
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -107,6 +111,7 @@ class WelcomeScreen extends StatelessWidget {
                     side: const BorderSide(color: primaryColor),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
+                      
                     ),
                   ),
                   onPressed: () => Navigator.push(
@@ -119,7 +124,7 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'A supportive space to grow together 💜',
+                  'A supportive space to grow together ',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.black54),
                 ),
@@ -209,7 +214,7 @@ class _CreateAccountScreenState
                 const Text('Account type'),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: role,
+                   initialValue: role,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.person_outline),
                   ),
@@ -332,7 +337,8 @@ class _CreateAccountScreenState
   }
 }
 
-// ---------------- CHOOSE VERIFICATION ----------------
+
+// ---------------- VERIFICATION CHOICE SCREEN ----------------
 
 class VerificationChoiceScreen extends StatelessWidget {
   final String name;
@@ -373,21 +379,24 @@ class VerificationChoiceScreen extends StatelessWidget {
               style: TextStyle(color: Colors.black54),
             ),
             const SizedBox(height: 28),
+
             verificationCard(
               icon: Icons.email_outlined,
               title: 'Verify by Email',
               subtitle: email,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => OTPVerificationScreen(
-                    destination: email,
-                    method: 'Email',
-                  ),
-                ),
-              ),
+onTap: () => Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) => OTPVerificationScreen(
+      destination: email,
+      method: 'Email',
+    ),
+  ),
+),
             ),
+
             const SizedBox(height: 16),
+
             verificationCard(
               icon: Icons.sms_outlined,
               title: 'Verify by SMS',
@@ -402,9 +411,11 @@ class VerificationChoiceScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             const Spacer(),
+
             const Text(
-              'Verification is not connected yet. No message will be sent.',
+              'Email verification is connected. SMS verification is not available yet.',
               style: TextStyle(
                 color: Colors.deepOrange,
                 fontSize: 12,
@@ -438,24 +449,248 @@ class _OTPVerificationScreenState
     extends State<OTPVerificationScreen> {
   final codeController = TextEditingController();
 
-  @override
-  void dispose() {
-    codeController.dispose();
-    super.dispose();
+  // Android Emulator uses this address to reach the computer hosting
+  // the ASP.NET Core backend.
+  static const String baseUrl = 'http://10.0.2.2:5187';
+
+bool isSending = false;
+bool isVerifying = false;
+bool codeSent = false;
+
+int resendCountdown = 0;
+Timer? resendTimer;
+
+@override
+void initState() {
+  super.initState();
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (widget.method == 'Email') {
+      sendOtp();
+    }
+  });
+}
+
+@override
+void dispose() {
+  resendTimer?.cancel();
+  codeController.dispose();
+  super.dispose();
+}
+
+  void showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
-  void showNotConnectedMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'OTP is not connected yet. No code has been sent or verified.',
-        ),
-      ),
-    );
+  String getErrorMessage(http.Response response) {
+    try {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        if (data['message'] != null) {
+          return data['message'].toString();
+        }
+
+        if (data['detail'] != null) {
+          return data['detail'].toString();
+        }
+
+        if (data['title'] != null) {
+          return data['title'].toString();
+        }
+      }
+    } catch (_) {
+      // Use the fallback message if the response isn't JSON.
+    }
+
+    return 'Request failed (${response.statusCode}). Please try again.';
+  }
+void startResendCountdown() {
+  resendTimer?.cancel();
+
+  setState(() {
+    resendCountdown = 60;
+  });
+
+  resendTimer = Timer.periodic(
+    const Duration(seconds: 1),
+    (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (resendCountdown <= 1) {
+        timer.cancel();
+
+        setState(() {
+          resendCountdown = 0;
+        });
+      } else {
+        setState(() {
+          resendCountdown--;
+        });
+      }
+    },
+  );
+}
+  // ---------------- SEND OTP ----------------
+
+  Future<void> sendOtp() async {
+    if (widget.method != 'Email') {
+      showMessage(
+        'SMS verification is not connected yet.',
+      );
+      return;
+    }
+
+    if (isSending || isVerifying) return;
+
+    setState(() {
+      isSending = true;
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/send-otp'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': widget.destination.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (!mounted) return;
+
+if (response.statusCode >= 200 &&
+    response.statusCode < 300) {
+  setState(() {
+    codeSent = true;
+  });
+
+  startResendCountdown();
+
+  showMessage(
+    'Verification code sent to ${widget.destination}',
+  );
+}
+       else {
+        showMessage(getErrorMessage(response));
+      }
+    } catch (e) {
+      showMessage(
+        'Could not connect to the backend. '
+        'Make sure the backend is running.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSending = false;
+        });
+      }
+    }
+  }
+
+  // ---------------- VERIFY OTP ----------------
+
+  Future<void> verifyOtp() async {
+    if (widget.method != 'Email') {
+      showMessage(
+        'SMS verification is not connected yet.',
+      );
+      return;
+    }
+
+    final code = codeController.text.trim();
+
+    if (code.length != 6 ||
+        !RegExp(r'^[0-9]{6}$').hasMatch(code)) {
+      showMessage('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    if (isSending || isVerifying) return;
+
+    setState(() {
+      isVerifying = true;
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/verify-otp'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': widget.destination.trim(),
+              'code': code,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (!mounted) return;
+
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+
+        if (data is Map<String, dynamic> &&
+            data['verified'] == true) {
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              icon: const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 56,
+              ),
+              title: const Text('Email Verified'),
+              content: const Text(
+                'Your email address has been verified successfully.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          showMessage('The server did not confirm verification.');
+        }
+      } else {
+        showMessage(getErrorMessage(response));
+      }
+    } catch (e) {
+      showMessage(
+        'Could not connect to the backend. '
+        'Please try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isVerifying = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEmail = widget.method == 'Email';
+
     return Scaffold(
       appBar: AppBar(title: const Text('OTP Verification')),
       body: SingleChildScrollView(
@@ -470,7 +705,9 @@ class _OTPVerificationScreenState
                 color: primaryColor,
               ),
             ),
+
             const SizedBox(height: 24),
+
             const Text(
               'Verify your identity',
               style: TextStyle(
@@ -478,44 +715,127 @@ class _OTPVerificationScreenState
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 10),
+
             Text(
               'Destination: ${widget.destination}',
               style: const TextStyle(color: Colors.black54),
             ),
+
             const SizedBox(height: 24),
-            TextFormField(
-              controller: codeController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: const InputDecoration(
-                hintText: 'Enter 6-digit OTP',
-                prefixIcon: Icon(Icons.password_outlined),
-              ),
-            ),
+
+Center(
+child: Pinput(
+controller: codeController,
+length: 6,
+keyboardType: TextInputType.number,
+defaultPinTheme: PinTheme(
+width: 46,
+height: 56,
+textStyle: const TextStyle(
+fontSize: 22,
+fontWeight: FontWeight.w600,
+color: primaryColor,
+),
+decoration: BoxDecoration(
+color: Colors.white,
+border: Border.all(color: Colors.grey.shade300),
+borderRadius: BorderRadius.circular(12),
+),
+),
+focusedPinTheme: PinTheme(
+width: 46,
+height: 56,
+textStyle: const TextStyle(
+fontSize: 22,
+fontWeight: FontWeight.w600,
+color: primaryColor,
+),
+decoration: BoxDecoration(
+color: Colors.white,
+border: Border.all(color: primaryColor, width: 2),
+borderRadius: BorderRadius.circular(12),
+),
+),
+submittedPinTheme: PinTheme(
+width: 46,
+height: 56,
+textStyle: const TextStyle(
+fontSize: 22,
+fontWeight: FontWeight.w600,
+color: primaryColor,
+),
+decoration: BoxDecoration(
+color: const Color(0xFFF3EEFF),
+border: Border.all(color: primaryColor),
+borderRadius: BorderRadius.circular(12),
+),
+),
+),
+),
+
+
+
             const SizedBox(height: 8),
-            const Text(
-              'Demo screen only: no OTP has been sent.',
+
+            Text(
+              isEmail
+                  ? (codeSent
+                      ? 'Enter the code sent to your email. It expires in 5 minutes.'
+                      : 'A verification code will be sent to your email.')
+                  : 'SMS verification is not connected yet.',
               style: TextStyle(
-                color: Colors.deepOrange,
+                color: isEmail
+                    ? Colors.black54
+                    : Colors.deepOrange,
                 fontSize: 12,
               ),
             ),
+
             const SizedBox(height: 24),
+
             appButton(
-              text: 'Verify Code',
-              onPressed: showNotConnectedMessage,
+              text: isVerifying
+                  ? 'Verifying...'
+                  : 'Verify Code',
+              onPressed: isVerifying || isSending
+                  ? () {}
+                  : verifyOtp,
             ),
-            TextButton(
-              onPressed: showNotConnectedMessage,
-              child: const Text('Resend Code'),
-            ),
+
+Center(
+  child: TextButton(
+    onPressed: isSending ||
+            isVerifying ||
+            resendCountdown > 0
+        ? null
+        : sendOtp,
+    child: Text(
+      isSending
+          ? 'Sending...'
+          : resendCountdown > 0
+              ? 'Resend Code (${resendCountdown}s)'
+              : 'Resend Code',
+    ),
+  ),
+),
+
+            if (isSending)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 }
+
+
 
 // ---------------- SIGN IN ----------------
 
@@ -577,19 +897,35 @@ class SignInScreen extends StatelessWidget {
 
 // ---------------- EMAIL SIGN IN ----------------
 
+// This screen contains the email and password login form.
+// StatefulWidget is used because some values change when the user interacts
+// with the screen, such as Remember Me and password visibility.
 class EmailSignInScreen extends StatefulWidget {
   const EmailSignInScreen({super.key});
 
   @override
-  State<EmailSignInScreen> createState() =>
-      _EmailSignInScreenState();
+  State<EmailSignInScreen> createState() => _EmailSignInScreenState();
 }
 
 class _EmailSignInScreenState extends State<EmailSignInScreen> {
+  // Identifies the Form so we can validate its fields.
   final formKey = GlobalKey<FormState>();
+
+  // Reads and manages the text entered into the email field.
   final emailController = TextEditingController();
+
+  // Reads and manages the text entered into the password field.
   final passwordController = TextEditingController();
 
+  // Stores whether Remember Me is checked.
+  // This is only a UI setting for now; it is not saved permanently.
+  bool rememberMe = true;
+
+  // true hides the password; false shows it.
+  bool obscurePassword = true;
+
+  // Releases the controllers when the screen is removed.
+  // This helps prevent unnecessary resource usage.
   @override
   void dispose() {
     emailController.dispose();
@@ -597,13 +933,309 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
     super.dispose();
   }
 
-  void notConnected() {
+  // Displays a short message at the bottom of the screen.
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  // Validates the fields before attempting to sign in.
+  // Real account authentication is not connected yet.
+  void signIn() {
+    // Stop if the email or password is invalid.
+    if (!formKey.currentState!.validate()) return;
+
+    // Temporary message until we connect the backend.
+    showMessage('Sign in is not connected to the backend yet.');
+  }
+
+  // Opens the password recovery screen.
+  void forgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ForgotPasswordScreen(),
+      ),
+    );
+  }
+
+  // Placeholder for Google and Apple authentication.
+  // These buttons will not sign in until we implement the real services.
+  void socialSignIn(String provider) {
+    showMessage('$provider sign in is not connected yet.');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign In'),
+      ),
+
+      // Allows scrolling when the keyboard opens or the screen is small.
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+
+          // Groups the input fields so their validators can work together.
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ---------------- MAZID LOGO ----------------
+
+// Displays the app logo at the top of the Sign In screen.
+Center(
+  child: Image.asset(
+    'images/image.png',  
+    height: 110,        
+    width: 110,         
+    fit: BoxFit.contain, 
+  ),
+),
+
+const SizedBox(height: 20), 
+                // Welcome heading.
+                const Text(
+                  'Welcome back!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF30285E),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  'Sign in to continue your journey with MAZID.',
+                  style: TextStyle(color: Colors.black54),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---------------- EMAIL FIELD ----------------
+
+                TextFormField(
+                  controller: emailController,
+
+                  // Opens an email-friendly keyboard.
+                  keyboardType: TextInputType.emailAddress,
+
+                  // Removes unnecessary spaces around the email.
+                  decoration: const InputDecoration(
+                    labelText: 'Email address',
+                    hintText: 'example@email.com',
+                    prefixIcon: Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+
+                  // Checks whether the email looks valid.
+                  validator: (value) {
+                    if (value == null ||
+                        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                            .hasMatch(value.trim())) {
+                      return 'Enter a valid email address';
+                    }
+
+                    return null; // No error.
+                  },
+                ),
+
+                const SizedBox(height: 18),
+
+                // ---------------- PASSWORD FIELD ----------------
+
+                TextFormField(
+                  controller: passwordController,
+
+                  // Hides or displays the password.
+                  obscureText: obscurePassword,
+
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+
+                    // The eye button toggles password visibility.
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+
+                      onPressed: () {
+                        // setState tells Flutter to rebuild the UI.
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+
+                    border: const OutlineInputBorder(),
+                  ),
+
+                  // The password cannot be empty.
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Enter your password';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 8),
+
+                // ---------------- REMEMBER ME + FORGOT PASSWORD ----------------
+
+                Row(
+                  children: [
+                    // Checkbox for Remember Me.
+                    Checkbox(
+                      value: rememberMe,
+
+                      onChanged: (value) {
+                        setState(() {
+                          rememberMe = value ?? false;
+                        });
+                      },
+                    ),
+
+                    const Expanded(
+                      child: Text('Remember Me'),
+                    ),
+
+                    // Opens the password recovery screen.
+                    TextButton(
+                      onPressed: forgotPassword,
+                      child: const Text('Forgot Password?'),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+
+                // ---------------- SIGN IN BUTTON ----------------
+
+                appButton(
+                  text: 'Sign In',
+                  onPressed: signIn,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Divider between email login and social login.
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'OR CONTINUE WITH',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+
+                // ---------------- GOOGLE SIGN IN ----------------
+
+                OutlinedButton.icon(
+                  onPressed: () => socialSignIn('Google'),
+                  icon: const Icon(Icons.g_mobiledata, size: 30),
+                  label: const Text('Continue with Google'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // ---------------- APPLE SIGN IN ----------------
+
+                OutlinedButton.icon(
+                  onPressed: () => socialSignIn('Apple'),
+                  icon: const Icon(Icons.apple, size: 25),
+                  label: const Text('Continue with Apple'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ---------------- CREATE ACCOUNT ----------------
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account?"),
+
+                    TextButton(
+                      onPressed: () {
+                        // Opens the existing account creation screen.
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateAccountScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Create Account'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------- FORGOT PASSWORD ----------------
+
+// This screen collects the email address for a password reset request.
+// The actual reset process still needs to be connected to the backend.
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
+
+  @override
+  State<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  // Controller for the email field.
+  final emailController = TextEditingController();
+
+  // Form key used to validate the email.
+  final formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  // Temporary action until password recovery is implemented.
+  void sendResetRequest() {
     if (!formKey.currentState!.validate()) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Sign in is not connected to Firebase yet.',
+          'Password reset is not connected to the backend yet.',
         ),
       ),
     );
@@ -612,55 +1244,64 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Email Sign In')),
-      body: SingleChildScrollView(
+      appBar: AppBar(
+        title: const Text('Forgot Password'),
+      ),
+
+      body: Padding(
         padding: const EdgeInsets.all(24),
+
         child: Form(
           key: formKey,
+
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Text(
+                'Reset your password',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF30285E),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'Enter your email address to request a password reset.',
+                style: TextStyle(color: Colors.black54),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Email address used for the reset request.
               TextFormField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
+
                 decoration: const InputDecoration(
                   labelText: 'Email address',
                   prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(),
                 ),
+
                 validator: (value) {
                   if (value == null ||
                       !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
                           .hasMatch(value.trim())) {
-                    return 'Enter a valid email';
+                    return 'Enter a valid email address';
                   }
+
                   return null;
                 },
               ),
-              const SizedBox(height: 18),
-              TextFormField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-                validator: (value) =>
-                value == null || value.isEmpty
-                    ? 'Enter your password'
-                    : null,
-              ),
+
               const SizedBox(height: 24),
+
               appButton(
-                text: 'Sign In',
-                onPressed: notConnected,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Authentication will be connected to Firebase.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 12,
-                ),
+                text: 'Send Reset Link',
+                onPressed: sendResetRequest,
               ),
             ],
           ),
