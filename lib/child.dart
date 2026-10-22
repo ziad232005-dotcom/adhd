@@ -5,39 +5,115 @@ const Color childPrimary = Color(0xFF7566D9);
 const Color childBackground = Color(0xFFF8F7FF);
 const Color childText = Color(0xFF25213D);
 
+
 class ChildTask {
   final int id;
   final String title;
   final String subtitle;
   final IconData icon;
   final int points;
-  const ChildTask(this.id, this.title, this.subtitle, this.icon, this.points);
+
+  const ChildTask(
+    this.id,
+    this.title,
+    this.subtitle,
+    this.icon,
+    this.points,
+  );
 }
 
-/// Shared demo data. It resets when the app process is closed; no backend yet.
-class ChildAppState {
+/// Shared data between the Parent and Child screens.
+class ChildAppState extends ChangeNotifier {
   ChildAppState._();
+
   static final ChildAppState instance = ChildAppState._();
 
+  int _nextTaskId = 5;
   int points = 0;
-  final Set<int> completed = {};
-  String? mood;
 
-  final List<ChildTask> tasks = const [
-    ChildTask(1, 'Brush your teeth', 'A fresh start!', Icons.cleaning_services_rounded, 10),
-    ChildTask(2, 'Pack your school bag', 'Get ready for tomorrow.', Icons.backpack_rounded, 15),
-    ChildTask(3, 'Read for 10 minutes', 'One page at a time.', Icons.menu_book_rounded, 20),
-    ChildTask(4, 'Tidy up your toys', 'Make your space shine.', Icons.toys_rounded, 15),
+  final Set<int> completed = {};
+
+  String? _mood;
+
+  String? get mood => _mood;
+
+  set mood(String? value) {
+    _mood = value;
+    notifyListeners();
+  }
+
+  final List<ChildTask> tasks = [
+    const ChildTask(
+      1,
+      'Brush your teeth',
+      'A fresh start!',
+      Icons.cleaning_services_rounded,
+      10,
+    ),
+    const ChildTask(
+      2,
+      'Pack your school bag',
+      'Get ready for tomorrow.',
+      Icons.backpack_rounded,
+      15,
+    ),
+    const ChildTask(
+      3,
+      'Read for 10 minutes',
+      'One page at a time.',
+      Icons.menu_book_rounded,
+      20,
+    ),
+    const ChildTask(
+      4,
+      'Tidy up your toys',
+      'Make your space shine.',
+      Icons.toys_rounded,
+      15,
+    ),
   ];
 
   int get completedCount => completed.length;
 
+  int get totalPointsPossible {
+    return tasks.fold(0, (sum, task) => sum + task.points);
+  }
+
+  bool isCompleted(ChildTask task) {
+    return completed.contains(task.id);
+  }
+
+  void addTask({
+    required String title,
+    required String subtitle,
+    required int points,
+  }) {
+    tasks.add(
+      ChildTask(
+        _nextTaskId++,
+        title,
+        subtitle,
+        Icons.task_alt_rounded,
+        points,
+      ),
+    );
+
+    notifyListeners();
+  }
+
   bool completeTask(ChildTask task) {
-    if (!completed.add(task.id)) return false;
+    if (!completed.add(task.id)) {
+      return false;
+    }
+
     points += task.points;
+    notifyListeners();
+
     return true;
   }
 }
+
+
 
 class ChildLoginScreen extends StatefulWidget {
   const ChildLoginScreen({super.key});
@@ -170,7 +246,10 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           ),
           const SizedBox(height: 16),
           Row(children: [
-            Expanded(child: _statCard(Icons.stars_rounded, '${data.points}', 'My points', const Color(0xFFFFB547))),
+            Expanded(child: _statCard(Icons.stars_rounded,
+             '${data.points}', 'My points', const Color(0xFFFFB547),
+             ),
+             ),
             const SizedBox(width: 12),
             Expanded(child: _statCard(Icons.check_circle_rounded, '${data.completedCount}/${data.tasks.length}', 'Tasks done', const Color(0xFF43B89C))),
           ]),
@@ -195,66 +274,153 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
   }
 }
 
+
 class ChildTasksScreen extends StatefulWidget {
   const ChildTasksScreen({super.key});
+
   @override
   State<ChildTasksScreen> createState() => _ChildTasksScreenState();
 }
 
 class _ChildTasksScreenState extends State<ChildTasksScreen> {
-  final data = ChildAppState.instance;
+  final ChildAppState data = ChildAppState.instance;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: childBackground,
-        appBar: AppBar(title: const Text('My Tasks'), backgroundColor: childBackground, elevation: 0),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            _whitePanel(Row(children: [
-              const Icon(Icons.flag_rounded, color: childPrimary, size: 34),
-              const SizedBox(width: 12),
-              Expanded(child: Text('${data.completedCount} of ${data.tasks.length} tasks completed', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-            ])),
-            const SizedBox(height: 14),
-            ...data.tasks.map((task) {
-              final done = data.completed.contains(task.id);
-              return Card(
-                color: Colors.white,
-                elevation: 0,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(14),
-                  leading: Container(
-                    width: 46, height: 46,
-                    decoration: BoxDecoration(color: childPrimary.withValues(alpha: .12), borderRadius: BorderRadius.circular(14)),
-                    child: Icon(task.icon, color: childPrimary),
-                  ),
-                  title: Text(task.title, style: TextStyle(fontWeight: FontWeight.bold, decoration: done ? TextDecoration.lineThrough : null)),
-                  subtitle: Text(done ? 'Great job! +${task.points} points earned.' : '${task.subtitle}\n+${task.points} points'),
-                  isThreeLine: true,
-                  trailing: IconButton(
-                    onPressed: done ? null : () {
-                      setState(() => data.completeTask(task));
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Awesome! +${task.points} points 🎉')));
-                    },
-                    icon: Icon(done ? Icons.check_circle_rounded : Icons.circle_outlined, size: 30, color: done ? const Color(0xFF43B89C) : childPrimary),
-                  ),
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: data,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: childBackground,
+          appBar: AppBar(
+            title: const Text('My Tasks'),
+            backgroundColor: childBackground,
+            elevation: 0,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              _whitePanel(
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.flag_rounded,
+                      color: childPrimary,
+                      size: 34,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '${data.completedCount} of ${data.tasks.length} tasks completed',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            }),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FocusTimerScreen())),
-              icon: const Icon(Icons.timer_rounded),
-              label: const Text('Start Focus Time'),
-              style: OutlinedButton.styleFrom(foregroundColor: childPrimary, padding: const EdgeInsets.all(14), side: const BorderSide(color: childPrimary)),
-            ),
-          ],
-        ),
-      );
+              ),
+
+              const SizedBox(height: 14),
+
+              ...data.tasks.map((task) {
+                final done = data.isCompleted(task);
+
+                return Card(
+                  color: Colors.white,
+                  elevation: 0,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(14),
+                    leading: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: childPrimary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        task.icon,
+                        color: childPrimary,
+                      ),
+                    ),
+                    title: Text(
+                      task.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        decoration: done
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      done
+                          ? 'Great job! +${task.points} points earned.'
+                          : '${task.subtitle}\n+${task.points} points',
+                    ),
+                    isThreeLine: true,
+                    trailing: IconButton(
+                      onPressed: done
+                          ? null
+                          : () {
+                              final success = data.completeTask(task);
+
+                              if (success && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Awesome! +${task.points} points 🎉',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                      icon: Icon(
+                        done
+                            ? Icons.check_circle_rounded
+                            : Icons.circle_outlined,
+                        size: 30,
+                        color: done
+                            ? const Color(0xFF43B89C)
+                            : childPrimary,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              const SizedBox(height: 8),
+
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FocusTimerScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.timer_rounded),
+                label: const Text('Start Focus Time'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: childPrimary,
+                  padding: const EdgeInsets.all(14),
+                  side: const BorderSide(color: childPrimary),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
+
+
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});

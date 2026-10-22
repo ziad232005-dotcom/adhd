@@ -1,7 +1,40 @@
+import 'add_task.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-// ============================================================
-// PARENT DASHBOARD
-// ============================================================
+import 'package:image_picker/image_picker.dart';
+import 'child.dart';
+import 'screens/daily_routine.dart';
+import 'screens/track_behavior.dart';
+import 'screens/ask_ai.dart';
+import 'screens/progress.dart';
+
+const Color primaryPurple = Color(0xFF7566D9);
+const Color dashboardBackground = Color(0xFFFAF8FF);
+const Color darkPurple = Color(0xFF30285E);
+const Color softPurple = Color(0xFFF0EDFF);
+
+class DashboardChild {
+  final String name;
+  final int age;
+  final String grade;
+  final String? imagePath;
+
+  const DashboardChild({
+    required this.name,
+    required this.age,
+    required this.grade,
+    this.imagePath,
+  });
+
+  DashboardChild copyWith({String? imagePath}) {
+    return DashboardChild(
+      name: name,
+      age: age,
+      grade: grade,
+      imagePath: imagePath ?? this.imagePath,
+    );
+  }
+}
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -11,394 +44,173 @@ class ParentDashboardScreen extends StatefulWidget {
       _ParentDashboardScreenState();
 }
 
-class _ParentDashboardScreenState
-    extends State<ParentDashboardScreen> {
-  int selectedTab = 0;
-
-  // Temporary sample data. No backend is used.
-  final String parentName = 'Jamie';
-
-  final List<Map<String, dynamic>> children = [
-    {
-      'name': 'Alex',
-      'initial': 'A',
-      'age': 9,
-      'grade': 'Grade 4',
-      'focusAreas': ['Focus', 'Daily routines', 'Schoolwork'],
-      'tasksDone': 3,
-      'totalTasks': 6,
-      'streak': 5,
-      'focusSessions': 1,
-    },
-    {
-      'name': 'Maya',
-      'initial': 'M',
-      'age': 7,
-      'grade': 'Grade 2',
-      'focusAreas': ['Focus', 'Mood'],
-      'tasksDone': 2,
-      'totalTasks': 5,
-      'streak': 3,
-      'focusSessions': 1,
-    },
-  ];
-
+class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   int selectedChildIndex = 0;
+  int selectedNavIndex = 0;
 
-  final List<Map<String, dynamic>> routines = [
-    {
-      'title': 'Morning routine',
-      'time': '7:30 AM',
-      'details': '4 steps',
-      'done': true,
-      'icon': Icons.wb_sunny_outlined,
-    },
-    {
-      'title': 'Homework warm-up',
-      'time': '10:00 AM',
-      'details': '15 min',
-      'done': true,
-      'icon': Icons.menu_book_outlined,
-    },
-    {
-      'title': 'Reading time',
-      'time': '4:00 PM',
-      'details': '20 min',
-      'done': false,
-      'icon': Icons.auto_stories_outlined,
-    },
-    {
-      'title': 'Wind-down routine',
-      'time': '8:00 PM',
-      'details': '3 steps',
-      'done': false,
-      'icon': Icons.nightlight_outlined,
-    },
-  ];
+  final ImagePicker _imagePicker = ImagePicker();
 
-  final List<Map<String, dynamic>> activities = [
-    {
-      'title': 'Reading time',
-      'subtitle': 'Today · 4:00 PM · with a parent',
-      'icon': Icons.menu_book_outlined,
-    },
-    {
-      'title': 'Focus session',
-      'subtitle': 'Today · 5:30 PM · 25 min',
-      'icon': Icons.timer_outlined,
-    },
-    {
-      'title': 'Follow-up with Dr. Sarah Morgan',
-      'subtitle': 'Thu 22 Oct · 5:30 PM',
-      'icon': Icons.calendar_month_outlined,
-    },
-  ];
+final List<DashboardChild> children = [
+  const DashboardChild(
+    name: 'Alex',
+    age: 9,
+    grade: 'Grade 4',
+  ),
+  const DashboardChild(
+    name: 'Maya',
+    age: 7,
+    grade: 'Grade 2',
+  ),
+];
 
-  final List<Map<String, dynamic>> observations = [
-    {
-      'author': 'Teacher · Ms. Layla',
-      'date': 'Thu 15 Oct',
-      'text':
-          'Stayed with the reading task for 12 minutes after one short reminder.',
-      'category': 'Focus',
-      'icon': Icons.school_outlined,
-    },
-    {
-      'author': 'You · Parent check-in',
-      'date': 'Fri 16 Oct',
-      'text':
-          'Morning routine went smoothly with the picture checklist.',
-      'category': 'Routines',
-      'icon': Icons.home_outlined,
-    },
-  ];
+  DashboardChild get selectedChild => children[selectedChildIndex];
 
-  final List<Map<String, dynamic>> reminders = [
-    {
-      'title': 'Wind-down routine',
-      'subtitle': 'Today · 8:00 PM',
-      'action': 'Snooze',
-      'icon': Icons.notifications_none,
-    },
-    {
-      'title': 'Weekly report is ready',
-      'subtitle': '11–17 Oct',
-      'action': 'Open',
-      'icon': Icons.insert_chart_outlined,
-    },
-    {
-      'title': 'Questions for Thursday’s visit',
-      'subtitle': 'Dr. Sarah Morgan · 22 Oct',
-      'action': 'Add',
-      'icon': Icons.event_note_outlined,
-    },
-  ];
+  Future<void> _changeChildPhoto() async {
+    try {
+      final XFile? pickedImage = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1000,
+      );
 
-  Map<String, dynamic> get currentChild =>
-      children[selectedChildIndex];
+      if (pickedImage == null || !mounted) return;
 
-  int get completedRoutines =>
-      routines.where((item) => item['done'] == true).length;
+      setState(() {
+        children[selectedChildIndex] = selectedChild.copyWith(
+          imagePath: pickedImage.path,
+        );
+      });
 
-  void showFeatureMessage(String feature) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Child photo updated successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not select the photo')),
+      );
+    }
+  }
+
+  void _showMessage(String title) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature screen will be implemented next.'),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text('$title — coming soon')),
     );
   }
+  
 
-  void selectChild(int index) {
-    setState(() {
-      selectedChildIndex = index;
-    });
-  }
-
-  void addChild() {
-    showFeatureMessage('Add child');
-  }
 
   @override
   Widget build(BuildContext context) {
-    final child = currentChild;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
-
+      backgroundColor: dashboardBackground,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              _buildHeader(),
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildHeader(),
+                  const SizedBox(height: 28),
+                  _buildGreeting(),
+                  const SizedBox(height: 22),
+                  _buildChildSelector(),
+                  const SizedBox(height: 14),
+                  _buildChildProfile(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle("Today's Overview", 'See details'),
+                  const SizedBox(height: 14),
+                  _buildOverviewCards(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Quick Actions', 'View all'),
+                  const SizedBox(height: 14),
+                  _buildQuickActions(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle("Today's Routine", 'View routine'),
+                  const SizedBox(height: 14),
+                  _buildRoutineCard(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Upcoming Activities', 'View calendar'),
+                  const SizedBox(height: 14),
+                  _buildActivities(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Recent Observations', 'View all'),
+                  const SizedBox(height: 14),
+                  _buildObservationCard(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Progress Highlights', 'Weekly report'),
+                  const SizedBox(height: 14),
+                  Align(
+  alignment: Alignment.centerRight,
+  child: TextButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ProgressScreen(),
+        ),
+      );
+    },
+    icon: const Icon(Icons.insights_rounded),
+    label: const Text('View Full Progress'),
+  ),
+),
 
-              const SizedBox(height: 24),
-
-              // GREETING
-              Text(
-                'Good morning, $parentName',
-                style: const TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF30285E),
-                ),
+_buildProgressCard(),
+                  _buildProgressCard(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Reminders', 'View all'),
+                  const SizedBox(height: 14),
+                  _buildReminders(),
+                ]),
               ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                '${_formattedDate()} · ${child['name']}’s day at a glance',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black54,
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              // CHILD SELECTOR
-              _buildChildSelector(),
-
-              const SizedBox(height: 16),
-
-              // CHILD OVERVIEW
-              _buildChildOverview(child),
-
-              const SizedBox(height: 24),
-
-              // QUICK ACTIONS
-              _buildSectionTitle('Quick actions'),
-
-              const SizedBox(height: 12),
-
-              _buildQuickActions(),
-
-              const SizedBox(height: 26),
-
-              // UPCOMING ACTIVITIES
-              _buildSectionTitle(
-                'Upcoming activities',
-                action: 'See all',
-                onAction: () =>
-                    showFeatureMessage('Upcoming activities'),
-              ),
-
-              const SizedBox(height: 12),
-
-              ...activities.map(_buildActivityCard),
-
-              const SizedBox(height: 26),
-
-              // TODAY'S ROUTINE
-              _buildSectionTitle(
-                'Today’s routine',
-                action: 'Manage',
-                onAction: () => showFeatureMessage('Manage routine'),
-              ),
-
-              const SizedBox(height: 12),
-
-              _buildRoutineCard(),
-
-              const SizedBox(height: 26),
-
-              // RECENT OBSERVATIONS
-              _buildSectionTitle(
-                'Recent observations',
-                action: 'See all',
-                onAction: () =>
-                    showFeatureMessage('All observations'),
-              ),
-
-              const SizedBox(height: 12),
-
-              ...observations.map(_buildObservationCard),
-
-              const SizedBox(height: 12),
-
-              const Text(
-                'Observations are notes from you and your child’s '
-                'teachers. They describe what was seen and are not '
-                'an assessment.',
-                style: TextStyle(
-                  fontSize: 11,
-                  height: 1.5,
-                  color: Colors.black54,
-                ),
-              ),
-
-              const SizedBox(height: 26),
-
-              // PROGRESS HIGHLIGHTS
-              _buildSectionTitle(
-                'Progress highlights',
-                action: 'Reports',
-                onAction: () => showFeatureMessage('Reports'),
-              ),
-
-              const SizedBox(height: 12),
-
-              _buildProgressHighlights(child),
-
-              const SizedBox(height: 26),
-
-              // REMINDERS
-              _buildSectionTitle(
-                'Reminders',
-                action: 'Manage',
-                onAction: () => showFeatureMessage('Manage reminders'),
-              ),
-
-              const SizedBox(height: 12),
-
-              ...reminders.map(_buildReminderCard),
-
-              const SizedBox(height: 18),
-
-              const Center(
-                child: Text(
-                  'MΛZID supports everyday routines. It doesn’t '
-                  'diagnose or treat any condition. Names and figures '
-                  'shown are sample content.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    height: 1.5,
-                    color: Colors.black54,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-
-      // BOTTOM NAVIGATION
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedTab,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFEAE5FF),
-
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedTab = index;
-          });
-
-          if (index != 0) {
-            final features = [
-              'Home',
-              'Tasks',
-              'AI Help',
-              'Specialist',
-              'Reports',
-            ];
-
-            showFeatureMessage(features[index]);
-          }
-        },
-
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.checklist_outlined),
-            selectedIcon: Icon(Icons.checklist),
-            label: 'Tasks',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: 'AI Help',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.medical_services_outlined),
-            selectedIcon: Icon(Icons.medical_services),
-            label: 'Specialist',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insert_chart_outlined),
-            selectedIcon: Icon(Icons.insert_chart),
-            label: 'Reports',
-          ),
-        ],
+            floatingActionButton: FloatingActionButton.extended(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ChildTasksScreen(),
       ),
     );
-  }
+  },
+  backgroundColor: primaryPurple,
+  foregroundColor: Colors.white,
+  icon: const Icon(Icons.child_care_rounded),
+  label: const Text('Child View'),
+),
 
-  // ------------------------------------------------------------
-  // HEADER
-  // ------------------------------------------------------------
+bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
 
   Widget _buildHeader() {
     return Row(
       children: [
         Container(
-          width: 42,
-          height: 42,
-          decoration: const BoxDecoration(
-            color: Color(0xFF7566D9),
-            shape: BoxShape.circle,
+          width: 46,
+          height: 46,
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
           ),
-          child: const Center(
-            child: Text(
-              'b',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 27,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          child: Image.asset(
+            'images/image.png',
+            fit: BoxFit.contain,
+errorBuilder: (_, _, _) => const Icon(
+  Icons.psychology_alt_rounded,
+  color: primaryPurple,
+  size: 30,
+),
           ),
         ),
-
         const SizedBox(width: 10),
-
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,765 +218,415 @@ class _ParentDashboardScreenState
               Text(
                 'MΛZID',
                 style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF30285E),
+                  color: darkPurple,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  letterSpacing: 1.2,
                 ),
               ),
               Text(
-                'ADHD PARENT SUPPORT',
+                'ADHD Parent Support',
                 style: TextStyle(
-                  fontSize: 9,
-                  letterSpacing: 0.7,
-                  color: Color(0xFF7566D9),
+                  color: Colors.grey,
+                  fontSize: 11,
                 ),
               ),
             ],
           ),
         ),
-
-        IconButton(
-          onPressed: () => showFeatureMessage('Notifications'),
-          icon: const Icon(
-            Icons.notifications_none_rounded,
-            color: Color(0xFF30285E),
-          ),
+        _circleButton(
+          icon: Icons.notifications_none_rounded,
+          onTap: () => _showMessage('Notifications'),
         ),
-
-        CircleAvatar(
-          radius: 19,
-          backgroundColor: const Color(0xFFEAE5FF),
-          child: Text(
-            parentName[0],
-            style: const TextStyle(
-              color: Color(0xFF7566D9),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        const SizedBox(width: 10),
+        _circleButton(
+          icon: Icons.person_outline_rounded,
+          onTap: () => _showMessage('Parent profile'),
         ),
       ],
     );
   }
 
-  // ------------------------------------------------------------
-  // CHILD SELECTOR
-  // ------------------------------------------------------------
+  Widget _buildGreeting() {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$greeting! 👋',
+          style: const TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            color: darkPurple,
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          "Small steps make a big difference. Let's make today count.",
+          style: TextStyle(
+            color: Color(0xFF817C98),
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildChildSelector() {
     return Row(
       children: [
-        ...List.generate(children.length, (index) {
-          final child = children[index];
-          final isSelected = selectedChildIndex == index;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: InkWell(
-              onTap: () => selectChild(index),
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFFEAE5FF)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF7566D9)
-                        : const Color(0xFFE7E3F2),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 13,
-                      backgroundColor: const Color(0xFF7566D9),
-                      child: Text(
-                        child['initial'],
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      child['name'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF30285E),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-
+        const Text(
+          'Your children',
+          style: TextStyle(
+            color: darkPurple,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const Spacer(),
-
-        IconButton(
-          tooltip: 'Add child',
-          onPressed: addChild,
-          icon: const Icon(
-            Icons.add_circle_outline,
-            color: Color(0xFF7566D9),
+        GestureDetector(
+          onTap: () => _showMessage('Add child'),
+          child: const Row(
+            children: [
+              Icon(Icons.add_circle_outline, color: primaryPurple, size: 19),
+              SizedBox(width: 5),
+              Text(
+                'Add child',
+                style: TextStyle(
+                  color: primaryPurple,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  // ------------------------------------------------------------
-  // CHILD OVERVIEW
-  // ------------------------------------------------------------
-
-  Widget _buildChildOverview(Map<String, dynamic> child) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF7566D9),
-            Color(0xFF9587EA),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                child: Text(
-                  child['initial'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      child['name'],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Age ${child['age']} · ${child['grade']}',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              IconButton(
-                onPressed: () =>
-                    showFeatureMessage('${child['name']} profile'),
-                icon: const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
-            children: (child['focusAreas'] as List<String>)
-                .map(
-                  (area) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.17),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      area,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-
-          const SizedBox(height: 22),
-
-          Row(
-            children: [
-              _buildChildStat(
-                '${child['tasksDone']} of ${child['totalTasks']}',
-                'Tasks today',
-              ),
-              _buildChildStat(
-                '${child['streak']} days',
-                'Check-in streak',
-              ),
-              _buildChildStat(
-                '${child['focusSessions']} session',
-                'Focus today',
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 15),
-
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () =>
-                  showFeatureMessage('${child['name']} profile'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.6),
-                ),
-                shape: const StadiumBorder(),
-              ),
-              child: Text('View ${child['name']}’s profile'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChildStat(String value, String label) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // SECTION TITLE
-  // ------------------------------------------------------------
-
-  Widget _buildSectionTitle(
-    String title, {
-    String? action,
-    VoidCallback? onAction,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF30285E),
-            ),
-          ),
-        ),
-
-        if (action != null)
-          TextButton(
-            onPressed: onAction,
-            child: Text(
-              action,
-              style: const TextStyle(
-                color: Color(0xFF7566D9),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // ------------------------------------------------------------
-  // QUICK ACTIONS
-  // ------------------------------------------------------------
-
-  Widget _buildQuickActions() {
-    final actions = [
-      {
-        'title': 'Add task',
-        'icon': Icons.add_task,
-        'color': const Color(0xFFEAE5FF),
-      },
-      {
-        'title': 'Check-in',
-        'icon': Icons.favorite_border,
-        'color': const Color(0xFFDDF7ED),
-      },
-      {
-        'title': 'Ask AI',
-        'icon': Icons.auto_awesome,
-        'color': const Color(0xFFFFE8D9),
-      },
-      {
-        'title': 'Book visit',
-        'icon': Icons.calendar_month_outlined,
-        'color': const Color(0xFFFFE6EE),
-      },
-    ];
-
-    return Row(
-      children: actions.map((action) {
-        return Expanded(
-          child: InkWell(
-            onTap: () => showFeatureMessage(action['title'] as String),
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Column(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: action['color'] as Color,
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                    child: Icon(
-                      action['icon'] as IconData,
-                      color: const Color(0xFF7566D9),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    action['title'] as String,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF30285E),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // UPCOMING ACTIVITIES
-  // ------------------------------------------------------------
-
-  Widget _buildActivityCard(Map<String, dynamic> activity) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFEDE9F7)),
-      ),
-      child: ListTile(
-        onTap: () =>
-            showFeatureMessage(activity['title'] as String),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 5,
-        ),
-        leading: Container(
-          width: 43,
-          height: 43,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEAE5FF),
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Icon(
-            activity['icon'] as IconData,
-            color: const Color(0xFF7566D9),
-          ),
-        ),
-        title: Text(
-          activity['title'] as String,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF30285E),
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Text(
-            activity['subtitle'] as String,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black54,
-            ),
-          ),
-        ),
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: Color(0xFF7566D9),
-        ),
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // TODAY'S ROUTINE
-  // ------------------------------------------------------------
-
-  Widget _buildRoutineCard() {
-    final progress = completedRoutines / routines.length;
+  Widget _buildChildProfile() {
+    final child = selectedChild;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEDE9F7)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFECE7FF)),
+        boxShadow: [
+          BoxShadow(
+            color: primaryPurple.withValues(alpha: 0.06),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  '$completedRoutines of ${routines.length} steps done',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF30285E),
-                  ),
+              GestureDetector(
+                onTap: _changeChildPhoto,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        color: softPurple,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: child.imagePath != null
+                          ? Image.file(
+                              File(child.imagePath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _defaultChildAvatar(),
+                            )
+                          : _defaultChildAvatar(),
+                    ),
+                    Positioned(
+                      right: 3,
+                      bottom: 3,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                          color: primaryPurple,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                '${(progress * 100).round()}%',
-                style: const TextStyle(
-                  color: Color(0xFF7566D9),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      child.name,
+                      style: const TextStyle(
+                        color: darkPurple,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${child.age} years old • ${child.grade}',
+                      style: const TextStyle(
+                        color: Color(0xFF817C98),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: _changeChildPhoto,
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 14,
+                            color: primaryPurple,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Change photo',
+                            style: TextStyle(
+                              color: primaryPurple,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: primaryPurple,
               ),
             ],
           ),
-
-          const SizedBox(height: 12),
-
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 7,
-              backgroundColor: const Color(0xFFEDE9F7),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF7566D9),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          ...routines.map(_buildRoutineItem),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoutineItem(Map<String, dynamic> routine) {
-    final done = routine['done'] as bool;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: done
-                  ? const Color(0xFFDDF7ED)
-                  : const Color(0xFFEAE5FF),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(
-              routine['icon'] as IconData,
-              color: done
-                  ? const Color(0xFF299B77)
-                  : const Color(0xFF7566D9),
-              size: 21,
-            ),
-          ),
-
-          const SizedBox(width: 11),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  routine['title'] as String,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF30285E),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${routine['time']} · ${routine['details']}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 6),
-
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 5,
-            ),
-            decoration: BoxDecoration(
-              color: done
-                  ? const Color(0xFFDDF7ED)
-                  : const Color(0xFFF0EDF8),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              done ? 'Done' : 'To do',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: done
-                    ? const Color(0xFF218260)
-                    : const Color(0xFF7566D9),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // RECENT OBSERVATIONS
-  // ------------------------------------------------------------
-
-  Widget _buildObservationCard(
-    Map<String, dynamic> observation,
-  ) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFEDE9F7)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          const SizedBox(height: 18),
+          const Divider(color: Color(0xFFF0EDFA), height: 1),
+          const SizedBox(height: 15),
           Row(
             children: [
-              Icon(
-                observation['icon'] as IconData,
-                color: const Color(0xFF7566D9),
-                size: 19,
-              ),
-              const SizedBox(width: 7),
               Expanded(
-                child: Text(
-                  observation['author'] as String,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF30285E),
-                  ),
+                child: _miniStat(
+                  icon: Icons.task_alt_rounded,
+                  label: 'Tasks done',
+                  value: '3 / 5',
                 ),
               ),
-              Text(
-                observation['date'] as String,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.black54,
+              Container(width: 1, height: 38, color: const Color(0xFFECE7F5)),
+              Expanded(
+                child: _miniStat(
+                  icon: Icons.bolt_rounded,
+                  label: 'Focus time',
+                  value: '45 min',
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            observation['text'] as String,
-            style: const TextStyle(
-              fontSize: 12,
-              height: 1.5,
-              color: Color(0xFF514B6D),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 11,
-                vertical: 5,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAE5FF),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                observation['category'] as String,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF7566D9),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  // ------------------------------------------------------------
-  // PROGRESS HIGHLIGHTS
-  // ------------------------------------------------------------
+  Widget _defaultChildAvatar() {
+    return const Center(
+      child: Icon(
+        Icons.face_rounded,
+        size: 55,
+        color: primaryPurple,
+      ),
+    );
+  }
 
-  Widget _buildProgressHighlights(
-    Map<String, dynamic> child,
-  ) {
+  Widget _miniStat({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: _buildProgressCard(
-            icon: Icons.timer_outlined,
-            title: 'Focus sessions',
-            value: '${child['focusSessions'] + 8}',
-            subtitle: '2 more than last week',
-          ),
-        ),
-
-        const SizedBox(width: 12),
-
-        Expanded(
-          child: _buildProgressCard(
-            icon: Icons.check_circle_outline,
-            title: 'Tasks done',
-            value: '75%',
-            subtitle: '24 of 32 this week',
+        Icon(icon, color: primaryPurple, size: 21),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: darkPurple,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF89849F),
+                  fontSize: 10,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildProgressCard({
+  Widget _buildSectionTitle(String title, String action) {
+  return Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: darkPurple,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      GestureDetector(
+        onTap: () {
+          if (action == 'Weekly report') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ProgressScreen(),
+              ),
+            );
+          } else {
+            _showMessage(action);
+          }
+        },
+        child: Text(
+          action,
+          style: const TextStyle(
+            color: primaryPurple,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+  Widget _buildOverviewCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: _overviewCard(
+            icon: Icons.checklist_rounded,
+            title: 'Tasks',
+            value: '3/5',
+            subtitle: 'Completed',
+            progress: 0.6,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _overviewCard(
+            icon: Icons.calendar_month_rounded,
+            title: 'Routine',
+            value: '4/6',
+            subtitle: 'Activities',
+            progress: 0.67,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _overviewCard(
+            icon: Icons.psychology_alt_rounded,
+            title: 'Focus',
+            value: '45m',
+            subtitle: 'Today',
+            progress: 0.75,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _overviewCard({
     required IconData icon,
     required String title,
     required String value,
     required String subtitle,
+    required double progress,
   }) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDE9F7)),
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: const Color(0xFFEFEAFB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: const Color(0xFF7566D9),
-            size: 23,
-          ),
-
-          const SizedBox(height: 9),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black54,
-            ),
-          ),
-
-          const SizedBox(height: 7),
-
+          Icon(icon, color: primaryPurple, size: 23),
+          const SizedBox(height: 13),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF30285E),
+              color: darkPurple,
+              fontWeight: FontWeight.w800,
+              fontSize: 19,
             ),
           ),
-
-          const SizedBox(height: 6),
-
+          const SizedBox(height: 3),
+          Text(
+            title,
+            style: const TextStyle(
+              color: darkPurple,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 3),
           Text(
             subtitle,
             style: const TextStyle(
+              color: Color(0xFF918BA8),
               fontSize: 10,
-              color: Color(0xFF7566D9),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: softPurple,
+              valueColor: const AlwaysStoppedAnimation(primaryPurple),
             ),
           ),
         ],
@@ -1172,72 +634,580 @@ class _ParentDashboardScreenState
     );
   }
 
-  // ------------------------------------------------------------
-  // REMINDERS
-  // ------------------------------------------------------------
+  Widget _buildQuickActions() {
+    final actions = [
+      (
+        'Track Behavior',
+        Icons.track_changes_rounded,
+        const Color(0xFFF0EDFF),
+      ),
+      (
+        'Daily Routine',
+        Icons.calendar_month_rounded,
+        const Color(0xFFE9F8F0),
+      ),
+      (
+        'Ask AI',
+        Icons.auto_awesome_rounded,
+        const Color(0xFFFFF1E5),
+      ),
+      (
+        'Add Task',
+        Icons.add_task_rounded,
+        const Color(0xFFFFEAF1),
+      ),
+    ];
 
-  Widget _buildReminderCard(Map<String, dynamic> reminder) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 7,
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: actions.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 11,
+        crossAxisSpacing: 11,
+        childAspectRatio: 2.35,
       ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEDE9F7)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
+      itemBuilder: (context, index) {
+        final action = actions[index];
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(17),
+onTap: () {
+  switch (action.$1) {
+    case 'Track Behavior':
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const TrackBehaviorScreen(),
+        ),
+      );
+      break;
+
+case 'Daily Routine':
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const DailyRoutineScreen(),
+    ),
+  );
+  break;
+
+    case 'Ask AI':
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AskAIScreen(),
+        ),
+      );
+      break;
+
+    case 'Add Task':
+      _openAddTaskPage();
+      break;
+  }
+},
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAE5FF),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: const Color(0xFFEFEAFB)),
             ),
-            child: Icon(
-              reminder['icon'] as IconData,
-              color: const Color(0xFF7566D9),
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  reminder['title'] as String,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF30285E),
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: action.$3,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    action.$2,
+                    color: primaryPurple,
+                    size: 21,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  reminder['subtitle'] as String,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black54,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    action.$1,
+                    style: const TextStyle(
+                      color: darkPurple,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+        );
+      },
+    );
+  }
 
-          TextButton(
-            onPressed: () =>
-                showFeatureMessage(reminder['action'] as String),
-            child: Text(
-              reminder['action'] as String,
-              style: const TextStyle(
-                color: Color(0xFF7566D9),
-                fontWeight: FontWeight.bold,
+  Widget _buildRoutineCard() {
+  final routine = [
+    {
+      'title': 'Morning routine',
+      'time': '07:30 AM',
+      'completed': true,
+      'icon': Icons.wb_sunny_rounded,
+      'color': const Color(0xFFFFB547),
+      'background': const Color(0xFFFFF6E7),
+    },
+    {
+      'title': 'Homework time',
+      'time': '04:00 PM',
+      'completed': true,
+      'icon': Icons.menu_book_rounded,
+      'color': const Color(0xFF7566D9),
+      'background': const Color(0xFFF0EDFF),
+    },
+    {
+      'title': 'Reading time',
+      'time': '06:00 PM',
+      'completed': false,
+      'icon': Icons.auto_stories_rounded,
+      'color': const Color(0xFF36BFA6),
+      'background': const Color(0xFFE8FAF5),
+    },
+  ];
+
+  return _whiteCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Daily Routine',
+              style: TextStyle(
+                color: darkPurple,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
               ),
+            ),
+            IconButton(
+              onPressed: () => _showRoutineDialog(),
+              icon: const Icon(
+                Icons.add_circle_rounded,
+                color: primaryPurple,
+                size: 27,
+              ),
+              tooltip: 'Add routine',
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        for (int i = 0; i < routine.length; i++) ...[
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: routine[i]['background'] as Color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: (routine[i]['color'] as Color).withAlpha(45),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 43,
+                  height: 43,
+                  decoration: BoxDecoration(
+                    color: (routine[i]['color'] as Color).withAlpha(30),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    routine[i]['icon'] as IconData,
+                    color: routine[i]['color'] as Color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        routine[i]['title'] as String,
+                        style: TextStyle(
+                          color: darkPurple,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          decoration:
+                              routine[i]['completed'] as bool
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 13,
+                            color: routine[i]['color'] as Color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            routine[i]['time'] as String,
+                            style: const TextStyle(
+                              color: Color(0xFF89849F),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      routine[i]['completed'] =
+                          !(routine[i]['completed'] as bool);
+                    });
+                  },
+                  icon: Icon(
+                    routine[i]['completed'] as bool
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: routine[i]['completed'] as bool
+                        ? const Color(0xFF36BFA6)
+                        : const Color(0xFFB8B2CC),
+                  ),
+                  tooltip: 'Mark as completed',
+                ),
+
+                PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    color: Color(0xFF89849F),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showRoutineDialog(
+                        title: routine[i]['title'] as String,
+                        time: routine[i]['time'] as String,
+                      );
+                    } else if (value == 'delete') {
+                      setState(() {
+                        routine.removeAt(i);
+                      });
+                    } else if (value == 'reminder') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Reminder selected for ${routine[i]['title']}',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Edit routine'),
+                    ),
+                    PopupMenuItem(
+                      value: 'reminder',
+                      child: Text('Set reminder'),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete routine'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        if (routine.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text(
+                'No routines yet. Tap + to add one!',
+                style: TextStyle(
+                  color: Color(0xFF89849F),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+Future<void> _openAddTaskPage() async {
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const AddTaskScreen(),
+    ),
+  );
+
+  if (!mounted) return;
+
+  if (result == true) {
+    setState(() {});
+  }
+}
+Future<void> _showRoutineDialog({
+  String? title,
+  String? time,
+}) async {
+  final titleController = TextEditingController(text: title ?? '');
+  TimeOfDay selectedTime = const TimeOfDay(hour: 7, minute: 30);
+
+  if (time != null) {
+    try {
+      selectedTime = TimeOfDay(
+        hour: int.parse(time.split(':')[0]) +
+            (time.toUpperCase().contains('PM') &&
+                    int.parse(time.split(':')[0]) != 12
+                ? 12
+                : 0),
+        minute: int.parse(time.split(':')[1].split(' ')[0]),
+      );
+    } catch (_) {
+      selectedTime = const TimeOfDay(hour: 7, minute: 30);
+    }
+  }
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            title: Text(
+              title == null ? 'Add Routine' : 'Edit Routine',
+              style: const TextStyle(
+                color: darkPurple,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Routine name',
+                    prefixIcon: const Icon(
+                      Icons.edit_rounded,
+                      color: primaryPurple,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(
+                    Icons.access_time_rounded,
+                    color: primaryPurple,
+                  ),
+                  title: const Text('Routine time'),
+                  subtitle: Text(selectedTime.format(context)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: selectedTime,
+                    );
+
+                    if (picked != null) {
+                      setDialogState(() {
+                        selectedTime = picked;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryPurple,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  if (titleController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a routine name.'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // This dialog currently collects the data.
+                  // Connect it to a shared routine list to persist changes.
+                  Navigator.pop(dialogContext);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        title == null
+                            ? 'Routine details entered. Connect the shared list to save it.'
+                            : 'Routine details edited. Connect the shared list to save it.',
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  titleController.dispose();
+}
+  Widget _buildActivities() {
+    return Column(
+      children: [
+        _activityTile(
+          icon: Icons.menu_book_rounded,
+          title: 'Reading practice',
+          subtitle: 'Today • 4:30 PM',
+          color: const Color(0xFFECE8FF),
+        ),
+        const SizedBox(height: 10),
+        _activityTile(
+          icon: Icons.sports_soccer_rounded,
+          title: 'Outdoor play',
+          subtitle: 'Tomorrow • 5:00 PM',
+          color: const Color(0xFFE4F7EB),
+        ),
+      ],
+    );
+  }
+
+  Widget _activityTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return _whiteCard(
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: primaryPurple, size: 24),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: darkPurple,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xFF89849F),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: primaryPurple,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildObservationCard() {
+    return _whiteCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF0E2),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(
+              Icons.lightbulb_outline_rounded,
+              color: Color(0xFFE5A14C),
+              size: 23,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Positive progress today',
+                  style: TextStyle(
+                    color: darkPurple,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Your child completed a task with fewer reminders.',
+                  style: TextStyle(
+                    color: Color(0xFF817C98),
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 7),
+                Text(
+                  'Today • 10:30 AM',
+                  style: TextStyle(
+                    color: primaryPurple,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1245,24 +1215,214 @@ class _ParentDashboardScreenState
     );
   }
 
-  // ------------------------------------------------------------
-  // DATE
-  // ------------------------------------------------------------
+  Widget _buildProgressCard() {
+    return _whiteCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Weekly consistency',
+                  style: TextStyle(
+                    color: darkPurple,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Text(
+                '+12%',
+                style: TextStyle(
+                  color: Color(0xFF39A879),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Routine completion compared with last week',
+            style: TextStyle(
+              color: Color(0xFF89849F),
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _progressBar('Mon', 0.55),
+              _progressBar('Tue', 0.75),
+              _progressBar('Wed', 0.45),
+              _progressBar('Thu', 0.85),
+              _progressBar('Fri', 0.65),
+              _progressBar('Sat', 0.9),
+              _progressBar('Sun', 0.6),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  String _formattedDate() {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  Widget _progressBar(String day, double value) {
+    return Column(
+      children: [
+        Container(
+          width: 19,
+          height: 75,
+          alignment: Alignment.bottomCenter,
+          decoration: BoxDecoration(
+            color: softPurple,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: FractionallySizedBox(
+            heightFactor: value,
+            child: Container(
+              decoration: BoxDecoration(
+                color: primaryPurple,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          day,
+          style: const TextStyle(
+            color: Color(0xFF89849F),
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReminders() {
+    return Column(
+      children: [
+        _reminderTile(
+          icon: Icons.medication_outlined,
+          title: 'Medication reminder',
+          subtitle: 'Today • 7:00 PM',
+        ),
+        const SizedBox(height: 10),
+        _reminderTile(
+          icon: Icons.event_note_rounded,
+          title: 'Prepare for tomorrow',
+          subtitle: 'Today • 8:00 PM',
+        ),
+      ],
+    );
+  }
+
+  Widget _reminderTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return _whiteCard(
+      child: Row(
+        children: [
+          Icon(icon, color: primaryPurple, size: 23),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: darkPurple,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xFF89849F),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.notifications_active_outlined,
+            color: primaryPurple,
+            size: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _whiteCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEFEAFB)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _circleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: SizedBox(
+          width: 43,
+          height: 43,
+          child: Icon(icon, color: darkPurple, size: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    const items = [
+      (Icons.home_rounded, 'Home'),
+      (Icons.checklist_rounded, 'Tasks'),
+      (Icons.insights_rounded, 'Progress'),
+      (Icons.person_outline_rounded, 'Profile'),
     ];
 
-    const weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
-    ];
+    return NavigationBar(
+      height: 70,
+      backgroundColor: Colors.white,
+      indicatorColor: softPurple,
+      selectedIndex: selectedNavIndex,
+      onDestinationSelected: (index) {
+        setState(() => selectedNavIndex = index);
 
-    final now = DateTime.now();
-
-    return '${weekdays[now.weekday - 1]}, '
-        '${now.day} ${months[now.month - 1]}';
+        if (index != 0) {
+          _showMessage(items[index].$2);
+        }
+      },
+      destinations: [
+        for (int i = 0; i < items.length; i++)
+          NavigationDestination(
+            icon: Icon(items[i].$1),
+            label: items[i].$2,
+          ),
+      ],
+    );
   }
 }
+
