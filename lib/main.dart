@@ -3,6 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:pinput/pinput.dart';
+import 'parent.dart';
+import 'child.dart';
+
+
 void main() {
   runApp(const ADHDCompanionApp());
 }
@@ -46,96 +50,228 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
+      backgroundColor: const Color(0xFFFAF8FF),
 
-  Image.asset(
-  'images/image.png',
-  width: 200,
-  height: 180,
-  fit: BoxFit.contain,
-  ),
-                const SizedBox(height: 24),
-                const Text(
-                  'MΛZID',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5F4EC2),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'ADHD Parent Support',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Color(0x89001244),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 45),
-                const Text(
-                  'A Brighter journey for your child',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Your journey starts with one small step.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 30),
-                appButton(
-                  text: 'Get Started',
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CreateAccountScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 54),
-                    foregroundColor: primaryColor,
-                    side: const BorderSide(color: primaryColor),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      
-                    ),
-                  ),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SignInScreen(),
-                    ),
-                  ),
-                  child: const Text('Sign In'),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'A supportive space to grow together ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black54),
-                ),
-              ],
+      body: Stack(
+        children: [
+          // Background decoration at the bottom of the screen.
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: CustomPaint(
+              size: Size(
+                MediaQuery.of(context).size.width,
+                75,
+              ),
+              painter: WelcomeWavePainter(),
             ),
           ),
-        ),
+
+          // Main screen content.
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 20,
+                      ),
+
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 75),
+
+                          // App logo.
+                          Image.asset(
+                            'images/image.png',
+                            width: 115,
+                            height: 115,
+                            fit: BoxFit.contain,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // App name.
+                          const Text(
+                            'MΛZID',
+                            style: TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF7566D9),
+                            ),
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          // App subtitle.
+                          const Text(
+                            'ADHD Parent Support',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF30285E),
+                            ),
+                          ),
+
+                          const SizedBox(height: 100),
+
+                          // Main heading.
+                          const Text(
+                            'A Brighter Journey\nfor Your Child',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 27,
+                              height: 1.15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF30285E),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Short app description.
+                          const Text(
+                            'Track progress, get helpful guidance,\n'
+                            'and work together with your doctor.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              color: Color(0xFF85809F),
+                            ),
+                          ),
+
+                          const SizedBox(height: 50),
+
+                          // Get Started navigates to account creation.
+                          SizedBox(
+                            width: double.infinity,
+                            height: 58,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const CreateAccountScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color(0xFF7566E8),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: const StadiumBorder(),
+                              ),
+                              child: const Text(
+                                'Get Started',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Sign In navigates to the login screen.
+                          SizedBox(
+                            width: double.infinity,
+                            height: 58,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const EmailSignInScreen(),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor:
+                                    const Color(0xFF7566D9),
+                                side: const BorderSide(
+                                  color: Color(0xFF7566D9),
+                                  width: 1.5,
+                                ),
+                                shape: const StadiumBorder(),
+                              ),
+                              child: const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 85),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+
+// ---------------- WELCOME BACKGROUND WAVE ----------------
+
+// Draws the soft wave decoration shown at the bottom of the design.
+class WelcomeWavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFF0ECFF)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+
+    path.moveTo(0, size.height * 0.35);
+
+    path.quadraticBezierTo(
+      size.width * 0.20,
+      size.height * -0.10,
+      size.width * 0.42,
+      size.height * 0.48,
+    );
+
+    path.quadraticBezierTo(
+      size.width * 0.70,
+      size.height * 1.10,
+      size.width,
+      size.height * 0.20,
+    );
+
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant WelcomeWavePainter oldDelegate) {
+    return false;
+  }
+}
+
 
 // ---------------- CREATE ACCOUNT ----------------
 
@@ -147,30 +283,85 @@ class CreateAccountScreen extends StatefulWidget {
       _CreateAccountScreenState();
 }
 
-class _CreateAccountScreenState
-    extends State<CreateAccountScreen> {
+class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  // Used to validate all fields inside the form.
   final formKey = GlobalKey<FormState>();
 
+  // Controllers read the values entered by the user.
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
+  // Account settings.
   String role = 'Parent';
-  bool hidePassword = true;
+  DateTime? selectedDateOfBirth;
 
+  bool hidePassword = true;
+  bool hideConfirmPassword = true;
+  bool acceptedTerms = false;
+
+  // Releases controllers when the screen is removed.
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void continueToVerification() {
-    if (!formKey.currentState!.validate()) return;
+  // Opens the date picker and saves the selected birth date.
+  Future<void> selectDateOfBirth() async {
+    final now = DateTime.now();
 
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 25, now.month, now.day),
+      firstDate: DateTime(1900),
+      lastDate: now,
+      helpText: 'Select your date of birth',
+    );
+
+    if (pickedDate != null && mounted) {
+      setState(() {
+        selectedDateOfBirth = pickedDate;
+      });
+    }
+  }
+
+  // Checks the form and moves to the existing verification screen.
+  void continueToVerification() {
+    // Validate the text fields first.
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Date of birth is required.
+    if (selectedDateOfBirth == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your date of birth.'),
+        ),
+      );
+      return;
+    }
+
+    // The user must accept the terms before continuing.
+    if (!acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please accept the Terms of Service and Privacy Policy.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Keep the existing verification flow and parameter names.
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -185,148 +376,383 @@ class _CreateAccountScreenState
     );
   }
 
+  // Reusable field label.
+  Widget fieldLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF30285E),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      backgroundColor: const Color(0xFFFAF8FF),
+
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFFAF8FF),
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Create Account',
+          style: TextStyle(
+            color: Color(0xFF30285E),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+
           child: Form(
             key: formKey,
+
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Screen heading.
                 const Text(
                   'Create your account',
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF30285E),
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 const Text(
-                  'Enter your details to get started.',
-                  style: TextStyle(color: Colors.black54),
+                  'Let’s get to know you and start your journey together.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Colors.black54,
+                  ),
                 ),
-                const SizedBox(height: 25),
-                const Text('Account type'),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 26),
+
+                // Account type.
+                fieldLabel('Account type'),
+
                 DropdownButtonFormField<String>(
-                   initialValue: role,
+                  initialValue: role,
                   decoration: const InputDecoration(
+                    hintText: 'Select account type',
                     prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
+                    ),
                   ),
                   items: const [
                     DropdownMenuItem(
                       value: 'Parent',
                       child: Text('Parent'),
                     ),
-                    DropdownMenuItem(
-                      value: 'Child',
-                      child: Text('Child'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Shadow Teacher',
-                      child: Text('Shadow Teacher'),
-                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) {
-                      setState(() => role = value);
+                      setState(() {
+                        role = value;
+                      });
                     }
                   },
                 ),
+
                 const SizedBox(height: 18),
-                const Text('Full name'),
-                const SizedBox(height: 8),
+
+                // Full name.
+                fieldLabel('Full name'),
+
                 TextFormField(
                   controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     hintText: 'Enter your full name',
                     prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
+                    ),
                   ),
-                  validator: (value) =>
-                  value == null || value.trim().isEmpty
-                      ? 'Please enter your name'
-                      : null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter your full name.';
+                    }
+
+                    return null;
+                  },
                 ),
+
                 const SizedBox(height: 18),
-                const Text('Email address'),
-                const SizedBox(height: 8),
+
+                // Email address.
+                fieldLabel('Email address'),
+
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     hintText: 'name@example.com',
                     prefixIcon: Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your email';
+                      return 'Please enter your email.';
                     }
+
                     if (!RegExp(
                       r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
                     ).hasMatch(value.trim())) {
-                      return 'Enter a valid email address';
+                      return 'Please enter a valid email address.';
                     }
+
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 18),
-                const Text('Mobile number'),
-                const SizedBox(height: 8),
+
+                // Mobile number.
+                fieldLabel('Mobile number'),
+
                 TextFormField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     hintText: '+20 1xxxxxxxxx',
                     prefixIcon: Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
+                    ),
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your phone number';
+                    final phone = value?.trim() ?? '';
+
+                    if (phone.isEmpty) {
+                      return 'Please enter your mobile number.';
                     }
-                    if (value.trim().length < 8) {
-                      return 'Enter a valid phone number';
+
+                    // Allow common phone-number characters.
+                    final digits = phone.replaceAll(
+                      RegExp(r'[^0-9]'),
+                      '',
+                    );
+
+                    if (digits.length < 8 || digits.length > 15) {
+                      return 'Please enter a valid mobile number.';
                     }
+
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 18),
-                const Text('Password'),
-                const SizedBox(height: 8),
+
+                // Date of birth.
+                fieldLabel('Date of birth'),
+
+                InkWell(
+                  onTap: selectDateOfBirth,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      hintText: 'Select your date of birth',
+                      prefixIcon: Icon(Icons.calendar_month_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(14),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      selectedDateOfBirth == null
+                          ? 'Select your date of birth'
+                          : '${selectedDateOfBirth!.day.toString().padLeft(2, '0')}/'
+                            '${selectedDateOfBirth!.month.toString().padLeft(2, '0')}/'
+                            '${selectedDateOfBirth!.year}',
+                      style: TextStyle(
+                        color: selectedDateOfBirth == null
+                            ? Colors.black54
+                            : const Color(0xFF30285E),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // Password.
+                fieldLabel('Password'),
+
                 TextFormField(
                   controller: passwordController,
                   obscureText: hidePassword,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
                   decoration: InputDecoration(
-                    hintText: 'At least 6 characters',
+                    hintText: 'At least 8 characters',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
+                      tooltip: hidePassword
+                          ? 'Show password'
+                          : 'Hide password',
                       icon: Icon(
                         hidePassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),
+                      onPressed: () {
+                        setState(() {
+                          hidePassword = !hidePassword;
+                        });
+                      },
+                    ),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return 'Use at least 6 characters';
+                    if (value == null || value.length < 8) {
+                      return 'Use at least 8 characters.';
                     }
+
                     return null;
                   },
                 ),
-                const SizedBox(height: 28),
-                appButton(
-                  text: 'Continue to Verification',
-                  onPressed: continueToVerification,
+
+                const SizedBox(height: 18),
+
+                // Confirm password.
+                fieldLabel('Confirm password'),
+
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: hideConfirmPassword,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    hintText: 'Re-enter your password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      tooltip: hideConfirmPassword
+                          ? 'Show password'
+                          : 'Hide password',
+                      icon: Icon(
+                        hideConfirmPassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          hideConfirmPassword = !hideConfirmPassword;
+                        });
+                      },
+                    ),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(14),
+                      ),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password.';
+                    }
+
+                    if (value != passwordController.text) {
+                      return 'Passwords do not match.';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 18),
+
+                // Terms and privacy consent.
+                CheckboxListTile(
+                  value: acceptedTerms,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: const Color(0xFF7566D9),
+                  title: const Text(
+                    'I agree to the Terms of Service and Privacy Policy.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.4,
+                      color: Color(0xFF30285E),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      acceptedTerms = value ?? false;
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                // Continue to the existing email/SMS verification choice.
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: continueToVerification,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7566D9),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: const StadiumBorder(),
+                    ),
+                    child: const Text(
+                      'Continue to Verification',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Already have an account? Sign In',
+                      style: TextStyle(
+                        color: Color(0xFF7566D9),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -336,6 +762,7 @@ class _CreateAccountScreenState
     );
   }
 }
+
 
 
 // ---------------- VERIFICATION CHOICE SCREEN ----------------
@@ -659,9 +1086,16 @@ if (response.statusCode >= 200 &&
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
+                 onPressed: () {
+  Navigator.of(dialogContext).pop();
+
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => const ParentDashboardScreen(),
+    ),
+    (route) => false,
+  );
+},
                   child: const Text('OK'),
                 ),
               ],
