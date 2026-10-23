@@ -7,9 +7,15 @@ import 'parent.dart';
 import 'child.dart';
 
 
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await ChildAppState.instance.loadData();
+
   runApp(const ADHDCompanionApp());
 }
+
 
 const primaryColor = Color(0xFF7566D9);
 const backgroundColor = Color(0xFFF8F7FF);
@@ -21,7 +27,7 @@ class ADHDCompanionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ADHD Companion',
+      title: 'MΛZID',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -37,7 +43,7 @@ class ADHDCompanionApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const WelcomeScreen(),
+      home: const ParentDashboardScreen(),
     );
   }
 }

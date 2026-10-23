@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color childPrimary = Color(0xFF7566D9);
 const Color childBackground = Color(0xFFF8F7FF);
 const Color childText = Color(0xFF25213D);
+
 
 
 class ChildTask {
@@ -22,65 +25,216 @@ class ChildTask {
   );
 }
 
-/// Shared data between the Parent and Child screens.
+class TaskCompletion {
+  final int taskId;
+  final String taskTitle;
+  final DateTime completedAt;
+  final int pointsEarned;
+
+  const TaskCompletion({
+    required this.taskId,
+    required this.taskTitle,
+    required this.completedAt,
+    required this.pointsEarned,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'taskId': taskId,
+        'taskTitle': taskTitle,
+        'completedAt': completedAt.toIso8601String(),
+        'pointsEarned': pointsEarned,
+      };
+
+  factory TaskCompletion.fromJson(Map<String, dynamic> json) {
+    return TaskCompletion(
+      taskId: json['taskId'] as int,
+      taskTitle: json['taskTitle'] as String,
+      completedAt: DateTime.parse(json['completedAt'] as String),
+      pointsEarned: json['pointsEarned'] as int,
+    );
+  }
+}
+
 class ChildAppState extends ChangeNotifier {
-  ChildAppState._();
+  ChildAppState._() {
+    _expiryTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _refreshExpiredTasks(),
+    );
+  }
 
   static final ChildAppState instance = ChildAppState._();
 
+  static const _storageKey = 'mazid_child_task_state_v1';
+
   int _nextTaskId = 5;
   int points = 0;
-
-  final Set<int> completed = {};
-
   String? _mood;
 
   String? get mood => _mood;
 
   set mood(String? value) {
     _mood = value;
+    _saveData();
     notifyListeners();
   }
 
+  Timer? _expiryTimer;
+
+  final Map<int, DateTime> _lastCompletedAt = {};
+  final List<TaskCompletion> completionHistory = [];
+
   final List<ChildTask> tasks = [
     const ChildTask(
-      1,
-      'Brush your teeth',
-      'A fresh start!',
-      Icons.cleaning_services_rounded,
-      10,
+      1, 'Brush your teeth', 'A fresh start!',
+      Icons.cleaning_services_rounded, 10,
     ),
     const ChildTask(
-      2,
-      'Pack your school bag',
-      'Get ready for tomorrow.',
-      Icons.backpack_rounded,
-      15,
+      2, 'Pack your school bag', 'Get ready for tomorrow.',
+      Icons.backpack_rounded, 15,
     ),
     const ChildTask(
-      3,
-      'Read for 10 minutes',
-      'One page at a time.',
-      Icons.menu_book_rounded,
-      20,
+      3, 'Read for 10 minutes', 'One page at a time.',
+      Icons.menu_book_rounded, 20,
     ),
     const ChildTask(
-      4,
-      'Tidy up your toys',
-      'Make your space shine.',
-      Icons.toys_rounded,
-      15,
+      4, 'Tidy up your toys', 'Make your space shine.',
+      Icons.toys_rounded, 15,
     ),
   ];
 
-  int get completedCount => completed.length;
+  Future<void> loadData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_storageKey);
 
-  int get totalPointsPossible {
-    return tasks.fold(0, (sum, task) => sum + task.points);
+    if (raw == null) return;
+
+    try {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+
+      points = json['points'] as int? ?? 0;
+      _nextTaskId = json['nextTaskId'] as int? ?? 5;
+      _mood = json['mood'] as String?;
+
+      final savedTasks = json['tasks'] as List<dynamic>?;
+
+      if (savedTasks != null) {
+        tasks
+          ..clear()
+          ..addAll(savedTasks.map((item) {
+            final map = item as Map<String, dynamic>;
+            return ChildTask(
+              map['id'] as int,
+              map['title'] as String,
+              map['subtitle'] as String,
+              Icons.task_alt_rounded,
+              map['points'] as int,
+            );
+          }));
+      }
+
+      _lastCompletedAt
+        ..clear()
+        ..addAll(
+          (json['lastCompletedAt'] as Map<String, dynamic>? ?? {})
+              .map((key, value) => MapEntry(
+                    int.parse(key),
+                    DateTime.parse(value as String),
+                  )),
+        );
+
+      completionHistory
+        ..clear()
+        ..addAll(
+          (json['completionHistory'] as List<dynamic>? ?? [])
+              .map((item) => TaskCompletion.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  )),
+        );
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Could not load saved task data: $e');
+    }
+  }
+
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final json = {
+      'points': points,
+      'nextTaskId': _nextTaskId,
+      'mood': _mood,
+      'tasks': tasks.map((task) => {
+            'id': task.id,
+            'title': task.title,
+            'subtitle': task.subtitle,
+            'points': task.points,
+          }).toList(),
+      'lastCompletedAt': _lastCompletedAt.map(
+        (key, value) => MapEntry(key.toString(), value.toIso8601String()),
+      ),
+      'completionHistory':
+          completionHistory.map((record) => record.toJson()).toList(),
+    };
+
+    await prefs.setString(_storageKey, jsonEncode(json));
   }
 
   bool isCompleted(ChildTask task) {
-    return completed.contains(task.id);
+    final completedAt = _lastCompletedAt[task.id];
+
+    if (completedAt == null) return false;
+
+    return DateTime.now().difference(completedAt) <
+        const Duration(hours: 24);
+  }
+
+  DateTime? nextAvailableAt(ChildTask task) {
+    final completedAt = _lastCompletedAt[task.id];
+
+    if (completedAt == null) return null;
+
+    final availableAt = completedAt.add(const Duration(hours: 24));
+
+    return DateTime.now().isBefore(availableAt) ? availableAt : null;
+  }
+  Duration? remainingLockTime(ChildTask task) {
+  final availableAt = nextAvailableAt(task);
+
+  if (availableAt == null) return null;
+
+  return availableAt.difference(DateTime.now());
+}
+
+  int get completedCount => tasks.where(isCompleted).length;
+
+  int get totalPointsPossible =>
+      tasks.fold(0, (sum, task) => sum + task.points);
+
+  bool completeTask(ChildTask task) {
+    if (!tasks.any((item) => item.id == task.id)) return false;
+    if (isCompleted(task)) return false;
+
+    final now = DateTime.now();
+
+    _lastCompletedAt[task.id] = now;
+
+    completionHistory.add(
+      TaskCompletion(
+        taskId: task.id,
+        taskTitle: task.title,
+        completedAt: now,
+        pointsEarned: task.points,
+      ),
+    );
+
+    points += task.points;
+
+    _saveData();
+    notifyListeners();
+
+    return true;
   }
 
   void addTask({
@@ -98,20 +252,56 @@ class ChildAppState extends ChangeNotifier {
       ),
     );
 
+    _saveData();
     notifyListeners();
   }
 
-  bool completeTask(ChildTask task) {
-    if (!completed.add(task.id)) {
-      return false;
-    }
+  void deleteTask(ChildTask task) {
+    if (isCompleted(task)) return;
 
-    points += task.points;
+    tasks.removeWhere((item) => item.id == task.id);
+    _lastCompletedAt.remove(task.id);
+
+    _saveData();
     notifyListeners();
+  }
 
-    return true;
+  List<TaskCompletion> get weeklyCompletions {
+    final now = DateTime.now();
+    final start = now.subtract(const Duration(days: 7));
+
+    return completionHistory.where((record) {
+      return !record.completedAt.isBefore(start) &&
+          !record.completedAt.isAfter(now);
+    }).toList();
+  }
+
+  int get weeklyCompletedCount => weeklyCompletions.length;
+
+  int get weeklyPoints => weeklyCompletions.fold(
+        0,
+        (sum, record) => sum + record.pointsEarned,
+      );
+
+  int weeklyCompletionsForTask(int taskId) {
+    return weeklyCompletions
+        .where((record) => record.taskId == taskId)
+        .length;
+  }
+
+  void _refreshExpiredTasks() {
+    // isCompleted checks the actual time, so notify screens to refresh
+    // when a task's 24-hour lock has expired.
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _expiryTimer?.cancel();
+    super.dispose();
   }
 }
+
 
 
 
@@ -348,20 +538,21 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                         color: childPrimary,
                       ),
                     ),
-                    title: Text(
-                      task.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        decoration: done
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
-                    ),
+                   title: Text(
+  task.title,
+  style: TextStyle(
+    decoration: done
+        ? TextDecoration.lineThrough
+        : TextDecoration.none,
+    decorationThickness: 1.0,
+    color: done ? Colors.grey : null,
+  ),
+),
                     subtitle: Text(
-                      done
-                          ? 'Great job! +${task.points} points earned.'
-                          : '${task.subtitle}\n+${task.points} points',
-                    ),
+  done
+      ? '🔒 Completed! Available again in 24 hours.'
+      : '${task.subtitle}\n+${task.points} points',
+),
                     isThreeLine: true,
                     trailing: IconButton(
                       onPressed: done

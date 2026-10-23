@@ -58,13 +58,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
             color: darkPurple,
           ),
         ),
-        title: const Text(
-          'Ask AI',
-          style: TextStyle(
-            color: darkPurple,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+
       ),
       body: Column(
         children: [

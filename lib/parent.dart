@@ -3,16 +3,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'child.dart';
-import 'screens/daily_routine.dart';
+import 'tasks.dart';
 import 'screens/track_behavior.dart';
 import 'screens/ask_ai.dart';
 import 'screens/progress.dart';
-
+import 'add_routine.dart';
+//اللوان ال انا مستخدمها في Dashboard parent
 const Color primaryPurple = Color(0xFF7566D9);
 const Color dashboardBackground = Color(0xFFFAF8FF);
 const Color darkPurple = Color(0xFF30285E);
 const Color softPurple = Color(0xFFF0EDFF);
-
+//بيانات ال child  ال بتظهر علي dashboard parent 
 class DashboardChild {
   final String name;
   final int age;
@@ -47,9 +48,34 @@ class ParentDashboardScreen extends StatefulWidget {
 class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   int selectedChildIndex = 0;
   int selectedNavIndex = 0;
-
+ 
+//اداه اختيار الصور من المعرض 
   final ImagePicker _imagePicker = ImagePicker();
+  // قائمة الروتين اليومي؛ كل عنصر يحتوي على الاسم والوقت وحالة الإنجاز والأيقونة واللون.
 
+final List<Map<String, dynamic>> routine = [
+  {
+    'title': 'Morning routine',
+    'time': '07:30 AM',
+    'completed': true,
+    'icon': Icons.wb_sunny_rounded,
+    'color': const Color(0xFFFFB547),
+  },
+  {
+    'title': 'Homework time',
+    'time': '04:00 PM',
+    'completed': true,
+    'icon': Icons.menu_book_rounded,
+    'color': const Color(0xFF7566D9),
+  },
+  {
+    'title': 'Reading time',
+    'time': '06:00 PM',
+    'completed': false,
+    'icon': Icons.auto_stories_rounded,
+    'color': const Color(0xFF36BFA6),
+  },
+];
 final List<DashboardChild> children = [
   const DashboardChild(
     name: 'Alex',
@@ -64,7 +90,7 @@ final List<DashboardChild> children = [
 ];
 
   DashboardChild get selectedChild => children[selectedChildIndex];
-
+//تغير صوره البروفايل بتاع الطفل 
   Future<void> _changeChildPhoto() async {
     try {
       final XFile? pickedImage = await _imagePicker.pickImage(
@@ -92,7 +118,7 @@ final List<DashboardChild> children = [
       );
     }
   }
-
+//بتعرض رساله للحاجات ال لسه مخلصتش  اسفل الشاشه 
   void _showMessage(String title) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$title — coming soon')),
@@ -100,13 +126,14 @@ final List<DashboardChild> children = [
   }
   
 
-
+//مخصصه في ان هي بتبني ال dashboard بتجمع الاقسام
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: dashboardBackground,
-      body: SafeArea(
-        child: CustomScrollView(
+body: SafeArea(
+  child: selectedNavIndex == 0
+      ? CustomScrollView(
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -142,23 +169,6 @@ final List<DashboardChild> children = [
                   const SizedBox(height: 28),
                   _buildSectionTitle('Progress Highlights', 'Weekly report'),
                   const SizedBox(height: 14),
-                  Align(
-  alignment: Alignment.centerRight,
-  child: TextButton.icon(
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const ProgressScreen(),
-        ),
-      );
-    },
-    icon: const Icon(Icons.insights_rounded),
-    label: const Text('View Full Progress'),
-  ),
-),
-
-_buildProgressCard(),
                   _buildProgressCard(),
                   const SizedBox(height: 28),
                   _buildSectionTitle('Reminders', 'View all'),
@@ -168,27 +178,51 @@ _buildProgressCard(),
               ),
             ),
           ],
-        ),
-      ),
-            floatingActionButton: FloatingActionButton.extended(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ChildTasksScreen(),
-      ),
-    );
-  },
-  backgroundColor: primaryPurple,
-  foregroundColor: Colors.white,
-  icon: const Icon(Icons.child_care_rounded),
-  label: const Text('Child View'),
+        )
+      : selectedNavIndex == 1
+          ? const ParentTasksScreen()
+          : selectedNavIndex == 2
+              ? const ProgressScreen()
+              : const Center(
+                  child: Text('Parent Profile'),
+                ),
 ),
+floatingActionButton: selectedNavIndex == 0
+    ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChildTasksScreen(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xFF7566D9),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.child_care_rounded),
+        label: const Text('Child View'),
+      )
+    : selectedNavIndex == 1
+        ? FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddTaskScreen(),
+                ),
+              );
+            },
+            backgroundColor: const Color(0xFF7566D9),
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add Task'),
+          )
+        : null,
 
 bottomNavigationBar: _buildBottomNavigation(),
     );
   }
-
+//مخصصه للجزء العلوي للشاشه 
   Widget _buildHeader() {
     return Row(
       children: [
@@ -246,7 +280,7 @@ errorBuilder: (_, _, _) => const Icon(
       ],
     );
   }
-
+//بتعرض تحيه حسب الوقت
   Widget _buildGreeting() {
     final hour = DateTime.now().hour;
     final greeting = hour < 12
@@ -311,7 +345,7 @@ errorBuilder: (_, _, _) => const Icon(
       ],
     );
   }
-
+//بيانات الطفل ال موجوده في ال parent
   Widget _buildChildProfile() {
     final child = selectedChild;
 
@@ -453,7 +487,7 @@ errorBuilder: (_, _, _) => const Icon(
       ),
     );
   }
-
+//لو مفيش صوره للطفل بتعرض ايقونه 
   Widget _defaultChildAvatar() {
     return const Center(
       child: Icon(
@@ -539,6 +573,7 @@ errorBuilder: (_, _, _) => const Icon(
     ],
   );
 }
+//بتعرض ملخص اليوم
   Widget _buildOverviewCards() {
     return Row(
       children: [
@@ -634,146 +669,94 @@ errorBuilder: (_, _, _) => const Icon(
     );
   }
 
-  Widget _buildQuickActions() {
-    final actions = [
-      (
-        'Track Behavior',
-        Icons.track_changes_rounded,
-        const Color(0xFFF0EDFF),
-      ),
-      (
-        'Daily Routine',
-        Icons.calendar_month_rounded,
-        const Color(0xFFE9F8F0),
-      ),
-      (
-        'Ask AI',
-        Icons.auto_awesome_rounded,
-        const Color(0xFFFFF1E5),
-      ),
-      (
-        'Add Task',
-        Icons.add_task_rounded,
-        const Color(0xFFFFEAF1),
-      ),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: actions.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 11,
-        crossAxisSpacing: 11,
-        childAspectRatio: 2.35,
-      ),
-      itemBuilder: (context, index) {
-        final action = actions[index];
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(17),
-onTap: () {
-  switch (action.$1) {
-    case 'Track Behavior':
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const TrackBehaviorScreen(),
-        ),
-      );
-      break;
-
-case 'Daily Routine':
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const DailyRoutineScreen(),
+Widget _buildQuickActions() {
+  final actions = [
+    (
+      'Track Behavior',
+      Icons.track_changes_rounded,
+      const Color(0xFFECE8FF),
     ),
-  );
-  break;
+    (
+      'Ask AI',
+      Icons.psychology_alt_rounded,
+      const Color(0xFFE4F7EB),
+    ),
+  ];
 
-    case 'Ask AI':
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => AskAIScreen(),
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: actions.length,
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 2.2,
+    ),
+    itemBuilder: (context, index) {
+      final action = actions[index];
+
+      return InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: () {
+          switch (action.$1) {
+            case 'Track Behavior':
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const TrackBehaviorScreen(),
+                ),
+              );
+              break;
+
+            case 'Ask AI':
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AskAIScreen(),
+                ),
+              );
+              break;
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: const Color(0xFFEFEAFB)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                action.$2,
+                color: primaryPurple,
+                size: 25,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  action.$1,
+                  style: const TextStyle(
+                    color: darkPurple,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
-      break;
+    },
+  );
+}
 
-    case 'Add Task':
-      _openAddTaskPage();
-      break;
-  }
-},
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: const Color(0xFFEFEAFB)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: action.$3,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    action.$2,
-                    color: primaryPurple,
-                    size: 21,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    action.$1,
-                    style: const TextStyle(
-                      color: darkPurple,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildRoutineCard() {
-  final routine = [
-    {
-      'title': 'Morning routine',
-      'time': '07:30 AM',
-      'completed': true,
-      'icon': Icons.wb_sunny_rounded,
-      'color': const Color(0xFFFFB547),
-      'background': const Color(0xFFFFF6E7),
-    },
-    {
-      'title': 'Homework time',
-      'time': '04:00 PM',
-      'completed': true,
-      'icon': Icons.menu_book_rounded,
-      'color': const Color(0xFF7566D9),
-      'background': const Color(0xFFF0EDFF),
-    },
-    {
-      'title': 'Reading time',
-      'time': '06:00 PM',
-      'completed': false,
-      'icon': Icons.auto_stories_rounded,
-      'color': const Color(0xFF36BFA6),
-      'background': const Color(0xFFE8FAF5),
-    },
-  ];
+
+
+Widget _buildRoutineCard() {
+
 
   return _whiteCard(
     child: Column(
@@ -783,53 +766,60 @@ case 'Daily Routine':
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Daily Routine',
-              style: TextStyle(
-                color: darkPurple,
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _showRoutineDialog(),
-              icon: const Icon(
-                Icons.add_circle_rounded,
-                color: primaryPurple,
-                size: 27,
-              ),
-              tooltip: 'Add routine',
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
+  'Daily Routine',
+  style: TextStyle(
+    color: darkPurple,
+    fontSize: 17,
+    fontWeight: FontWeight.w800,
+  ),
+),
+
+IconButton(
+  onPressed: () async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AddRoutineScreen(),
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        routine.add(result);
+      });
+    }
+  },
+  icon: const Icon(
+    Icons.add_circle_rounded,
+    color: primaryPurple,
+    size: 27,
+  ),
+  tooltip: 'Add routine',
+),
+
+],
+),
+const SizedBox(height: 8),
 
         for (int i = 0; i < routine.length; i++) ...[
           Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: routine[i]['background'] as Color,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: (routine[i]['color'] as Color).withAlpha(45),
+                color: const Color(0xFFEFEAFB),
               ),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 43,
-                  height: 43,
-                  decoration: BoxDecoration(
-                    color: (routine[i]['color'] as Color).withAlpha(30),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(
-                    routine[i]['icon'] as IconData,
-                    color: routine[i]['color'] as Color,
-                    size: 22,
-                  ),
+                Icon(
+                  routine[i]['icon'] as IconData,
+                  color: routine[i]['color'] as Color,
+                  size: 27,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 15),
 
                 Expanded(
                   child: Column(
@@ -949,20 +939,9 @@ case 'Daily Routine':
     ),
   );
 }
-Future<void> _openAddTaskPage() async {
-  final result = await Navigator.push<bool>(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const AddTaskScreen(),
-    ),
-  );
 
-  if (!mounted) return;
 
-  if (result == true) {
-    setState(() {});
-  }
-}
+
 Future<void> _showRoutineDialog({
   String? title,
   String? time,
@@ -1064,17 +1043,34 @@ Future<void> _showRoutineDialog({
 
                   // This dialog currently collects the data.
                   // Connect it to a shared routine list to persist changes.
-                  Navigator.pop(dialogContext);
+final routineTitle = titleController.text.trim();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        title == null
-                            ? 'Routine details entered. Connect the shared list to save it.'
-                            : 'Routine details edited. Connect the shared list to save it.',
-                      ),
-                    ),
-                  );
+final formattedTime = selectedTime.format(context);
+
+setState(() {
+  if (title == null) {
+    // Add a new routine
+    routine.add({
+      'title': routineTitle,
+      'time': formattedTime,
+      'completed': false,
+      'icon': Icons.star_rounded,
+      'color': primaryPurple,
+    });
+  } else {
+    // Update the existing routine
+    final index = routine.indexWhere(
+      (item) => item['title'] == title,
+    );
+
+    if (index != -1) {
+      routine[index]['title'] = routineTitle;
+      routine[index]['time'] = formattedTime;
+    }
+  }
+});
+
+Navigator.pop(dialogContext);
                 },
                 child: const Text('Save'),
               ),
@@ -1395,34 +1391,45 @@ Future<void> _showRoutineDialog({
     );
   }
 
-  Widget _buildBottomNavigation() {
-    const items = [
-      (Icons.home_rounded, 'Home'),
-      (Icons.checklist_rounded, 'Tasks'),
-      (Icons.insights_rounded, 'Progress'),
-      (Icons.person_outline_rounded, 'Profile'),
-    ];
 
-    return NavigationBar(
-      height: 70,
-      backgroundColor: Colors.white,
-      indicatorColor: softPurple,
-      selectedIndex: selectedNavIndex,
-      onDestinationSelected: (index) {
-        setState(() => selectedNavIndex = index);
+Widget _buildBottomNavigation() {
+  return NavigationBar(
+    selectedIndex: selectedNavIndex,
+    onDestinationSelected: (index) {
+      if (index == 3) {
+        _showMessage('Parent profile');
+        return;
+      }
 
-        if (index != 0) {
-          _showMessage(items[index].$2);
-        }
-      },
-      destinations: [
-        for (int i = 0; i < items.length; i++)
-          NavigationDestination(
-            icon: Icon(items[i].$1),
-            label: items[i].$2,
-          ),
-      ],
-    );
-  }
+      setState(() {
+        selectedNavIndex = index;
+      });
+    },
+    destinations: const [
+      NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home_rounded),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.checklist_outlined),
+        selectedIcon: Icon(Icons.checklist_rounded),
+        label: 'Tasks',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.insights_outlined),
+        selectedIcon: Icon(Icons.insights_rounded),
+        label: 'Progress',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.person_outline_rounded),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
+    ],
+  );
+}
+
+
 }
 

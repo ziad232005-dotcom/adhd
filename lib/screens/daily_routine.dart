@@ -364,19 +364,11 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 49,
-              height: 49,
-              decoration: BoxDecoration(
-                color: activity.color,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(
-                activity.icon,
-                color: _primaryPurple,
-                size: 24,
-              ),
-            ),
+            Icon(
+              activity.icon,
+              color: _primaryPurple,
+             size: 26,
+             ),
             const SizedBox(width: 13),
             Expanded(
               child: Column(
