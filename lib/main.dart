@@ -43,7 +43,7 @@ class ADHDCompanionApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const ParentDashboardScreen(),
+      home: const ChildLoginScreen(),
     );
   }
 }

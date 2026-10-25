@@ -8,6 +8,11 @@ import 'screens/track_behavior.dart';
 import 'screens/ask_ai.dart';
 import 'screens/progress.dart';
 import 'add_routine.dart';
+import 'add_activity_page.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'activity_calendar_page.dart';
+import 'view_routine.dart';
 //اللوان ال انا مستخدمها في Dashboard parent
 const Color primaryPurple = Color(0xFF7566D9);
 const Color dashboardBackground = Color(0xFFFAF8FF);
@@ -45,49 +50,202 @@ class ParentDashboardScreen extends StatefulWidget {
       _ParentDashboardScreenState();
 }
 
+
 class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   int selectedChildIndex = 0;
   int selectedNavIndex = 0;
- 
-//اداه اختيار الصور من المعرض 
-  final ImagePicker _imagePicker = ImagePicker();
-  // قائمة الروتين اليومي؛ كل عنصر يحتوي على الاسم والوقت وحالة الإنجاز والأيقونة واللون.
 
-final List<Map<String, dynamic>> routine = [
-  {
-    'title': 'Morning routine',
-    'time': '07:30 AM',
-    'completed': true,
-    'icon': Icons.wb_sunny_rounded,
-    'color': const Color(0xFFFFB547),
-  },
-  {
-    'title': 'Homework time',
-    'time': '04:00 PM',
-    'completed': true,
-    'icon': Icons.menu_book_rounded,
-    'color': const Color(0xFF7566D9),
-  },
-  {
-    'title': 'Reading time',
-    'time': '06:00 PM',
-    'completed': false,
-    'icon': Icons.auto_stories_rounded,
-    'color': const Color(0xFF36BFA6),
-  },
-];
-final List<DashboardChild> children = [
-  const DashboardChild(
-    name: 'Alex',
-    age: 9,
-    grade: 'Grade 4',
-  ),
-  const DashboardChild(
-    name: 'Maya',
-    age: 7,
-    grade: 'Grade 2',
-  ),
-];
+  // Image picker
+  final ImagePicker _imagePicker = ImagePicker();
+
+  // Routines
+  final List<Map<String, dynamic>> routine = [];
+  bool _routinesLoaded = false;
+
+  // Activities — independent from routines
+  final List<Map<String, dynamic>> activities = [];
+  bool _activitiesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadActivities();
+    _loadRoutines();
+  }
+    final List<DashboardChild> children = [
+    const DashboardChild(
+      name: 'Alex',
+      age: 9,
+      grade: 'Grade 4',
+    ),
+    const DashboardChild(
+      name: 'Maya',
+      age: 7,
+      grade: 'Grade 2',
+    ),
+  ];
+
+  // =========================
+  // LOAD ROUTINES
+  // =========================
+
+  Future<void> _loadRoutines() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedRoutines = prefs.getString('parent_routines');
+
+    if (!mounted) return;
+
+    try {
+      final List<dynamic> decoded = savedRoutines == null
+          ? <dynamic>[]
+          : jsonDecode(savedRoutines) as List<dynamic>;
+
+final loadedRoutines = decoded.map((item) {
+  final map = Map<String, dynamic>.from(item as Map);
+
+  final iconCode = map['iconCode'];
+
+map['icon'] = _iconFromCodePoint(iconCode);
+
+  final storedColor = map['colorValue'];
+
+  final int colorValue = storedColor is int
+      ? storedColor
+      : primaryPurple.toARGB32();
+
+  map['color'] = Color(colorValue);
+
+  return map;
+}).toList();
+
+      setState(() {
+        routine
+          ..clear()
+          ..addAll(loadedRoutines);
+
+        _sortRoutines();
+        _routinesLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error loading routines: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _routinesLoaded = true;
+      });
+    }
+  }
+
+IconData _iconFromCodePoint(dynamic codePoint) {
+  switch (codePoint) {
+    case 0xe318:
+      return Icons.check_circle_outline_rounded;
+    default:
+      return Icons.check_circle_outline_rounded;
+  }
+}
+
+  // Newest routines first
+  void _sortRoutines() {
+    routine.sort((a, b) {
+      final dateA = DateTime.tryParse(
+        a['createdAt']?.toString() ?? '',
+      );
+
+      final dateB = DateTime.tryParse(
+        b['createdAt']?.toString() ?? '',
+      );
+
+      if (dateA == null && dateB == null) return 0;
+      if (dateA == null) return 1;
+      if (dateB == null) return -1;
+
+      return dateB.compareTo(dateA);
+    });
+  }
+
+  // =========================
+  // SAVE ROUTINES
+  // =========================
+
+Future<void> _saveRoutines() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  final serializableRoutines = routine.map((item) {
+    final map = Map<String, dynamic>.from(item);
+
+    final icon = map.remove('icon');
+    final color = map.remove('color');
+
+    map['iconCode'] = icon is IconData
+        ? icon.codePoint
+        : Icons.check_circle_outline_rounded.codePoint;
+
+    map['colorValue'] = color is Color
+        ? color.toARGB32()
+        : primaryPurple.toARGB32();
+
+    return map;
+  }).toList();
+
+  await prefs.setString(
+    'parent_routines',
+    jsonEncode(serializableRoutines),
+  );
+}
+
+  // =========================
+  // LOAD ACTIVITIES
+  // =========================
+
+  Future<void> _loadActivities() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedActivities = prefs.getString(
+      'parent_upcoming_activities',
+    );
+
+    if (!mounted) return;
+
+    try {
+      final List<dynamic> decoded = savedActivities == null
+          ? <dynamic>[]
+          : jsonDecode(savedActivities) as List<dynamic>;
+
+      setState(() {
+        activities
+          ..clear()
+          ..addAll(
+            decoded.map(
+              (item) => Map<String, dynamic>.from(item as Map),
+            ),
+          );
+
+        _activitiesLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error loading activities: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _activitiesLoaded = true;
+      });
+    }
+  }
+
+Future<void> _saveActivities() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.setString(
+    'parent_upcoming_activities',
+    jsonEncode(activities),
+  );
+}
+
+
 
   DashboardChild get selectedChild => children[selectedChildIndex];
 //تغير صوره البروفايل بتاع الطفل 
@@ -155,15 +313,106 @@ body: SafeArea(
                   const SizedBox(height: 14),
                   _buildQuickActions(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle("Today's Routine", 'View routine'),
+                _buildSectionTitle(
+  "Today's Routine",
+  'View routine',
+  onTap: () async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ViewRoutineScreen(
+          routines: routine,
+          onSave: _saveRoutines,
+        ),
+      ),
+    );
+
+    if (mounted) {
+      setState(() {});
+    }
+  },
+),
                   const SizedBox(height: 14),
                   _buildRoutineCard(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Upcoming Activities', 'View calendar'),
+               
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const Text(
+      'Upcoming Activities',
+      style: TextStyle(
+        color: darkPurple,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    TextButton(
+      onPressed: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ActivityCalendarPage(
+              activities: activities,
+              onSaveActivities: _saveActivities,
+              onAddActivity: () async {
+                final result =
+                    await Navigator.push<Map<String, dynamic>>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddActivityPage(),
+                  ),
+                );
+
+                if (result == null || !mounted) return null;
+
+                setState(() {
+                  activities.add(result);
+                  activities.sort((a, b) {
+                    final dateA =
+                        DateTime.parse(a['dateTime'] as String);
+                    final dateB =
+                        DateTime.parse(b['dateTime'] as String);
+                    return dateA.compareTo(dateB);
+                  });
+                });
+
+                await _saveActivities();
+                return result;
+              },
+            ),
+          ),
+        );
+
+        if (mounted) setState(() {});
+      },
+      child: const Text(
+        'View calendar',
+        style: TextStyle(
+          color: primaryPurple,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  ],
+),
+
                   const SizedBox(height: 14),
                   _buildActivities(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Recent Observations', 'View all'),
+_buildSectionTitle(
+  'Recent Observations',
+  'View all',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AllObservationsScreen(),
+      ),
+    );
+  },
+),
+_buildObservationCard(),
                   const SizedBox(height: 14),
                   _buildObservationCard(),
                   const SizedBox(height: 28),
@@ -222,6 +471,7 @@ floatingActionButton: selectedNavIndex == 0
 bottomNavigationBar: _buildBottomNavigation(),
     );
   }
+  
 //مخصصه للجزء العلوي للشاشه 
   Widget _buildHeader() {
     return Row(
@@ -348,7 +598,7 @@ errorBuilder: (_, _, _) => const Icon(
 //بيانات الطفل ال موجوده في ال parent
   Widget _buildChildProfile() {
     final child = selectedChild;
-
+final childData = ChildAppState.instance;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -464,25 +714,40 @@ errorBuilder: (_, _, _) => const Icon(
           const SizedBox(height: 18),
           const Divider(color: Color(0xFFF0EDFA), height: 1),
           const SizedBox(height: 15),
-          Row(
-            children: [
-              Expanded(
-                child: _miniStat(
-                  icon: Icons.task_alt_rounded,
-                  label: 'Tasks done',
-                  value: '3 / 5',
-                ),
-              ),
-              Container(width: 1, height: 38, color: const Color(0xFFECE7F5)),
-              Expanded(
-                child: _miniStat(
-                  icon: Icons.bolt_rounded,
-                  label: 'Focus time',
-                  value: '45 min',
-                ),
-              ),
-            ],
+AnimatedBuilder(
+  animation: childData,
+  builder: (context, _) {
+    final totalTasks = childData.tasks.length;
+
+    final completedTasks = childData.tasks.where((task) {
+      return childData.isCompleted(task);
+    }).length;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _miniStat(
+            icon: Icons.task_alt_rounded,
+            label: 'Tasks done',
+            value: '$completedTasks / $totalTasks',
           ),
+        ),
+        Container(
+          width: 1,
+          height: 38,
+          color: const Color(0xFFECE7F5),
+        ),
+        Expanded(
+          child: _miniStat(
+            icon: Icons.bolt_rounded,
+            label: 'Focus time',
+            value: 'Not tracked',
+          ),
+        ),
+      ],
+    );
+  },
+),
         ],
       ),
     );
@@ -535,81 +800,111 @@ errorBuilder: (_, _, _) => const Icon(
     );
   }
 
-  Widget _buildSectionTitle(String title, String action) {
-  return Row(
-    children: [
-      Expanded(
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: darkPurple,
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-      GestureDetector(
-        onTap: () {
-          if (action == 'Weekly report') {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProgressScreen(),
-              ),
-            );
-          } else {
-            _showMessage(action);
-          }
-        },
-        child: Text(
-          action,
-          style: const TextStyle(
-            color: primaryPurple,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    ],
-  );
-}
-//بتعرض ملخص اليوم
-  Widget _buildOverviewCards() {
-    return Row(
+Widget _buildSectionTitle(
+  String title,
+  String action, {
+  VoidCallback? onTap,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: _overviewCard(
-            icon: Icons.checklist_rounded,
-            title: 'Tasks',
-            value: '3/5',
-            subtitle: 'Completed',
-            progress: 0.6,
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: darkPurple,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _overviewCard(
-            icon: Icons.calendar_month_rounded,
-            title: 'Routine',
-            value: '4/6',
-            subtitle: 'Activities',
-            progress: 0.67,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _overviewCard(
-            icon: Icons.psychology_alt_rounded,
-            title: 'Focus',
-            value: '45m',
-            subtitle: 'Today',
-            progress: 0.75,
+        TextButton(
+          onPressed: onTap,
+          child: Text(
+            action,
+            style: const TextStyle(
+              color: primaryPurple,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
+//بتعرض ملخص اليوم
+Widget _buildOverviewCards() {
+  final childData = ChildAppState.instance;
+
+  return AnimatedBuilder(
+    animation: childData,
+    builder: (context, child) {
+      // عدد المهام المكتملة اليوم
+      final completedTasks = childData.tasks.where((task) {
+        return childData.isCompleted(task);
+      }).length;
+
+      // إجمالي المهام
+      final totalTasks = childData.tasks.length;
+
+      // عدد عناصر الروتين المكتملة
+      final completedRoutine = routine.where((item) {
+        return item['completed'] == true;
+      }).length;
+
+      // إجمالي عناصر الروتين
+      final totalRoutine = routine.length;
+
+      // نسبة إنجاز المهام
+      final taskProgress = totalTasks == 0
+          ? 0.0
+          : (completedTasks / totalTasks).clamp(0.0, 1.0);
+
+      // نسبة إنجاز الروتين
+      final routineProgress = totalRoutine == 0
+          ? 0.0
+          : (completedRoutine / totalRoutine).clamp(0.0, 1.0);
+
+      return Row(
+        children: [
+          Expanded(
+            child: _overviewCard(
+              icon: Icons.checklist_rounded,
+              title: 'Tasks',
+              value: '$completedTasks/$totalTasks',
+              subtitle: 'Completed',
+              progress: taskProgress,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _overviewCard(
+              icon: Icons.calendar_month_rounded,
+              title: 'Routine',
+              value: '$completedRoutine/$totalRoutine',
+              subtitle: 'Activities',
+              progress: routineProgress,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _overviewCard(
+              icon: Icons.psychology_alt_rounded,
+              title: 'Focus',
+              value: '--',
+              subtitle: 'No sessions',
+              progress: 0.0,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
   Widget _overviewCard({
     required IconData icon,
     required String title,
@@ -756,8 +1051,6 @@ Widget _buildQuickActions() {
 
 
 Widget _buildRoutineCard() {
-
-
   return _whiteCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,179 +1059,202 @@ Widget _buildRoutineCard() {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-  'Daily Routine',
-  style: TextStyle(
-    color: darkPurple,
-    fontSize: 17,
-    fontWeight: FontWeight.w800,
-  ),
-),
-
-IconButton(
-  onPressed: () async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AddRoutineScreen(),
-      ),
-    );
-
-    if (result != null && mounted) {
-      setState(() {
-        routine.add(result);
-      });
-    }
-  },
-  icon: const Icon(
-    Icons.add_circle_rounded,
-    color: primaryPurple,
-    size: 27,
-  ),
-  tooltip: 'Add routine',
-),
-
-],
-),
-const SizedBox(height: 8),
-
-        for (int i = 0; i < routine.length; i++) ...[
-          Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFEFEAFB),
+              'Daily Routine',
+              style: TextStyle(
+                color: darkPurple,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  routine[i]['icon'] as IconData,
-                  color: routine[i]['color'] as Color,
-                  size: 27,
-                ),
-                const SizedBox(width: 15),
+            IconButton(
+              onPressed: () async {
+                final result =
+                    await Navigator.push<Map<String, dynamic>>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddRoutineScreen(),
+                  ),
+                );
 
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        routine[i]['title'] as String,
-                        style: TextStyle(
-                          color: darkPurple,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          decoration:
-                              routine[i]['completed'] as bool
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 13,
-                            color: routine[i]['color'] as Color,
+                if (result == null || !mounted) return;
+
+                setState(() {
+                  routine.insert(0, {
+                    ...result,
+                    'createdAt': DateTime.now().toIso8601String(),
+                  });
+                  _sortRoutines();
+                });
+
+                await _saveRoutines();
+              },
+              icon: const Icon(
+                Icons.add_circle_rounded,
+                color: primaryPurple,
+                size: 27,
+              ),
+              tooltip: 'Add routine',
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        if (!_routinesLoaded)
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: primaryPurple,
+              ),
+            ),
+          )
+        else ...[
+          for (int i = 0; i < routine.length && i < 3; i++) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFEFEAFB),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    routine[i]['icon'] is IconData
+                        ? routine[i]['icon'] as IconData
+                        : Icons.check_circle_outline_rounded,
+                    color: routine[i]['color'] is Color
+                        ? routine[i]['color'] as Color
+                        : primaryPurple,
+                    size: 27,
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          routine[i]['title']?.toString() ?? 'Routine',
+                          style: TextStyle(
+                            color: darkPurple,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            decoration: routine[i]['completed'] == true
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            routine[i]['time'] as String,
-                            style: const TextStyle(
-                              color: Color(0xFF89849F),
-                              fontSize: 11,
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 13,
+                              color: routine[i]['color'] is Color
+                                  ? routine[i]['color'] as Color
+                                  : primaryPurple,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              routine[i]['time']?.toString() ?? '',
+                              style: const TextStyle(
+                                color: Color(0xFF89849F),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      setState(() {
+                        routine[i]['completed'] =
+                            !(routine[i]['completed'] == true);
+                      });
+                      await _saveRoutines();
+                    },
+                    icon: Icon(
+                      routine[i]['completed'] == true
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: routine[i]['completed'] == true
+                          ? const Color(0xFF36BFA6)
+                          : const Color(0xFFB8B2CC),
+                    ),
+                    tooltip: 'Mark as completed',
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: Color(0xFF89849F),
+                    ),
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        _showRoutineDialog(
+                          title: routine[i]['title']?.toString(),
+                          time: routine[i]['time']?.toString(),
+                        );
+                      } else if (value == 'delete') {
+                        setState(() {
+                          routine.removeAt(i);
+                        });
+                        await _saveRoutines();
+                      } else if (value == 'reminder') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Reminder selected for '
+                              '${routine[i]['title']}',
                             ),
                           ),
-                        ],
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit routine'),
+                      ),
+                      PopupMenuItem(
+                        value: 'reminder',
+                        child: Text('Set reminder'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete routine'),
                       ),
                     ],
                   ),
-                ),
-
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      routine[i]['completed'] =
-                          !(routine[i]['completed'] as bool);
-                    });
-                  },
-                  icon: Icon(
-                    routine[i]['completed'] as bool
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    color: routine[i]['completed'] as bool
-                        ? const Color(0xFF36BFA6)
-                        : const Color(0xFFB8B2CC),
-                  ),
-                  tooltip: 'Mark as completed',
-                ),
-
-                PopupMenuButton<String>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: Color(0xFF89849F),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      _showRoutineDialog(
-                        title: routine[i]['title'] as String,
-                        time: routine[i]['time'] as String,
-                      );
-                    } else if (value == 'delete') {
-                      setState(() {
-                        routine.removeAt(i);
-                      });
-                    } else if (value == 'reminder') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Reminder selected for ${routine[i]['title']}',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Edit routine'),
-                    ),
-                    PopupMenuItem(
-                      value: 'reminder',
-                      child: Text('Set reminder'),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Delete routine'),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
 
-        if (routine.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(
-              child: Text(
-                'No routines yet. Tap + to add one!',
-                style: TextStyle(
-                  color: Color(0xFF89849F),
-                  fontSize: 12,
+          if (routine.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'No routines yet. Tap + to add one!',
+                  style: TextStyle(
+                    color: Color(0xFF89849F),
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
-          ),
+        ],
       ],
     ),
   );
 }
+
+
 
 
 
@@ -997,28 +1313,34 @@ Future<void> _showRoutineDialog({
                   ),
                 ),
                 const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.access_time_rounded,
-                    color: primaryPurple,
-                  ),
-                  title: const Text('Routine time'),
-                  subtitle: Text(selectedTime.format(context)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime,
-                    );
+               
+ListTile(
+  contentPadding: EdgeInsets.zero,
+  tileColor: Colors.transparent,
+  splashColor: primaryPurple.withValues(alpha: 0.10),
+  leading: const Icon(
+    Icons.access_time_rounded,
+    color: primaryPurple,
+  ),
+  title: const Text('Routine time'),
+  subtitle: Text(selectedTime.format(context)),
+  trailing: const Icon(Icons.chevron_right_rounded),
+  onTap: () async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
 
-                    if (picked != null) {
-                      setDialogState(() {
-                        selectedTime = picked;
-                      });
-                    }
-                  },
-                ),
+    if (!context.mounted) return;
+
+    if (picked != null) {
+      setDialogState(() {
+        selectedTime = picked;
+      });
+    }
+  },
+),
+
               ],
             ),
             actions: [
@@ -1083,133 +1405,324 @@ Navigator.pop(dialogContext);
 
   titleController.dispose();
 }
-  Widget _buildActivities() {
-    return Column(
-      children: [
-        _activityTile(
-          icon: Icons.menu_book_rounded,
-          title: 'Reading practice',
-          subtitle: 'Today • 4:30 PM',
-          color: const Color(0xFFECE8FF),
+Widget _buildActivities() {
+  if (!_activitiesLoaded) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: CircularProgressIndicator(
+          color: primaryPurple,
         ),
-        const SizedBox(height: 10),
-        _activityTile(
-          icon: Icons.sports_soccer_rounded,
-          title: 'Outdoor play',
-          subtitle: 'Tomorrow • 5:00 PM',
-          color: const Color(0xFFE4F7EB),
-        ),
-      ],
-    );
-  }
-
-  Widget _activityTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return _whiteCard(
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: primaryPurple, size: 24),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: darkPurple,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF89849F),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: primaryPurple,
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildObservationCard() {
-    return _whiteCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF0E2),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: const Icon(
-              Icons.lightbulb_outline_rounded,
-              color: Color(0xFFE5A14C),
-              size: 23,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Positive progress today',
-                  style: TextStyle(
-                    color: darkPurple,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Your child completed a task with fewer reminders.',
-                  style: TextStyle(
-                    color: Color(0xFF817C98),
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                ),
-                SizedBox(height: 7),
-                Text(
-                  'Today • 10:30 AM',
-                  style: TextStyle(
-                    color: primaryPurple,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  return Column(
+    children: [
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () async {
+  final result = await Navigator.push<Map<String, dynamic>>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const AddActivityPage(),
+    ),
+  );
+
+  if (result == null || !mounted) return;
+
+  setState(() {
+    activities.add(result);
+
+    activities.sort((a, b) {
+      final dateA = DateTime.parse(a['dateTime'] as String);
+      final dateB = DateTime.parse(b['dateTime'] as String);
+      return dateA.compareTo(dateB);
+    });
+  });
+
+  await _saveActivities();
+},
+          icon: const Icon(Icons.add_circle_outline_rounded),
+          label: const Text('Add activity'),
+        ),
       ),
-    );
+
+      if (activities.isEmpty)
+        _whiteCard(
+          child: const Column(
+            children: [
+              Icon(
+                Icons.event_note_rounded,
+                size: 40,
+                color: primaryPurple,
+              ),
+              SizedBox(height: 10),
+              Text(
+                'No upcoming activities',
+                style: TextStyle(
+                  color: darkPurple,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'Add an activity to get started.',
+                style: TextStyle(
+                  color: Color(0xFF89849F),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        )
+      else
+        ...activities.asMap().entries.map((entry) {
+          final index = entry.key;
+          final activity = entry.value;
+          final date = DateTime.parse(activity['dateTime'] as String);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _whiteCard(
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: softPurple,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.event_note_rounded,
+                      color: primaryPurple,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          activity['title'] as String,
+                          style: const TextStyle(
+                            color: darkPurple,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${_activityDateLabel(date)} • '
+                          '${TimeOfDay.fromDateTime(date).format(context)}',
+                          style: const TextStyle(
+                            color: Color(0xFF89849F),
+                            fontSize: 11,
+                          ),
+                        ),
+                        if ((activity['description'] as String? ?? '')
+                            .isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            activity['description'] as String,
+                            style: const TextStyle(
+                              color: Color(0xFF817C98),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      if (value == 'delete') {
+                        setState(() {
+                          activities.removeAt(index);
+                        });
+
+                        await _saveActivities();
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete activity'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+    ],
+  );
+}
+
+String _activityDateLabel(DateTime date) {
+  final now = DateTime.now();
+
+  if (date.year == now.year &&
+      date.month == now.month &&
+      date.day == now.day) {
+    return 'Today';
   }
+
+  final tomorrow = now.add(const Duration(days: 1));
+
+  if (date.year == tomorrow.year &&
+      date.month == tomorrow.month &&
+      date.day == tomorrow.day) {
+    return 'Tomorrow';
+  }
+
+  return '${date.day}/${date.month}/${date.year}';
+}
+
+
+Widget _buildObservationCard() {
+  final data = ChildAppState.instance;
+
+  return AnimatedBuilder(
+    animation: data,
+    builder: (context, child) {
+      if (data.observations.isEmpty) {
+        return _whiteCard(
+          child: const Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline_rounded,
+                color: Color(0xFFE5A14C),
+                size: 25,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'No observations yet',
+                      style: TextStyle(
+                        color: darkPurple,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Your child’s activities will appear here.',
+                      style: TextStyle(
+                        color: Color(0xFF817C98),
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      final observations = data.observations.take(3).toList();
+
+      return Column(
+        children: observations.map((observation) {
+          final isTask = observation.type == 'task';
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _whiteCard(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isTask
+                          ? const Color(0xFFE3F7EF)
+                          : const Color(0xFFFFF0E2),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Icon(
+                      isTask
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.lightbulb_outline_rounded,
+                      color: isTask
+                          ? const Color(0xFF43B89C)
+                          : const Color(0xFFE5A14C),
+                      size: 23,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          observation.title,
+                          style: const TextStyle(
+                            color: darkPurple,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          observation.description,
+                          style: const TextStyle(
+                            color: Color(0xFF817C98),
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          _formatObservationTime(observation.timestamp),
+                          style: const TextStyle(
+                            color: primaryPurple,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    },
+  );
+}
+
+String _formatObservationTime(DateTime timestamp) {
+  final now = DateTime.now();
+  final difference = now.difference(timestamp);
+
+  if (difference.inSeconds < 60) {
+    return 'Just now';
+  }
+
+  if (difference.inMinutes < 60) {
+    return '${difference.inMinutes} min ago';
+  }
+
+  if (now.year == timestamp.year &&
+      now.month == timestamp.month &&
+      now.day == timestamp.day) {
+    return 'Today • ${TimeOfDay.fromDateTime(timestamp).format(context)}';
+  }
+
+  return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+}
+
 
   Widget _buildProgressCard() {
     return _whiteCard(
@@ -1433,3 +1946,145 @@ Widget _buildBottomNavigation() {
 
 }
 
+class AllObservationsScreen extends StatelessWidget {
+  const AllObservationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ChildAppState.instance;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F7FF),
+      appBar: AppBar(
+        title: const Text(
+          'All Observations',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: darkPurple,
+          ),
+        ),
+        backgroundColor: const Color(0xFFF8F7FF),
+        elevation: 0,
+      ),
+      body: AnimatedBuilder(
+        animation: data,
+        builder: (context, child) {
+final observations = data.observations;
+          if (observations.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline_rounded,
+                      size: 60,
+                      color: Color(0xFF9B8FF0),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No observations yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: darkPurple,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Your child’s activities will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF817C98),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: observations.length,
+            itemBuilder: (context, index) {
+              final observation = observations[index];
+              final isTask = observation.type == 'task';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(11),
+                      decoration: BoxDecoration(
+                        color: isTask
+                            ? const Color(0xFFE3F7EF)
+                            : const Color(0xFFFFF0E2),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: Icon(
+                        isTask
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.lightbulb_outline_rounded,
+                        color: isTask
+                            ? const Color(0xFF43B89C)
+                            : const Color(0xFFE5A14C),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            observation.title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: darkPurple,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            observation.description,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: Color(0xFF817C98),
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          Text(
+                            '${observation.timestamp.day}/'
+                            '${observation.timestamp.month}/'
+                            '${observation.timestamp.year}'
+                            ' • '
+                            '${TimeOfDay.fromDateTime(observation.timestamp).format(context)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: primaryPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}

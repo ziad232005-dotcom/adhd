@@ -7,8 +7,6 @@ const Color childPrimary = Color(0xFF7566D9);
 const Color childBackground = Color(0xFFF8F7FF);
 const Color childText = Color(0xFF25213D);
 
-
-
 class ChildTask {
   final int id;
   final String title;
@@ -54,6 +52,35 @@ class TaskCompletion {
     );
   }
 }
+class ChildObservation {
+  final String title;
+  final String description;
+  final DateTime timestamp;
+  final String type;
+
+  const ChildObservation({
+    required this.title,
+    required this.description,
+    required this.timestamp,
+    required this.type,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'description': description,
+        'timestamp': timestamp.toIso8601String(),
+        'type': type,
+      };
+
+  factory ChildObservation.fromJson(Map<String, dynamic> json) {
+    return ChildObservation(
+      title: json['title'] as String,
+      description: json['description'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      type: json['type'] as String,
+    );
+  }
+}
 
 class ChildAppState extends ChangeNotifier {
   ChildAppState._() {
@@ -83,7 +110,30 @@ class ChildAppState extends ChangeNotifier {
 
   final Map<int, DateTime> _lastCompletedAt = {};
   final List<TaskCompletion> completionHistory = [];
+final List<ChildObservation> observations = [];
+void addObservation({
+  required String title,
+  required String description,
+  required String type,
+}) {
+  observations.insert(
+    0,
+    ChildObservation(
+      title: title,
+      description: description,
+      timestamp: DateTime.now(),
+      type: type,
+    ),
+  );
 
+  // الاحتفاظ بأحدث 100 ملاحظة
+  if (observations.length > 100) {
+    observations.removeRange(100, observations.length);
+  }
+
+  _saveData();
+  notifyListeners();
+}
   final List<ChildTask> tasks = [
     const ChildTask(
       1, 'Brush your teeth', 'A fresh start!',
@@ -143,43 +193,63 @@ class ChildAppState extends ChangeNotifier {
                   )),
         );
 
-      completionHistory
-        ..clear()
-        ..addAll(
-          (json['completionHistory'] as List<dynamic>? ?? [])
-              .map((item) => TaskCompletion.fromJson(
-                    Map<String, dynamic>.from(item as Map),
-                  )),
-        );
+     completionHistory
+  ..clear()
+  ..addAll(
+    (json['completionHistory'] as List<dynamic>? ?? [])
+        .map(
+          (item) => TaskCompletion.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        ),
+  );
 
-      notifyListeners();
+// Load saved Recent Observations
+observations
+  ..clear()
+  ..addAll(
+    (json['observations'] as List<dynamic>? ?? []).map(
+      (item) => ChildObservation.fromJson(
+        Map<String, dynamic>.from(item as Map),
+      ),
+    ),
+  );
+
+notifyListeners();
     } catch (e) {
       debugPrint('Could not load saved task data: $e');
     }
   }
 
-  Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
+Future<void> _saveData() async {
+  final prefs = await SharedPreferences.getInstance();
 
-    final json = {
-      'points': points,
-      'nextTaskId': _nextTaskId,
-      'mood': _mood,
-      'tasks': tasks.map((task) => {
-            'id': task.id,
-            'title': task.title,
-            'subtitle': task.subtitle,
-            'points': task.points,
-          }).toList(),
-      'lastCompletedAt': _lastCompletedAt.map(
-        (key, value) => MapEntry(key.toString(), value.toIso8601String()),
-      ),
-      'completionHistory':
-          completionHistory.map((record) => record.toJson()).toList(),
-    };
+  final json = {
+    'points': points,
+    'nextTaskId': _nextTaskId,
+    'mood': _mood,
 
-    await prefs.setString(_storageKey, jsonEncode(json));
-  }
+    'tasks': tasks.map((task) => {
+          'id': task.id,
+          'title': task.title,
+          'subtitle': task.subtitle,
+          'points': task.points,
+        }).toList(),
+
+    'lastCompletedAt': _lastCompletedAt.map(
+      (key, value) => MapEntry(key.toString(), value.toIso8601String()),
+    ),
+
+    'completionHistory':
+        completionHistory.map((record) => record.toJson()).toList(),
+
+    // Save Recent Observations
+    'observations': observations.map((o) => o.toJson()).toList(),
+  };
+
+  await prefs.setString(_storageKey, jsonEncode(json));
+}
+
 
   bool isCompleted(ChildTask task) {
     final completedAt = _lastCompletedAt[task.id];
@@ -212,30 +282,50 @@ class ChildAppState extends ChangeNotifier {
   int get totalPointsPossible =>
       tasks.fold(0, (sum, task) => sum + task.points);
 
-  bool completeTask(ChildTask task) {
-    if (!tasks.any((item) => item.id == task.id)) return false;
-    if (isCompleted(task)) return false;
 
-    final now = DateTime.now();
+bool completeTask(ChildTask task) {
+  if (!tasks.any((item) => item.id == task.id)) return false;
 
-    _lastCompletedAt[task.id] = now;
+  // منع إكمال المهمة مرة أخرى قبل مرور 24 ساعة.
+  if (isCompleted(task)) return false;
 
-    completionHistory.add(
-      TaskCompletion(
-        taskId: task.id,
-        taskTitle: task.title,
-        completedAt: now,
-        pointsEarned: task.points,
-      ),
-    );
+  // يبدأ العد من لحظة ضغط الطفل على Done.
+  final now = DateTime.now();
+  _lastCompletedAt[task.id] = now;
 
-    points += task.points;
+  completionHistory.add(
+    TaskCompletion(
+      taskId: task.id,
+      taskTitle: task.title,
+      completedAt: now,
+      pointsEarned: task.points,
+    ),
+  );
 
-    _saveData();
-    notifyListeners();
+  // إضافة النقاط مرة واحدة عند إكمال المهمة.
+  points += task.points;
 
-    return true;
+  observations.insert(
+    0,
+    ChildObservation(
+      title: 'Task completed',
+      description: 'Your child completed "${task.title}".',
+      timestamp: now,
+      type: 'task',
+    ),
+  );
+
+  // الاحتفاظ بأحدث 100 ملاحظة.
+  if (observations.length > 100) {
+    observations.removeRange(100, observations.length);
   }
+
+  // حفظ وقت الإكمال والحالة والنقاط.
+  _saveData();
+  notifyListeners();
+
+  return true;
+}
 
   void addTask({
     required String title,
