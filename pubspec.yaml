@@ -32,4 +32,4 @@ flutter:
   fonts:
     - family: Cairo
       fonts:
-        - asset: fonts/cairo-Regular.ttf
+        - asset: fonts/Cairo-Regular.ttf

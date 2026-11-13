@@ -1,17 +1,51 @@
-# adhd
+# MΛZID (ADHD Companion)
 
-A new Flutter project.
+A Flutter app that supports parents of children with ADHD. Parents manage
+routines, tasks, activities and behavior observations; children complete
+tasks, earn points and check in with their mood.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Parent dashboard:** routines, activities, tasks, observations, progress.
+- **Child area:** PIN login, daily tasks with points and rewards, focus timer,
+  mood check-in.
+- **Email verification (OTP):** talks to the ASP.NET Core backend
+  (`ADHD.Backend`).
+- **Ask AI:** placeholder screen with a fixed reply (not connected to a real
+  AI service yet).
 
-A few resources to get you started if this is your first Flutter project:
+> Not connected yet: email/password sign in, password reset, SMS
+> verification, Google/Apple sign in.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Getting started
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run
+```
+
+### Backend address
+
+The OTP screen calls the backend at `http://10.0.2.2:5187`, which is how the
+Android emulator reaches the host machine. Change it in
+`lib/core/app_config.dart` when running on a real device or in production.
+
+## Project structure
+
+```
+lib/
+  core/          shared colors and configuration
+  screens/       parent-side screens (AI, progress, behavior tracking)
+  main.dart      app entry, welcome, sign up, OTP, sign in
+  parent.dart    parent dashboard
+  child.dart     child state and screens
+  tasks.dart, add_task.dart, add_routine.dart, add_activity_page.dart,
+  daily_routine.dart, view_routine.dart, activity_calendar_page.dart
+test/            widget tests
+```
+
+## Tests
+
+```bash
+flutter test
+```
