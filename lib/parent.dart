@@ -13,11 +13,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'activity_calendar_page.dart';
 import 'view_routine.dart';
+import 'core/app_colors.dart';
 //اللوان ال انا مستخدمها في Dashboard parent
-const Color primaryPurple = Color(0xFF7566D9);
-const Color dashboardBackground = Color(0xFFFAF8FF);
-const Color darkPurple = Color(0xFF30285E);
-const Color softPurple = Color(0xFFF0EDFF);
 //بيانات ال child  ال بتظهر علي dashboard parent 
 class DashboardChild {
   final String name;
@@ -112,7 +109,7 @@ map['icon'] = _iconFromCodePoint(iconCode);
 
   final int colorValue = storedColor is int
       ? storedColor
-      : primaryPurple.toARGB32();
+      : AppColors.primary.toARGB32();
 
   map['color'] = Color(colorValue);
 
@@ -185,7 +182,7 @@ Future<void> _saveRoutines() async {
 
     map['colorValue'] = color is Color
         ? color.toARGB32()
-        : primaryPurple.toARGB32();
+        : AppColors.primary.toARGB32();
 
     return map;
   }).toList();
@@ -288,7 +285,7 @@ Future<void> _saveActivities() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: dashboardBackground,
+      backgroundColor: AppColors.background,
 body: SafeArea(
   child: selectedNavIndex == 0
       ? CustomScrollView(
@@ -342,7 +339,7 @@ Row(
     const Text(
       'Upcoming Activities',
       style: TextStyle(
-        color: darkPurple,
+        color: AppColors.textDark,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -389,7 +386,7 @@ Row(
       child: const Text(
         'View calendar',
         style: TextStyle(
-          color: primaryPurple,
+          color: AppColors.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -446,7 +443,7 @@ floatingActionButton: selectedNavIndex == 0
             ),
           );
         },
-        backgroundColor: const Color(0xFF7566D9),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.child_care_rounded),
         label: const Text('Child View'),
@@ -461,7 +458,7 @@ floatingActionButton: selectedNavIndex == 0
                 ),
               );
             },
-            backgroundColor: const Color(0xFF7566D9),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.add_rounded),
             label: const Text('Add Task'),
@@ -489,7 +486,7 @@ bottomNavigationBar: _buildBottomNavigation(),
             fit: BoxFit.contain,
 errorBuilder: (_, _, _) => const Icon(
   Icons.psychology_alt_rounded,
-  color: primaryPurple,
+  color: AppColors.primary,
   size: 30,
 ),
           ),
@@ -502,7 +499,7 @@ errorBuilder: (_, _, _) => const Icon(
               Text(
                 'MΛZID',
                 style: TextStyle(
-                  color: darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.w900,
                   fontSize: 20,
                   letterSpacing: 1.2,
@@ -547,14 +544,14 @@ errorBuilder: (_, _, _) => const Icon(
           style: const TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.w800,
-            color: darkPurple,
+            color: AppColors.textDark,
           ),
         ),
         const SizedBox(height: 7),
         const Text(
           "Small steps make a big difference. Let's make today count.",
           style: TextStyle(
-            color: Color(0xFF817C98),
+            color: AppColors.textSubtle,
             fontSize: 13,
             height: 1.5,
           ),
@@ -569,7 +566,7 @@ errorBuilder: (_, _, _) => const Icon(
         const Text(
           'Your children',
           style: TextStyle(
-            color: darkPurple,
+            color: AppColors.textDark,
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
@@ -579,12 +576,12 @@ errorBuilder: (_, _, _) => const Icon(
           onTap: () => _showMessage('Add child'),
           child: const Row(
             children: [
-              Icon(Icons.add_circle_outline, color: primaryPurple, size: 19),
+              Icon(Icons.add_circle_outline, color: AppColors.primary, size: 19),
               SizedBox(width: 5),
               Text(
                 'Add child',
                 style: TextStyle(
-                  color: primaryPurple,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -604,10 +601,10 @@ final childData = ChildAppState.instance;
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFECE7FF)),
+        border: Border.all(color: AppColors.divider),
         boxShadow: [
           BoxShadow(
-            color: primaryPurple.withValues(alpha: 0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -625,7 +622,7 @@ final childData = ChildAppState.instance;
                       width: 84,
                       height: 84,
                       decoration: BoxDecoration(
-                        color: softPurple,
+                        color: AppColors.softPurple,
                         borderRadius: BorderRadius.circular(22),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -644,7 +641,7 @@ final childData = ChildAppState.instance;
                       child: Container(
                         padding: const EdgeInsets.all(5),
                         decoration: const BoxDecoration(
-                          color: primaryPurple,
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -665,7 +662,7 @@ final childData = ChildAppState.instance;
                     Text(
                       child.name,
                       style: const TextStyle(
-                        color: darkPurple,
+                        color: AppColors.textDark,
                         fontSize: 21,
                         fontWeight: FontWeight.w800,
                       ),
@@ -674,7 +671,7 @@ final childData = ChildAppState.instance;
                     Text(
                       '${child.age} years old • ${child.grade}',
                       style: const TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                         fontSize: 12,
                       ),
                     ),
@@ -687,13 +684,13 @@ final childData = ChildAppState.instance;
                           Icon(
                             Icons.edit_outlined,
                             size: 14,
-                            color: primaryPurple,
+                            color: AppColors.primary,
                           ),
                           SizedBox(width: 5),
                           Text(
                             'Change photo',
                             style: TextStyle(
-                              color: primaryPurple,
+                              color: AppColors.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -707,7 +704,7 @@ final childData = ChildAppState.instance;
               const Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: primaryPurple,
+                color: AppColors.primary,
               ),
             ],
           ),
@@ -758,7 +755,7 @@ AnimatedBuilder(
       child: Icon(
         Icons.face_rounded,
         size: 55,
-        color: primaryPurple,
+        color: AppColors.primary,
       ),
     );
   }
@@ -771,7 +768,7 @@ AnimatedBuilder(
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: primaryPurple, size: 21),
+        Icon(icon, color: AppColors.primary, size: 21),
         const SizedBox(width: 8),
         Flexible(
           child: Column(
@@ -780,7 +777,7 @@ AnimatedBuilder(
               Text(
                 value,
                 style: const TextStyle(
-                  color: darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
                 ),
@@ -789,7 +786,7 @@ AnimatedBuilder(
               Text(
                 label,
                 style: const TextStyle(
-                  color: Color(0xFF89849F),
+                  color: AppColors.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -814,7 +811,7 @@ Widget _buildSectionTitle(
           child: Text(
             title,
             style: const TextStyle(
-              color: darkPurple,
+              color: AppColors.textDark,
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -825,7 +822,7 @@ Widget _buildSectionTitle(
           child: Text(
             action,
             style: const TextStyle(
-              color: primaryPurple,
+              color: AppColors.primary,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -917,17 +914,17 @@ Widget _buildOverviewCards() {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: primaryPurple, size: 23),
+          Icon(icon, color: AppColors.primary, size: 23),
           const SizedBox(height: 13),
           Text(
             value,
             style: const TextStyle(
-              color: darkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.w800,
               fontSize: 19,
             ),
@@ -936,7 +933,7 @@ Widget _buildOverviewCards() {
           Text(
             title,
             style: const TextStyle(
-              color: darkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.w700,
               fontSize: 12,
             ),
@@ -955,8 +952,8 @@ Widget _buildOverviewCards() {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 5,
-              backgroundColor: softPurple,
-              valueColor: const AlwaysStoppedAnimation(primaryPurple),
+              backgroundColor: AppColors.softPurple,
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
             ),
           ),
         ],
@@ -1019,13 +1016,13 @@ Widget _buildQuickActions() {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: const Color(0xFFEFEAFB)),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               Icon(
                 action.$2,
-                color: primaryPurple,
+                color: AppColors.primary,
                 size: 25,
               ),
               const SizedBox(width: 10),
@@ -1033,7 +1030,7 @@ Widget _buildQuickActions() {
                 child: Text(
                   action.$1,
                   style: const TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontWeight: FontWeight.w700,
                     fontSize: 11,
                   ),
@@ -1061,7 +1058,7 @@ Widget _buildRoutineCard() {
             const Text(
               'Daily Routine',
               style: TextStyle(
-                color: darkPurple,
+                color: AppColors.textDark,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -1090,7 +1087,7 @@ Widget _buildRoutineCard() {
               },
               icon: const Icon(
                 Icons.add_circle_rounded,
-                color: primaryPurple,
+                color: AppColors.primary,
                 size: 27,
               ),
               tooltip: 'Add routine',
@@ -1104,7 +1101,7 @@ Widget _buildRoutineCard() {
             padding: EdgeInsets.all(20),
             child: Center(
               child: CircularProgressIndicator(
-                color: primaryPurple,
+                color: AppColors.primary,
               ),
             ),
           )
@@ -1117,7 +1114,7 @@ Widget _buildRoutineCard() {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFFEFEAFB),
+                  color: AppColors.border,
                 ),
               ),
               child: Row(
@@ -1128,7 +1125,7 @@ Widget _buildRoutineCard() {
                         : Icons.check_circle_outline_rounded,
                     color: routine[i]['color'] is Color
                         ? routine[i]['color'] as Color
-                        : primaryPurple,
+                        : AppColors.primary,
                     size: 27,
                   ),
                   const SizedBox(width: 15),
@@ -1139,7 +1136,7 @@ Widget _buildRoutineCard() {
                         Text(
                           routine[i]['title']?.toString() ?? 'Routine',
                           style: TextStyle(
-                            color: darkPurple,
+                            color: AppColors.textDark,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             decoration: routine[i]['completed'] == true
@@ -1155,13 +1152,13 @@ Widget _buildRoutineCard() {
                               size: 13,
                               color: routine[i]['color'] is Color
                                   ? routine[i]['color'] as Color
-                                  : primaryPurple,
+                                  : AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               routine[i]['time']?.toString() ?? '',
                               style: const TextStyle(
-                                color: Color(0xFF89849F),
+                                color: AppColors.textMuted,
                                 fontSize: 11,
                               ),
                             ),
@@ -1191,7 +1188,7 @@ Widget _buildRoutineCard() {
                   PopupMenuButton<String>(
                     icon: const Icon(
                       Icons.more_vert_rounded,
-                      color: Color(0xFF89849F),
+                      color: AppColors.textMuted,
                     ),
                     onSelected: (value) async {
                       if (value == 'edit') {
@@ -1242,7 +1239,7 @@ Widget _buildRoutineCard() {
                 child: Text(
                   'No routines yet. Tap + to add one!',
                   style: TextStyle(
-                    color: Color(0xFF89849F),
+                    color: AppColors.textMuted,
                     fontSize: 12,
                   ),
                 ),
@@ -1292,7 +1289,7 @@ Future<void> _showRoutineDialog({
             title: Text(
               title == null ? 'Add Routine' : 'Edit Routine',
               style: const TextStyle(
-                color: darkPurple,
+                color: AppColors.textDark,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1305,7 +1302,7 @@ Future<void> _showRoutineDialog({
                     labelText: 'Routine name',
                     prefixIcon: const Icon(
                       Icons.edit_rounded,
-                      color: primaryPurple,
+                      color: AppColors.primary,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -1317,10 +1314,10 @@ Future<void> _showRoutineDialog({
 ListTile(
   contentPadding: EdgeInsets.zero,
   tileColor: Colors.transparent,
-  splashColor: primaryPurple.withValues(alpha: 0.10),
+  splashColor: AppColors.primary.withValues(alpha: 0.10),
   leading: const Icon(
     Icons.access_time_rounded,
-    color: primaryPurple,
+    color: AppColors.primary,
   ),
   title: const Text('Routine time'),
   subtitle: Text(selectedTime.format(context)),
@@ -1350,7 +1347,7 @@ ListTile(
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryPurple,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () {
@@ -1377,7 +1374,7 @@ setState(() {
       'time': formattedTime,
       'completed': false,
       'icon': Icons.star_rounded,
-      'color': primaryPurple,
+      'color': AppColors.primary,
     });
   } else {
     // Update the existing routine
@@ -1411,7 +1408,7 @@ Widget _buildActivities() {
       child: Padding(
         padding: EdgeInsets.all(20),
         child: CircularProgressIndicator(
-          color: primaryPurple,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -1456,13 +1453,13 @@ Widget _buildActivities() {
               Icon(
                 Icons.event_note_rounded,
                 size: 40,
-                color: primaryPurple,
+                color: AppColors.primary,
               ),
               SizedBox(height: 10),
               Text(
                 'No upcoming activities',
                 style: TextStyle(
-                  color: darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1470,7 +1467,7 @@ Widget _buildActivities() {
               Text(
                 'Add an activity to get started.',
                 style: TextStyle(
-                  color: Color(0xFF89849F),
+                  color: AppColors.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -1492,12 +1489,12 @@ Widget _buildActivities() {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: softPurple,
+                      color: AppColors.softPurple,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.event_note_rounded,
-                      color: primaryPurple,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1508,7 +1505,7 @@ Widget _buildActivities() {
                         Text(
                           activity['title'] as String,
                           style: const TextStyle(
-                            color: darkPurple,
+                            color: AppColors.textDark,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1518,7 +1515,7 @@ Widget _buildActivities() {
                           '${_activityDateLabel(date)} • '
                           '${TimeOfDay.fromDateTime(date).format(context)}',
                           style: const TextStyle(
-                            color: Color(0xFF89849F),
+                            color: AppColors.textMuted,
                             fontSize: 11,
                           ),
                         ),
@@ -1528,7 +1525,7 @@ Widget _buildActivities() {
                           Text(
                             activity['description'] as String,
                             style: const TextStyle(
-                              color: Color(0xFF817C98),
+                              color: AppColors.textSubtle,
                               fontSize: 11,
                             ),
                           ),
@@ -1595,7 +1592,7 @@ Widget _buildObservationCard() {
             children: [
               Icon(
                 Icons.lightbulb_outline_rounded,
-                color: Color(0xFFE5A14C),
+                color: AppColors.orange,
                 size: 25,
               ),
               SizedBox(width: 12),
@@ -1606,7 +1603,7 @@ Widget _buildObservationCard() {
                     Text(
                       'No observations yet',
                       style: TextStyle(
-                        color: darkPurple,
+                        color: AppColors.textDark,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1615,7 +1612,7 @@ Widget _buildObservationCard() {
                     Text(
                       'Your child’s activities will appear here.',
                       style: TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                         fontSize: 12,
                         height: 1.5,
                       ),
@@ -1653,8 +1650,8 @@ Widget _buildObservationCard() {
                           ? Icons.check_circle_outline_rounded
                           : Icons.lightbulb_outline_rounded,
                       color: isTask
-                          ? const Color(0xFF43B89C)
-                          : const Color(0xFFE5A14C),
+                          ? AppColors.successTeal
+                          : AppColors.orange,
                       size: 23,
                     ),
                   ),
@@ -1666,7 +1663,7 @@ Widget _buildObservationCard() {
                         Text(
                           observation.title,
                           style: const TextStyle(
-                            color: darkPurple,
+                            color: AppColors.textDark,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1675,7 +1672,7 @@ Widget _buildObservationCard() {
                         Text(
                           observation.description,
                           style: const TextStyle(
-                            color: Color(0xFF817C98),
+                            color: AppColors.textSubtle,
                             fontSize: 12,
                             height: 1.5,
                           ),
@@ -1684,7 +1681,7 @@ Widget _buildObservationCard() {
                         Text(
                           _formatObservationTime(observation.timestamp),
                           style: const TextStyle(
-                            color: primaryPurple,
+                            color: AppColors.primary,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1735,7 +1732,7 @@ String _formatObservationTime(DateTime timestamp) {
                 child: Text(
                   'Weekly consistency',
                   style: TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
@@ -1755,7 +1752,7 @@ String _formatObservationTime(DateTime timestamp) {
           const Text(
             'Routine completion compared with last week',
             style: TextStyle(
-              color: Color(0xFF89849F),
+              color: AppColors.textMuted,
               fontSize: 11,
             ),
           ),
@@ -1786,14 +1783,14 @@ String _formatObservationTime(DateTime timestamp) {
           height: 75,
           alignment: Alignment.bottomCenter,
           decoration: BoxDecoration(
-            color: softPurple,
+            color: AppColors.softPurple,
             borderRadius: BorderRadius.circular(8),
           ),
           child: FractionallySizedBox(
             heightFactor: value,
             child: Container(
               decoration: BoxDecoration(
-                color: primaryPurple,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -1803,7 +1800,7 @@ String _formatObservationTime(DateTime timestamp) {
         Text(
           day,
           style: const TextStyle(
-            color: Color(0xFF89849F),
+            color: AppColors.textMuted,
             fontSize: 10,
           ),
         ),
@@ -1837,7 +1834,7 @@ String _formatObservationTime(DateTime timestamp) {
     return _whiteCard(
       child: Row(
         children: [
-          Icon(icon, color: primaryPurple, size: 23),
+          Icon(icon, color: AppColors.primary, size: 23),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1846,7 +1843,7 @@ String _formatObservationTime(DateTime timestamp) {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1855,7 +1852,7 @@ String _formatObservationTime(DateTime timestamp) {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Color(0xFF89849F),
+                    color: AppColors.textMuted,
                     fontSize: 10,
                   ),
                 ),
@@ -1864,7 +1861,7 @@ String _formatObservationTime(DateTime timestamp) {
           ),
           const Icon(
             Icons.notifications_active_outlined,
-            color: primaryPurple,
+            color: AppColors.primary,
             size: 20,
           ),
         ],
@@ -1879,7 +1876,7 @@ String _formatObservationTime(DateTime timestamp) {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: child,
     );
@@ -1898,7 +1895,7 @@ String _formatObservationTime(DateTime timestamp) {
         child: SizedBox(
           width: 43,
           height: 43,
-          child: Icon(icon, color: darkPurple, size: 22),
+          child: Icon(icon, color: AppColors.textDark, size: 22),
         ),
       ),
     );
@@ -1954,16 +1951,16 @@ class AllObservationsScreen extends StatelessWidget {
     final data = ChildAppState.instance;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FF),
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
         title: const Text(
           'All Observations',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: darkPurple,
+            color: AppColors.textDark,
           ),
         ),
-        backgroundColor: const Color(0xFFF8F7FF),
+        backgroundColor: AppColors.backgroundAlt,
         elevation: 0,
       ),
       body: AnimatedBuilder(
@@ -1988,7 +1985,7 @@ final observations = data.observations;
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: darkPurple,
+                        color: AppColors.textDark,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -1996,7 +1993,7 @@ final observations = data.observations;
                       'Your child’s activities will appear here.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                       ),
                     ),
                   ],
@@ -2035,8 +2032,8 @@ final observations = data.observations;
                             ? Icons.check_circle_outline_rounded
                             : Icons.lightbulb_outline_rounded,
                         color: isTask
-                            ? const Color(0xFF43B89C)
-                            : const Color(0xFFE5A14C),
+                            ? AppColors.successTeal
+                            : AppColors.orange,
                         size: 24,
                       ),
                     ),
@@ -2050,7 +2047,7 @@ final observations = data.observations;
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: darkPurple,
+                              color: AppColors.textDark,
                             ),
                           ),
                           const SizedBox(height: 7),
@@ -2059,7 +2056,7 @@ final observations = data.observations;
                             style: const TextStyle(
                               fontSize: 13,
                               height: 1.5,
-                              color: Color(0xFF817C98),
+                              color: AppColors.textSubtle,
                             ),
                           ),
                           const SizedBox(height: 9),
@@ -2072,7 +2069,7 @@ final observations = data.observations;
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: primaryPurple,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],

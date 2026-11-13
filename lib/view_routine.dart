@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-
-const Color routinePrimaryPurple = Color(0xFF7566D9);
-const Color routineDarkPurple = Color(0xFF30285E);
-const Color routineBackground = Color(0xFFFAF8FF);
-
+import 'core/app_colors.dart';
 class ViewRoutineScreen extends StatefulWidget {
   final List<Map<String, dynamic>> routines;
   final Future<void> Function() onSave;
@@ -73,7 +69,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
       return color;
     }
 
-    return routinePrimaryPurple;
+    return AppColors.primary;
   }
 
   Future<void> _toggleCompleted(int index) async {
@@ -99,7 +95,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
           title: const Text(
             'Delete Routine?',
             style: TextStyle(
-              color: routineDarkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -158,7 +154,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
           title: const Text(
             'Edit Routine',
             style: TextStyle(
-              color: routineDarkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -194,7 +190,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: routinePrimaryPurple,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -244,18 +240,18 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: routineBackground,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: routineBackground,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: false,
         iconTheme: const IconThemeData(
-          color: routineDarkPurple,
+          color: AppColors.textDark,
         ),
         title: const Text(
           'My Routines',
           style: TextStyle(
-            color: routineDarkPurple,
+            color: AppColors.textDark,
             fontWeight: FontWeight.bold,
             fontSize: 23,
           ),
@@ -272,7 +268,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: routinePrimaryPurple,
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -384,7 +380,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
                       style: TextStyle(
                         color: completed
                             ? Colors.grey
-                            : routineDarkPurple,
+                            : AppColors.textDark,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         decoration: completed
@@ -440,7 +436,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
                       : Icons.radio_button_unchecked_rounded,
                   color: completed
                       ? const Color(0xFF36BFA6)
-                      : routinePrimaryPurple,
+                      : AppColors.primary,
                   size: 27,
                 ),
               ),
@@ -471,7 +467,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
                 icon: const Icon(Icons.edit_outlined, size: 17),
                 label: const Text('Edit'),
                 style: TextButton.styleFrom(
-                  foregroundColor: routinePrimaryPurple,
+                  foregroundColor: AppColors.primary,
                 ),
               ),
               TextButton.icon(
@@ -505,7 +501,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
               ),
               child: const Icon(
                 Icons.event_note_rounded,
-                color: routinePrimaryPurple,
+                color: AppColors.primary,
                 size: 48,
               ),
             ),
@@ -513,7 +509,7 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
             const Text(
               'No routines yet',
               style: TextStyle(
-                color: routineDarkPurple,
+                color: AppColors.textDark,
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),

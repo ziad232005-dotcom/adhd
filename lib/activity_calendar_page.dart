@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-
-const Color calendarPrimary = Color(0xFF7566D9);
-const Color calendarBackground = Color(0xFFFAF8FF);
-const Color calendarDark = Color(0xFF30285E);
-const Color calendarSoft = Color(0xFFF0EDFF);
-
+import 'core/app_colors.dart';
 class ActivityCalendarPage extends StatefulWidget {
   final List<Map<String, dynamic>> activities;
   final Future<void> Function() onSaveActivities;
@@ -124,10 +119,10 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: calendarBackground,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: calendarBackground,
-        foregroundColor: calendarDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         title: const Text(
           'Activity Calendar',
@@ -199,7 +194,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                 },
                 icon: const Icon(
                   Icons.chevron_left_rounded,
-                  color: calendarDark,
+                  color: AppColors.textDark,
                 ),
               ),
               Expanded(
@@ -207,7 +202,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                   '${_monthName(_visibleMonth.month)} ${_visibleMonth.year}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: calendarDark,
+                    color: AppColors.textDark,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -225,7 +220,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                 },
                 icon: const Icon(
                   Icons.chevron_right_rounded,
-                  color: calendarDark,
+                  color: AppColors.textDark,
                 ),
               ),
             ],
@@ -239,7 +234,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                       child: Text(
                         day,
                         style: const TextStyle(
-                          color: Color(0xFF89849F),
+                          color: AppColors.textMuted,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -290,13 +285,13 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: selected
-                        ? calendarPrimary
+                        ? AppColors.primary
                         : today
-                            ? calendarSoft
+                            ? AppColors.softPurple
                             : Colors.transparent,
                     borderRadius: BorderRadius.circular(13),
                     border: today && !selected
-                        ? Border.all(color: calendarPrimary)
+                        ? Border.all(color: AppColors.primary)
                         : null,
                   ),
                   child: Column(
@@ -307,7 +302,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                         style: TextStyle(
                           color: selected
                               ? Colors.white
-                              : calendarDark,
+                              : AppColors.textDark,
                           fontWeight: selected || today
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -322,7 +317,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                           color: hasActivities
                               ? selected
                                   ? Colors.white
-                                  : calendarPrimary
+                                  : AppColors.primary
                               : Colors.transparent,
                         ),
                       ),
@@ -338,13 +333,13 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
               Icon(
                 Icons.circle,
                 size: 8,
-                color: calendarPrimary,
+                color: AppColors.primary,
               ),
               SizedBox(width: 7),
               Text(
                 'Days with activities',
                 style: TextStyle(
-                  color: Color(0xFF89849F),
+                  color: AppColors.textMuted,
                   fontSize: 11,
                 ),
               ),
@@ -365,7 +360,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
               const Text(
                 'Daily activities',
                 style: TextStyle(
-                  color: calendarDark,
+                  color: AppColors.textDark,
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
                 ),
@@ -375,7 +370,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                 '${_selectedDay.day} ${_monthName(_selectedDay.month)} '
                 '${_selectedDay.year}',
                 style: const TextStyle(
-                  color: Color(0xFF89849F),
+                  color: AppColors.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -386,8 +381,8 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
           onPressed: _addActivity,
           tooltip: 'Add activity',
           style: IconButton.styleFrom(
-            backgroundColor: calendarSoft,
-            foregroundColor: calendarPrimary,
+            backgroundColor: AppColors.softPurple,
+            foregroundColor: AppColors.primary,
           ),
           icon: const Icon(Icons.add_rounded),
         ),
@@ -410,14 +405,14 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
           children: [
             Icon(
               Icons.event_available_rounded,
-              color: calendarPrimary,
+              color: AppColors.primary,
               size: 42,
             ),
             SizedBox(height: 12),
             Text(
               'No activities for this day',
               style: TextStyle(
-                color: calendarDark,
+                color: AppColors.textDark,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -425,7 +420,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
             Text(
               'Tap + to plan an activity.',
               style: TextStyle(
-                color: Color(0xFF89849F),
+                color: AppColors.textMuted,
                 fontSize: 12,
               ),
             ),
@@ -452,12 +447,12 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: calendarSoft,
+                  color: AppColors.softPurple,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.event_note_rounded,
-                  color: calendarPrimary,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -468,7 +463,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                     Text(
                       activity['title'] as String? ?? 'Activity',
                       style: const TextStyle(
-                        color: calendarDark,
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -476,7 +471,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                     Text(
                       TimeOfDay.fromDateTime(date).format(context),
                       style: const TextStyle(
-                        color: calendarPrimary,
+                        color: AppColors.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -487,7 +482,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                       Text(
                         activity['description'] as String,
                         style: const TextStyle(
-                          color: Color(0xFF89849F),
+                          color: AppColors.textMuted,
                           fontSize: 12,
                         ),
                       ),

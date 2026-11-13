@@ -5,6 +5,8 @@ import 'dart:async';
 import 'package:pinput/pinput.dart';
 import 'parent.dart';
 import 'child.dart';
+import 'core/app_colors.dart';
+import 'core/app_config.dart';
 
 
 
@@ -15,11 +17,6 @@ Future<void> main() async {
 
   runApp(const ADHDCompanionApp());
 }
-
-
-const primaryColor = Color(0xFF7566D9);
-const backgroundColor = Color(0xFFF8F7FF);
-
 class ADHDCompanionApp extends StatelessWidget {
   const ADHDCompanionApp({super.key});
 
@@ -31,9 +28,9 @@ class ADHDCompanionApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor,
+          seedColor: AppColors.primary,
         ),
-        scaffoldBackgroundColor: backgroundColor,
+        scaffoldBackgroundColor: AppColors.backgroundAlt,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
@@ -56,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor: AppColors.background,
 
       body: Stack(
         children: [
@@ -110,7 +107,7 @@ class WelcomeScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF7566D9),
+                              color: AppColors.primary,
                             ),
                           ),
 
@@ -121,7 +118,7 @@ class WelcomeScreen extends StatelessWidget {
                             'ADHD Parent Support',
                             style: TextStyle(
                               fontSize: 18,
-                              color: Color(0xFF30285E),
+                              color: AppColors.textDark,
                             ),
                           ),
 
@@ -135,7 +132,7 @@ class WelcomeScreen extends StatelessWidget {
                               fontSize: 27,
                               height: 1.15,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF30285E),
+                              color: AppColors.textDark,
                             ),
                           ),
 
@@ -204,9 +201,9 @@ class WelcomeScreen extends StatelessWidget {
                               },
                               style: OutlinedButton.styleFrom(
                                 foregroundColor:
-                                    const Color(0xFF7566D9),
+                                    AppColors.primary,
                                 side: const BorderSide(
-                                  color: Color(0xFF7566D9),
+                                  color: AppColors.primary,
                                   width: 1.5,
                                 ),
                                 shape: const StadiumBorder(),
@@ -391,7 +388,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF30285E),
+          color: AppColors.textDark,
         ),
       ),
     );
@@ -400,15 +397,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor: AppColors.background,
 
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF8FF),
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         title: const Text(
           'Create Account',
           style: TextStyle(
-            color: Color(0xFF30285E),
+            color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -430,7 +427,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF30285E),
+                    color: AppColors.textDark,
                   ),
                 ),
 
@@ -603,7 +600,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       style: TextStyle(
                         color: selectedDateOfBirth == null
                             ? Colors.black54
-                            : const Color(0xFF30285E),
+                            : AppColors.textDark,
                       ),
                     ),
                   ),
@@ -705,13 +702,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   value: acceptedTerms,
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: const Color(0xFF7566D9),
+                  activeColor: AppColors.primary,
                   title: const Text(
                     'I agree to the Terms of Service and Privacy Policy.',
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.4,
-                      color: Color(0xFF30285E),
+                      color: AppColors.textDark,
                     ),
                   ),
                   onChanged: (value) {
@@ -730,7 +727,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   child: ElevatedButton(
                     onPressed: continueToVerification,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7566D9),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: const StadiumBorder(),
@@ -755,7 +752,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     child: const Text(
                       'Already have an account? Sign In',
                       style: TextStyle(
-                        color: Color(0xFF7566D9),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -803,7 +800,7 @@ class VerificationChoiceScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF30285E),
+                color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: 10),
@@ -882,10 +879,6 @@ class _OTPVerificationScreenState
     extends State<OTPVerificationScreen> {
   final codeController = TextEditingController();
 
-  // Android Emulator uses this address to reach the computer hosting
-  // the ASP.NET Core backend.
-  static const String baseUrl = 'http://10.0.2.2:5187';
-
 bool isSending = false;
 bool isVerifying = false;
 bool codeSent = false;
@@ -946,7 +939,7 @@ void startResendCountdown() {
   resendTimer?.cancel();
 
   setState(() {
-    resendCountdown = 60;
+    resendCountdown = AppConfig.otpResendCooldownSeconds;
   });
 
   resendTimer = Timer.periodic(
@@ -990,7 +983,7 @@ void startResendCountdown() {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/api/auth/send-otp'),
+            Uri.parse('${AppConfig.apiBaseUrl}/api/auth/send-otp'),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -998,7 +991,7 @@ void startResendCountdown() {
               'email': widget.destination.trim(),
             }),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(AppConfig.requestTimeout);
 
       if (!mounted) return;
 
@@ -1043,9 +1036,11 @@ if (response.statusCode >= 200 &&
 
     final code = codeController.text.trim();
 
-    if (code.length != 6 ||
-        !RegExp(r'^[0-9]{6}$').hasMatch(code)) {
-      showMessage('Please enter the 6-digit verification code.');
+    if (code.length != AppConfig.otpLength ||
+        !RegExp(r'^[0-9]+$').hasMatch(code)) {
+      showMessage(
+        'Please enter the ${AppConfig.otpLength}-digit verification code.',
+      );
       return;
     }
 
@@ -1058,7 +1053,7 @@ if (response.statusCode >= 200 &&
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/api/auth/verify-otp'),
+            Uri.parse('${AppConfig.apiBaseUrl}/api/auth/verify-otp'),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -1067,7 +1062,7 @@ if (response.statusCode >= 200 &&
               'code': code,
             }),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(AppConfig.requestTimeout);
 
       if (!mounted) return;
 
@@ -1142,7 +1137,7 @@ if (response.statusCode >= 200 &&
               child: Icon(
                 Icons.verified_user_outlined,
                 size: 75,
-                color: primaryColor,
+                color: AppColors.primary,
               ),
             ),
 
@@ -1168,7 +1163,7 @@ if (response.statusCode >= 200 &&
 Center(
 child: Pinput(
 controller: codeController,
-length: 6,
+length: AppConfig.otpLength,
 keyboardType: TextInputType.number,
 defaultPinTheme: PinTheme(
 width: 46,
@@ -1176,7 +1171,7 @@ height: 56,
 textStyle: const TextStyle(
 fontSize: 22,
 fontWeight: FontWeight.w600,
-color: primaryColor,
+color: AppColors.primary,
 ),
 decoration: BoxDecoration(
 color: Colors.white,
@@ -1190,11 +1185,11 @@ height: 56,
 textStyle: const TextStyle(
 fontSize: 22,
 fontWeight: FontWeight.w600,
-color: primaryColor,
+color: AppColors.primary,
 ),
 decoration: BoxDecoration(
 color: Colors.white,
-border: Border.all(color: primaryColor, width: 2),
+border: Border.all(color: AppColors.primary, width: 2),
 borderRadius: BorderRadius.circular(12),
 ),
 ),
@@ -1204,11 +1199,11 @@ height: 56,
 textStyle: const TextStyle(
 fontSize: 22,
 fontWeight: FontWeight.w600,
-color: primaryColor,
+color: AppColors.primary,
 ),
 decoration: BoxDecoration(
 color: const Color(0xFFF3EEFF),
-border: Border.all(color: primaryColor),
+border: Border.all(color: AppColors.primary),
 borderRadius: BorderRadius.circular(12),
 ),
 ),
@@ -1296,7 +1291,7 @@ class SignInScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 27,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF30285E),
+                color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: 10),
@@ -1443,7 +1438,7 @@ const SizedBox(height: 20),
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF30285E),
+                    color: AppColors.textDark,
                   ),
                 ),
 
@@ -1702,7 +1697,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF30285E),
+                  color: AppColors.textDark,
                 ),
               ),
 
@@ -1847,7 +1842,7 @@ Widget appButton({
     height: 54,
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -1884,10 +1879,10 @@ Widget verificationCard({
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.12),
+          color: AppColors.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: primaryColor),
+        child: Icon(icon, color: AppColors.primary),
       ),
       title: Text(
         title,

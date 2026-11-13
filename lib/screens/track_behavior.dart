@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
 
 class TrackBehaviorScreen extends StatefulWidget {
   const TrackBehaviorScreen({super.key});
@@ -20,13 +21,13 @@ class _TrackBehaviorScreenState extends State<TrackBehaviorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF7566D9);
-    const darkPurple = Color(0xFF30285E);
+    const purple = AppColors.primary;
+    const darkPurple = AppColors.textDark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF8FF),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -102,7 +103,7 @@ class _TrackBehaviorScreenState extends State<TrackBehaviorScreen> {
                 side: BorderSide(
                   color: selected
                       ? purple
-                      : const Color(0xFFEFEAFB),
+                      : AppColors.border,
                 ),
               ),
               child: CheckboxListTile(

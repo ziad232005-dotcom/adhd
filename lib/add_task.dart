@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'child.dart';
-
-const Color taskPurple = Color(0xFF7566D9);
-const Color taskDarkPurple = Color(0xFF30285E);
-const Color taskBackground = Color(0xFFFAF8FF);
-
+import 'core/app_colors.dart';
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
 
@@ -76,10 +72,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: taskBackground,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: taskBackground,
-        foregroundColor: taskDarkPurple,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         title: const Text(
           'Add Task',
@@ -95,7 +91,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0EDFF),
+                  color: AppColors.softPurple,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: const Column(
@@ -103,7 +99,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   children: [
                     Icon(
                       Icons.add_task_rounded,
-                      color: taskPurple,
+                      color: AppColors.primary,
                       size: 35,
                     ),
                     SizedBox(height: 14),
@@ -112,14 +108,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: taskDarkPurple,
+                        color: AppColors.textDark,
                       ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'Create a simple task to help your child get started.',
                       style: TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                         height: 1.5,
                       ),
                     ),
@@ -224,14 +220,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   children: [
                     const Icon(
                       Icons.timer_outlined,
-                      color: taskPurple,
+                      color: AppColors.primary,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         '$_minutes minutes',
                         style: const TextStyle(
-                          color: taskDarkPurple,
+                          color: AppColors.textDark,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -319,7 +315,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveTask,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: taskPurple,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(17),
@@ -354,7 +350,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     return Text(
       text,
       style: const TextStyle(
-        color: taskDarkPurple,
+        color: AppColors.textDark,
         fontSize: 12,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.8,
@@ -368,7 +364,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon, color: taskPurple),
+      prefixIcon: Icon(icon, color: AppColors.primary),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(
@@ -385,7 +381,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: taskPurple, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
     );
   }

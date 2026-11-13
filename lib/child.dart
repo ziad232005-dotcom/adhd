@@ -2,11 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-
-const Color childPrimary = Color(0xFF7566D9);
-const Color childBackground = Color(0xFFF8F7FF);
-const Color childText = Color(0xFF25213D);
-
+import 'core/app_colors.dart';
 class ChildTask {
   final int id;
   final String title;
@@ -423,12 +419,12 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: childBackground,
+        backgroundColor: AppColors.backgroundAlt,
         appBar: AppBar(
-          backgroundColor: childBackground,
+          backgroundColor: AppColors.backgroundAlt,
           elevation: 0,
           title: const Text('MAZID',
-              style: TextStyle(color: childText, fontWeight: FontWeight.bold)),
+              style: TextStyle(color: AppColors.childText, fontWeight: FontWeight.bold)),
         ),
         body: SafeArea(
           child: Center(
@@ -440,7 +436,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                   _circleIcon(Icons.child_care_rounded, 112),
                   const SizedBox(height: 24),
                   const Text('Hello, Super Star!',
-                      style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold, color: childText)),
+                      style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold, color: AppColors.childText)),
                   const SizedBox(height: 10),
                   const Text('Enter your 4-digit PIN to continue',
                       textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
@@ -458,7 +454,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: childPrimary, width: 2)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -492,16 +488,16 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
   Widget build(BuildContext context) {
     final progress = data.completedCount / data.tasks.length;
     return Scaffold(
-      backgroundColor: childBackground,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
-        title: const Text('MAZID', style: TextStyle(color: childText, fontWeight: FontWeight.bold)),
-        backgroundColor: childBackground,
+        title: const Text('MAZID', style: TextStyle(color: AppColors.childText, fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.backgroundAlt,
         elevation: 0,
         actions: [
           IconButton(
             tooltip: 'My rewards',
             onPressed: () => open(const ChildRewardsScreen()),
-            icon: const Icon(Icons.card_giftcard_rounded, color: childPrimary),
+            icon: const Icon(Icons.card_giftcard_rounded, color: AppColors.primary),
           ),
           const SizedBox(width: 8),
         ],
@@ -512,7 +508,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [childPrimary, Color(0xFF9B8FF0)]),
+              gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF9B8FF0)]),
               borderRadius: BorderRadius.circular(26),
             ),
             child: const Row(children: [
@@ -527,24 +523,24 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: _statCard(Icons.stars_rounded,
-             '${data.points}', 'My points', const Color(0xFFFFB547),
+             '${data.points}', 'My points', AppColors.amber,
              ),
              ),
             const SizedBox(width: 12),
-            Expanded(child: _statCard(Icons.check_circle_rounded, '${data.completedCount}/${data.tasks.length}', 'Tasks done', const Color(0xFF43B89C))),
+            Expanded(child: _statCard(Icons.check_circle_rounded, '${data.completedCount}/${data.tasks.length}', 'Tasks done', AppColors.successTeal)),
           ]),
           const SizedBox(height: 24),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Text('Today’s progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: childText)),
-            Text('${(progress * 100).round()}%', style: const TextStyle(color: childPrimary, fontWeight: FontWeight.bold)),
+            const Text('Today’s progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.childText)),
+            Text('${(progress * 100).round()}%', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ]),
           const SizedBox(height: 10),
-          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: progress, minHeight: 10, color: childPrimary, backgroundColor: Colors.white)),
+          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: progress, minHeight: 10, color: AppColors.primary, backgroundColor: Colors.white)),
           const SizedBox(height: 24),
-          const Text('What would you like to do?', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: childText)),
+          const Text('What would you like to do?', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.childText)),
           const SizedBox(height: 12),
-          _navCard('My Tasks', 'Finish little tasks and earn points.', Icons.checklist_rounded, const Color(0xFF43B89C), () => open(const ChildTasksScreen())),
-          _navCard('Focus Time', 'Take one task at a time.', Icons.timer_rounded, childPrimary, () => open(const FocusTimerScreen())),
+          _navCard('My Tasks', 'Finish little tasks and earn points.', Icons.checklist_rounded, AppColors.successTeal, () => open(const ChildTasksScreen())),
+          _navCard('Focus Time', 'Take one task at a time.', Icons.timer_rounded, AppColors.primary, () => open(const FocusTimerScreen())),
           _navCard('How Do I Feel?', data.mood == null ? 'Choose the feeling that fits you.' : 'Today I feel ${data.mood}.', Icons.mood_rounded, const Color(0xFFFFA45B), () => open(const ChildCheckInScreen())),
           _navCard('My Progress', 'See what you have achieved.', Icons.insights_rounded, const Color(0xFF5C9FE8), () => open(const ChildProgressScreen())),
           _navCard('My Rewards', 'Your points are worth celebrating!', Icons.card_giftcard_rounded, const Color(0xFFE88EB3), () => open(const ChildRewardsScreen())),
@@ -571,10 +567,10 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
       animation: data,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: childBackground,
+          backgroundColor: AppColors.backgroundAlt,
           appBar: AppBar(
             title: const Text('My Tasks'),
-            backgroundColor: childBackground,
+            backgroundColor: AppColors.backgroundAlt,
             elevation: 0,
           ),
           body: ListView(
@@ -585,7 +581,7 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                   children: [
                     const Icon(
                       Icons.flag_rounded,
-                      color: childPrimary,
+                      color: AppColors.primary,
                       size: 34,
                     ),
                     const SizedBox(width: 12),
@@ -620,12 +616,12 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: childPrimary.withValues(alpha: 0.12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
                         task.icon,
-                        color: childPrimary,
+                        color: AppColors.primary,
                       ),
                     ),
                    title: Text(
@@ -666,8 +662,8 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                             : Icons.circle_outlined,
                         size: 30,
                         color: done
-                            ? const Color(0xFF43B89C)
-                            : childPrimary,
+                            ? AppColors.successTeal
+                            : AppColors.primary,
                       ),
                     ),
                   ),
@@ -688,9 +684,9 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                 icon: const Icon(Icons.timer_rounded),
                 label: const Text('Start Focus Time'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: childPrimary,
+                  foregroundColor: AppColors.primary,
                   padding: const EdgeInsets.all(14),
-                  side: const BorderSide(color: childPrimary),
+                  side: const BorderSide(color: AppColors.primary),
                 ),
               ),
             ],
@@ -748,20 +744,20 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
     final m = (remainingSeconds ~/ 60).toString().padLeft(2, '0');
     final s = (remainingSeconds % 60).toString().padLeft(2, '0');
     return Scaffold(
-      backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('Focus Time'), backgroundColor: childBackground, elevation: 0),
+      backgroundColor: AppColors.backgroundAlt,
+      appBar: AppBar(title: const Text('Focus Time'), backgroundColor: AppColors.backgroundAlt, elevation: 0),
       body: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         _circleIcon(Icons.stars_rounded, 116),
         const SizedBox(height: 22),
-        Text(isFinished ? 'Amazing Job!' : 'You Can Do It!', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: childText)),
+        Text(isFinished ? 'Amazing Job!' : 'You Can Do It!', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.childText)),
         const SizedBox(height: 10),
         Text(isFinished ? 'You finished your focus session!' : 'Focus on one little thing at a time.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
         const SizedBox(height: 28),
-        Text('$m:$s', style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: childPrimary)),
+        Text('$m:$s', style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: AppColors.primary)),
         const SizedBox(height: 24),
         _primaryButton(isFinished ? 'Start Again' : isRunning ? 'Pause' : 'Start Focus', isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded, toggleTimer),
-        TextButton(onPressed: resetTimer, child: const Text('Reset Timer', style: TextStyle(color: childPrimary))),
-        if (isFinished) const Text('Take a little break. You did great! 🌟', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, color: childText)),
+        TextButton(onPressed: resetTimer, child: const Text('Reset Timer', style: TextStyle(color: AppColors.primary))),
+        if (isFinished) const Text('Take a little break. You did great! 🌟', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.childText)),
       ]))),
     );
   }
@@ -789,12 +785,12 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: childBackground,
-        appBar: AppBar(title: const Text('How Do I Feel?'), backgroundColor: childBackground, elevation: 0),
+        backgroundColor: AppColors.backgroundAlt,
+        appBar: AppBar(title: const Text('How Do I Feel?'), backgroundColor: AppColors.backgroundAlt, elevation: 0),
         body: SafeArea(child: Column(children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
-            child: Text('How are you feeling today?', textAlign: TextAlign.center, style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: childText)),
+            child: Text('How are you feeling today?', textAlign: TextAlign.center, style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: AppColors.childText)),
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
@@ -813,19 +809,19 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
                     duration: const Duration(milliseconds: 160),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: chosen ? childPrimary.withValues(alpha: .13) : Colors.white,
+                      color: chosen ? AppColors.primary.withValues(alpha: .13) : Colors.white,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: chosen ? childPrimary : Colors.transparent, width: 2),
+                      border: Border.all(color: chosen ? AppColors.primary : Colors.transparent, width: 2),
                     ),
                     child: Row(children: [
                       Text(mood.$2, style: const TextStyle(fontSize: 32)),
                       const SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(mood.$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: childText)),
+                        Text(mood.$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.childText)),
                         const SizedBox(height: 4),
                         Text(mood.$3, style: const TextStyle(fontSize: 12, color: Colors.black54)),
                       ])),
-                      Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? childPrimary : Colors.black26),
+                      Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? AppColors.primary : Colors.black26),
                     ]),
                   ),
                 ),
@@ -856,12 +852,12 @@ class ChildRewardsScreen extends StatelessWidget {
       ('Super Achiever', 'Collect 60 points', 60, Icons.emoji_events_rounded),
     ];
     return Scaffold(
-      backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('My Rewards'), backgroundColor: childBackground, elevation: 0),
+      backgroundColor: AppColors.backgroundAlt,
+      appBar: AppBar(title: const Text('My Rewards'), backgroundColor: AppColors.backgroundAlt, elevation: 0),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         Container(
           padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(color: childPrimary, borderRadius: BorderRadius.circular(24)),
+          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(24)),
           child: Row(children: [
             const Icon(Icons.stars_rounded, color: Colors.white, size: 44),
             const SizedBox(width: 14),
@@ -873,7 +869,7 @@ class ChildRewardsScreen extends StatelessWidget {
           ]),
         ),
         const SizedBox(height: 22),
-        const Text('Achievement badges', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: childText)),
+        const Text('Achievement badges', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.childText)),
         const SizedBox(height: 12),
         ...rewards.map((r) {
           final unlocked = data.points >= r.$3;
@@ -882,10 +878,10 @@ class ChildRewardsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
-              leading: Container(width: 50, height: 50, decoration: BoxDecoration(color: (unlocked ? const Color(0xFFFFB547) : Colors.grey).withValues(alpha: .16), borderRadius: BorderRadius.circular(15)), child: Icon(r.$4, color: unlocked ? const Color(0xFFFFB547) : Colors.grey, size: 30)),
+              leading: Container(width: 50, height: 50, decoration: BoxDecoration(color: (unlocked ? AppColors.amber : Colors.grey).withValues(alpha: .16), borderRadius: BorderRadius.circular(15)), child: Icon(r.$4, color: unlocked ? AppColors.amber : Colors.grey, size: 30)),
               title: Text(r.$1, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(r.$2),
-              trailing: Icon(unlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded, color: unlocked ? const Color(0xFF43B89C) : Colors.grey),
+              trailing: Icon(unlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded, color: unlocked ? AppColors.successTeal : Colors.grey),
             ),
           );
         }),
@@ -904,22 +900,22 @@ class ChildProgressScreen extends StatelessWidget {
     final data = ChildAppState.instance;
     final progress = data.completedCount / data.tasks.length;
     return Scaffold(
-      backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('My Progress'), backgroundColor: childBackground, elevation: 0),
+      backgroundColor: AppColors.backgroundAlt,
+      appBar: AppBar(title: const Text('My Progress'), backgroundColor: AppColors.backgroundAlt, elevation: 0),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         _whitePanel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Look how far you’ve come!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: childText)),
+          const Text('Look how far you’ve come!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.childText)),
           const SizedBox(height: 8),
           Text('${data.completedCount} of ${data.tasks.length} tasks completed', style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 18),
-          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: progress, minHeight: 12, color: childPrimary, backgroundColor: childBackground)),
+          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: progress, minHeight: 12, color: AppColors.primary, backgroundColor: AppColors.backgroundAlt)),
           const SizedBox(height: 8),
-          Text('${(progress * 100).round()}% complete', style: const TextStyle(color: childPrimary, fontWeight: FontWeight.bold)),
+          Text('${(progress * 100).round()}% complete', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
         ])),
         const SizedBox(height: 14),
-        _infoCard(Icons.stars_rounded, 'Points collected', '${data.points}', const Color(0xFFFFB547)),
-        _infoCard(Icons.check_circle_rounded, 'Tasks completed', '${data.completedCount}', const Color(0xFF43B89C)),
-        _infoCard(Icons.mood_rounded, 'Latest mood', data.mood ?? 'Not shared yet', childPrimary),
+        _infoCard(Icons.stars_rounded, 'Points collected', '${data.points}', AppColors.amber),
+        _infoCard(Icons.check_circle_rounded, 'Tasks completed', '${data.completedCount}', AppColors.successTeal),
+        _infoCard(Icons.mood_rounded, 'Latest mood', data.mood ?? 'Not shared yet', AppColors.primary),
         const SizedBox(height: 12),
         const Text('Progress is about trying, not being perfect. 🌱', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, height: 1.5)),
       ]),
@@ -929,8 +925,8 @@ class ChildProgressScreen extends StatelessWidget {
 
 Widget _circleIcon(IconData icon, double size) => Container(
   width: size, height: size,
-  decoration: BoxDecoration(color: childPrimary.withValues(alpha: .12), shape: BoxShape.circle),
-  child: Icon(icon, size: size * .62, color: childPrimary),
+  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .12), shape: BoxShape.circle),
+  child: Icon(icon, size: size * .62, color: AppColors.primary),
 );
 
 Widget _primaryButton(String label, IconData icon, VoidCallback? onPressed) =>
@@ -942,9 +938,9 @@ Widget _primaryButton(String label, IconData icon, VoidCallback? onPressed) =>
         icon: Icon(icon),
         label: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: childPrimary,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: childPrimary.withValues(alpha: .35),
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: .35),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
@@ -958,7 +954,7 @@ Widget _statCard(IconData icon, String value, String label, Color color) => Cont
     Icon(icon, size: 29, color: color),
     const SizedBox(width: 9),
     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: childText)),
+      Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.childText)),
       Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
     ])),
   ]),
@@ -978,7 +974,7 @@ Widget _navCard(String title, String subtitle, IconData icon, Color color, VoidC
         Container(width: 50, height: 50, decoration: BoxDecoration(color: color.withValues(alpha: .14), borderRadius: BorderRadius.circular(15)), child: Icon(icon, color: color, size: 28)),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: childText)),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.childText)),
           const SizedBox(height: 5),
           Text(subtitle, style: const TextStyle(color: Colors.black54, fontSize: 12)),
         ])),
@@ -1002,6 +998,6 @@ Widget _infoCard(IconData icon, String title, String value, Color color) => Card
   child: ListTile(
     leading: Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: .14), borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: color)),
     title: Text(title, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-    subtitle: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: childText)),
+    subtitle: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.childText)),
   ),
 );

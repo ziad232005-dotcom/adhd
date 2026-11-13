@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_task.dart';
 import 'child.dart';
-
-const Color tasksPurple = Color(0xFF7566D9);
-const Color tasksDarkPurple = Color(0xFF30285E);
-const Color tasksBackground = Color(0xFFFAF8FF);
-const Color tasksSoftPurple = Color(0xFFF0EDFF);
-
+import 'core/app_colors.dart';
 class ParentTasksScreen extends StatefulWidget {
   const ParentTasksScreen({super.key});
 
@@ -95,7 +90,7 @@ final weeklyCompleted = data.weeklyCompletedCount;
 final weeklyPoints = data.weeklyPoints;
 
     return Scaffold(
-      backgroundColor: tasksBackground,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -161,7 +156,7 @@ const SizedBox(height: 28),
             fit: BoxFit.contain,
             errorBuilder: (_, _, _) => const Icon(
               Icons.checklist_rounded,
-              color: tasksPurple,
+              color: AppColors.primary,
               size: 29,
             ),
           ),
@@ -174,7 +169,7 @@ const SizedBox(height: 28),
               Text(
                 'MΛZID',
                 style: TextStyle(
-                  color: tasksDarkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.w900,
                   fontSize: 20,
                   letterSpacing: 1.2,
@@ -195,7 +190,7 @@ const SizedBox(height: 28),
           ),
           child: const Icon(
             Icons.checklist_rounded,
-            color: tasksPurple,
+            color: AppColors.primary,
           ),
         ),
       ],
@@ -209,7 +204,7 @@ const SizedBox(height: 28),
         const Text(
           'Task Management',
           style: TextStyle(
-            color: tasksDarkPurple,
+            color: AppColors.textDark,
             fontSize: 25,
             fontWeight: FontWeight.w800,
           ),
@@ -218,7 +213,7 @@ const SizedBox(height: 28),
         Text(
           'Organize your child’s tasks and celebrate every small win.',
           style: TextStyle(
-            color: tasksDarkPurple.withValues(alpha: 0.65),
+            color: AppColors.textDark.withValues(alpha: 0.65),
             fontSize: 13,
             height: 1.5,
           ),
@@ -236,14 +231,14 @@ const SizedBox(height: 28),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF7566D9), Color(0xFF998BEA)],
+          colors: [AppColors.primary, Color(0xFF998BEA)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: tasksPurple.withValues(alpha: 0.18),
+            color: AppColors.primary.withValues(alpha: 0.18),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -348,7 +343,7 @@ Widget _buildStatistics({
       const Text(
         'Task Statistics',
         style: TextStyle(
-          color: tasksDarkPurple,
+          color: AppColors.textDark,
           fontSize: 18,
           fontWeight: FontWeight.w800,
         ),
@@ -363,7 +358,7 @@ Widget _buildStatistics({
               title: 'Total Tasks',
               value: '$totalTasks',
               icon: Icons.checklist_rounded,
-              color: tasksPurple,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(width: 12),
@@ -372,7 +367,7 @@ Widget _buildStatistics({
               title: 'Total Points',
               value: '$totalPoints',
               icon: Icons.stars_rounded,
-              color: const Color(0xFFE5A14C),
+              color: AppColors.orange,
             ),
           ),
         ],
@@ -387,7 +382,7 @@ Widget _buildStatistics({
               title: 'Weekly Completed',
               value: '$weeklyCompleted',
               icon: Icons.task_alt_rounded,
-              color: const Color(0xFF29A987),
+              color: AppColors.successGreen,
             ),
           ),
           const SizedBox(width: 12),
@@ -442,7 +437,7 @@ Widget _statCard({
         Text(
           value,
           style: const TextStyle(
-            color: tasksDarkPurple,
+            color: AppColors.textDark,
             fontSize: 25,
             fontWeight: FontWeight.w900,
           ),
@@ -453,7 +448,7 @@ Widget _statCard({
         Text(
           title,
           style: const TextStyle(
-            color: Color(0xFF89849F),
+            color: AppColors.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -485,14 +480,14 @@ Widget _statCard({
             decoration: BoxDecoration(
               color: completed
                   ? const Color(0xFFE2F8F0)
-                  : tasksSoftPurple,
+                  : AppColors.softPurple,
               borderRadius: BorderRadius.circular(15),
             ),
             child: Icon(
               task.icon,
               color: completed
-                  ? const Color(0xFF29A987)
-                  : tasksPurple,
+                  ? AppColors.successGreen
+                  : AppColors.primary,
               size: 25,
             ),
           ),
@@ -517,7 +512,7 @@ Text(
                 Text(
                   task.subtitle,
                   style: const TextStyle(
-                    color: Color(0xFF89849F),
+                    color: AppColors.textMuted,
                     fontSize: 11,
                     height: 1.4,
                   ),
@@ -528,13 +523,13 @@ Text(
                     const Icon(
                       Icons.stars_rounded,
                       size: 16,
-                      color: Color(0xFFFFB547),
+                      color: AppColors.amber,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${task.points} points',
                       style: const TextStyle(
-                        color: tasksDarkPurple,
+                        color: AppColors.textDark,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -544,7 +539,7 @@ Text(
                       const Text(
                         'Completed',
                         style: TextStyle(
-                          color: Color(0xFF29A987),
+                          color: AppColors.successGreen,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
@@ -579,7 +574,7 @@ IconButton(
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${task.title} completed!'),
-              backgroundColor: const Color(0xFF29A987),
+              backgroundColor: AppColors.successGreen,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
             ),
@@ -590,7 +585,7 @@ IconButton(
         ? Icons.check_circle_rounded
         : Icons.radio_button_unchecked_rounded,
     color: completed
-        ? const Color(0xFF29A987)
+        ? AppColors.successGreen
         : const Color(0xFFB8B2CC),
     size: 27,
   ),
@@ -621,13 +616,13 @@ IconButton(
           Icon(
             Icons.task_alt_rounded,
             size: 48,
-            color: tasksPurple,
+            color: AppColors.primary,
           ),
           SizedBox(height: 12),
           Text(
             'No tasks yet',
             style: TextStyle(
-              color: tasksDarkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.w800,
               fontSize: 16,
             ),
@@ -637,7 +632,7 @@ IconButton(
             'Tap Add Task to create your first task.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(0xFF89849F),
+              color: AppColors.textMuted,
               fontSize: 12,
             ),
           ),
@@ -658,7 +653,7 @@ IconButton(
         children: [
           Icon(
             Icons.lightbulb_outline_rounded,
-            color: Color(0xFFE5A14C),
+            color: AppColors.orange,
             size: 22,
           ),
           SizedBox(width: 10),

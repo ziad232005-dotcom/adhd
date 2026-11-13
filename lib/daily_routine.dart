@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-
-const Color _primaryPurple = Color(0xFF7566D9);
-const Color _darkPurple = Color(0xFF30285E);
-const Color _background = Color(0xFFFAF8FF);
-const Color _softPurple = Color(0xFFF0EDFF);
-
+import 'core/app_colors.dart';
 class DailyRoutineScreen extends StatefulWidget {
   const DailyRoutineScreen({super.key});
 
@@ -30,7 +25,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       title: 'Study Time',
       time: const TimeOfDay(hour: 9, minute: 0),
       icon: Icons.menu_book_rounded,
-      color: const Color(0xFFF0EDFF),
+      color: AppColors.softPurple,
     ),
     _RoutineActivity(
       title: 'Play Time',
@@ -66,7 +61,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
               title: const Text(
                 'Add Activity',
                 style: TextStyle(
-                  color: _darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -81,7 +76,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                       hintText: 'e.g. Homework',
                       prefixIcon: const Icon(
                         Icons.edit_rounded,
-                        color: _primaryPurple,
+                        color: AppColors.primary,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -119,7 +114,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: _primaryPurple,
+                    backgroundColor: AppColors.primary,
                   ),
                   onPressed: () {
                     final title = titleController.text.trim();
@@ -132,7 +127,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                         title: title,
                         time: selectedTime,
                         icon: Icons.event_note_rounded,
-                        color: _softPurple,
+                        color: AppColors.softPurple,
                       ),
                     );
                   },
@@ -197,22 +192,22 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         : _completedCount / _activities.length;
 
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: _darkPurple,
+            color: AppColors.textDark,
           ),
         ),
         title: const Text(
           'Daily Routine',
           style: TextStyle(
-            color: _darkPurple,
+            color: AppColors.textDark,
             fontSize: 21,
             fontWeight: FontWeight.bold,
           ),
@@ -230,7 +225,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                 const Text(
                   "Today's Schedule",
                   style: TextStyle(
-                    color: _darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
                   ),
@@ -238,7 +233,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                 Text(
                   '${_activities.length} activities',
                   style: const TextStyle(
-                    color: _primaryPurple,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -262,7 +257,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addActivity,
-        backgroundColor: _primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: const Text(
@@ -279,7 +274,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF7566D9),
+            AppColors.primary,
             Color(0xFF9A8DEB),
           ],
         ),
@@ -359,14 +354,14 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
           border: Border.all(
             color: activity.isCompleted
                 ? const Color(0xFFD9F0E1)
-                : const Color(0xFFEFEAFB),
+                : AppColors.border,
           ),
         ),
         child: Row(
           children: [
             Icon(
               activity.icon,
-              color: _primaryPurple,
+              color: AppColors.primary,
              size: 26,
              ),
             const SizedBox(width: 13),
@@ -377,7 +372,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                   Text(
                     activity.title,
                     style: TextStyle(
-                      color: _darkPurple,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                       decoration: activity.isCompleted
@@ -398,7 +393,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
             ),
             Checkbox(
               value: activity.isCompleted,
-              activeColor: _primaryPurple,
+              activeColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(5),
               ),
@@ -420,7 +415,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +431,7 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
               Text(
                 "Today's Progress",
                 style: TextStyle(
-                  color: _darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -449,9 +444,9 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: _softPurple,
+              backgroundColor: AppColors.softPurple,
               valueColor: const AlwaysStoppedAnimation<Color>(
-                _primaryPurple,
+                AppColors.primary,
               ),
             ),
           ),
@@ -481,14 +476,14 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         children: [
           Icon(
             Icons.event_available_rounded,
-            color: _primaryPurple,
+            color: AppColors.primary,
             size: 48,
           ),
           SizedBox(height: 12),
           Text(
             'No activities yet',
             style: TextStyle(
-              color: _darkPurple,
+              color: AppColors.textDark,
               fontWeight: FontWeight.bold,
               fontSize: 17,
             ),

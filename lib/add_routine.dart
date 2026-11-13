@@ -1,10 +1,6 @@
 
 import 'package:flutter/material.dart';
-
-const Color primaryPurple = Color(0xFF7566D9);
-const Color darkPurple = Color(0xFF30285E);
-const Color routineBackground = Color(0xFFFAF8FF);
-
+import 'core/app_colors.dart';
 class AddRoutineScreen extends StatefulWidget {
   const AddRoutineScreen({super.key});
 
@@ -23,14 +19,14 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
       'task': 'Brush teeth, wash face, and get dressed.',
       'duration': 15,
       'icon': Icons.wb_sunny_rounded,
-      'color': const Color(0xFFFFB547),
+      'color': AppColors.amber,
     },
     {
       'title': 'School Preparation',
       'task': 'Check the school bag and prepare books.',
       'duration': 10,
       'icon': Icons.backpack_rounded,
-      'color': const Color(0xFF7566D9),
+      'color': AppColors.primary,
     },
     {
       'title': 'Homework Time',
@@ -44,7 +40,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
       'task': 'Read two pages with a parent.',
       'duration': 10,
       'icon': Icons.auto_stories_rounded,
-      'color': const Color(0xFFE5A14C),
+      'color': AppColors.orange,
     },
     {
       'title': 'Physical Activity',
@@ -159,16 +155,16 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
       );
       return activity['color'] as Color;
     }
-    return primaryPurple;
+    return AppColors.primary;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: routineBackground,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: routineBackground,
-        foregroundColor: darkPurple,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         title: const Text(
           'Add Routine',
@@ -186,7 +182,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                 const Text(
                   'Build a daily routine',
                   style: TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 25,
                     fontWeight: FontWeight.w800,
                   ),
@@ -195,7 +191,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                 const Text(
                   'Choose an activity and make it fit your child’s day.',
                   style: TextStyle(
-                    color: Color(0xFF817C98),
+                    color: AppColors.textSubtle,
                     fontSize: 13,
                     height: 1.5,
                   ),
@@ -276,14 +272,14 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                       children: [
                         const Icon(
                           Icons.access_time_rounded,
-                          color: primaryPurple,
+                          color: AppColors.primary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _selectedTime.format(context),
                             style: const TextStyle(
-                              color: darkPurple,
+                              color: AppColors.textDark,
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
@@ -291,7 +287,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                         ),
                         const Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: primaryPurple,
+                          color: AppColors.primary,
                         ),
                       ],
                     ),
@@ -317,13 +313,13 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                       selectedColor: const Color(0xFFE7E1FF),
                       backgroundColor: Colors.white,
                       labelStyle: TextStyle(
-                        color: selected ? primaryPurple : darkPurple,
+                        color: selected ? AppColors.primary : AppColors.textDark,
                         fontWeight: FontWeight.w700,
                       ),
                       side: BorderSide(
                         color: selected
-                            ? primaryPurple
-                            : const Color(0xFFECE7FF),
+                            ? AppColors.primary
+                            : AppColors.divider,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -346,25 +342,25 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                         title: const Text(
                           'Every day',
                           style: TextStyle(
-                            color: darkPurple,
+                            color: AppColors.textDark,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         subtitle: const Text(
                           'Repeat this activity daily',
                           style: TextStyle(
-                            color: Color(0xFF817C98),
+                            color: AppColors.textSubtle,
                             fontSize: 12,
                           ),
                         ),
-                        activeThumbColor: primaryPurple,
+                        activeThumbColor: AppColors.primary,
                         value: _repeatDaily,
                         onChanged: (value) {
                           setState(() => _repeatDaily = value);
                         },
                       ),
                       if (!_repeatDaily) ...[
-                        const Divider(color: Color(0xFFECE7FF)),
+                        const Divider(color: AppColors.divider),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -388,14 +384,14 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                               backgroundColor: Colors.white,
                               labelStyle: TextStyle(
                                 color: selected
-                                    ? primaryPurple
-                                    : darkPurple,
+                                    ? AppColors.primary
+                                    : AppColors.textDark,
                                 fontWeight: FontWeight.w700,
                               ),
                               side: BorderSide(
                                 color: selected
-                                    ? primaryPurple
-                                    : const Color(0xFFECE7FF),
+                                    ? AppColors.primary
+                                    : AppColors.divider,
                               ),
                             );
                           }),
@@ -413,22 +409,22 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                     title: const Text(
                       'Reminder',
                       style: TextStyle(
-                        color: darkPurple,
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     subtitle: const Text(
                       'Show a reminder for this activity',
                       style: TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                         fontSize: 12,
                       ),
                     ),
                     secondary: const Icon(
                       Icons.notifications_active_outlined,
-                      color: primaryPurple,
+                      color: AppColors.primary,
                     ),
-                    activeThumbColor: primaryPurple,
+                    activeThumbColor: AppColors.primary,
                     value: _reminderEnabled,
                     onChanged: (value) {
                       setState(() => _reminderEnabled = value);
@@ -444,7 +440,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                   child: ElevatedButton(
                     onPressed: _saveRoutine,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryPurple,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -471,7 +467,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
                     child: const Text(
                       'Cancel',
                       style: TextStyle(
-                        color: Color(0xFF817C98),
+                        color: AppColors.textSubtle,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -504,19 +500,19 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected
-                ? primaryPurple
-                : const Color(0xFFECE7FF),
+                ? AppColors.primary
+                : AppColors.divider,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: primaryPurple),
+            Icon(icon, size: 18, color: AppColors.primary),
             const SizedBox(width: 7),
             Text(
               title,
               style: TextStyle(
-                color: selected ? primaryPurple : darkPurple,
+                color: selected ? AppColors.primary : AppColors.textDark,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -531,7 +527,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
     return Text(
       title,
       style: const TextStyle(
-        color: darkPurple,
+        color: AppColors.textDark,
         fontSize: 17,
         fontWeight: FontWeight.w800,
       ),
@@ -544,7 +540,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
       child: Text(
         title,
         style: const TextStyle(
-          color: darkPurple,
+          color: AppColors.textDark,
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
@@ -562,21 +558,21 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
         color: Color(0xFFA6A0B8),
         fontSize: 13,
       ),
-      prefixIcon: Icon(icon, color: primaryPurple, size: 21),
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 21),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.all(16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFFECE7FF)),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFFECE7FF)),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: primaryPurple, width: 1.4),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
       ),
     );
   }
@@ -585,7 +581,7 @@ class _AddRoutineScreenState extends State<AddRoutineScreen> {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(15),
-      border: Border.all(color: const Color(0xFFECE7FF)),
+      border: Border.all(color: AppColors.divider),
     );
   }
 }

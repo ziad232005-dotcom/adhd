@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
 
 class AskAIScreen extends StatefulWidget {
   const AskAIScreen({super.key});
@@ -43,13 +44,13 @@ class _AskAIScreenState extends State<AskAIScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF7566D9);
-    const darkPurple = Color(0xFF30285E);
+    const purple = AppColors.primary;
+    const darkPurple = AppColors.textDark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF8FF),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -138,7 +139,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(
-                top: BorderSide(color: Color(0xFFEFEAFB)),
+                top: BorderSide(color: AppColors.border),
               ),
             ),
             child: SafeArea(
@@ -153,7 +154,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
                       decoration: InputDecoration(
                         hintText: 'Ask a question...',
                         filled: true,
-                        fillColor: const Color(0xFFFAF8FF),
+                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,

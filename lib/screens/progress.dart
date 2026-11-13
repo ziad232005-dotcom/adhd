@@ -1,31 +1,26 @@
 import 'package:flutter/material.dart';
-
-const Color _primaryPurple = Color(0xFF7566D9);
-const Color _darkPurple = Color(0xFF30285E);
-const Color _background = Color(0xFFFAF8FF);
-const Color _softPurple = Color(0xFFF0EDFF);
-
+import '../core/app_colors.dart';
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: _background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: _darkPurple,
+            color: AppColors.textDark,
           ),
         ),
         title: const Text(
           'Child Progress',
           style: TextStyle(
-            color: _darkPurple,
+            color: AppColors.textDark,
             fontSize: 21,
             fontWeight: FontWeight.bold,
           ),
@@ -40,7 +35,7 @@ class ProgressScreen extends StatelessWidget {
             const Text(
               'Progress Overview',
               style: TextStyle(
-                color: _darkPurple,
+                color: AppColors.textDark,
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
               ),
@@ -91,8 +86,8 @@ class ProgressScreen extends StatelessWidget {
                     title: 'Focus',
                     value: '80%',
                     subtitle: 'Weekly score',
-                    color: _softPurple,
-                    iconColor: _primaryPurple,
+                    color: AppColors.softPurple,
+                    iconColor: AppColors.primary,
                   ),
                 ),
               ],
@@ -117,7 +112,7 @@ class ProgressScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF7566D9),
+            AppColors.primary,
             Color(0xFF9A8DEB),
           ],
         ),
@@ -174,7 +169,7 @@ class ProgressScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +194,7 @@ class ProgressScreen extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              color: _darkPurple,
+              color: AppColors.textDark,
               fontSize: 25,
               fontWeight: FontWeight.bold,
             ),
@@ -226,7 +221,7 @@ class ProgressScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,7 +229,7 @@ class ProgressScreen extends StatelessWidget {
           const Text(
             'Weekly Activity',
             style: TextStyle(
-              color: _darkPurple,
+              color: AppColors.textDark,
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -262,7 +257,7 @@ class ProgressScreen extends StatelessWidget {
                         Text(
                           '${(values[index] * 100).round()}%',
                           style: const TextStyle(
-                            color: _darkPurple,
+                            color: AppColors.textDark,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -277,7 +272,7 @@ class ProgressScreen extends StatelessWidget {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: index == 5
-                                      ? _primaryPurple
+                                      ? AppColors.primary
                                       : const Color(0xFFDCD6FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -311,7 +306,7 @@ class ProgressScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: const Color(0xFFEFEAFB)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +314,7 @@ class ProgressScreen extends StatelessWidget {
           const Text(
             'Recent Achievements',
             style: TextStyle(
-              color: _darkPurple,
+              color: AppColors.textDark,
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -365,7 +360,7 @@ class ProgressScreen extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: _darkPurple, size: 24),
+          child: Icon(icon, color: AppColors.textDark, size: 24),
         ),
         const SizedBox(width: 13),
         Expanded(
@@ -375,7 +370,7 @@ class ProgressScreen extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  color: _darkPurple,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -404,14 +399,14 @@ class ProgressScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(19),
       decoration: BoxDecoration(
-        color: _softPurple,
+        color: AppColors.softPurple,
         borderRadius: BorderRadius.circular(20),
       ),
       child: const Row(
         children: [
           Icon(
             Icons.favorite_rounded,
-            color: _primaryPurple,
+            color: AppColors.primary,
             size: 29,
           ),
           SizedBox(width: 13),
@@ -422,7 +417,7 @@ class ProgressScreen extends StatelessWidget {
                 Text(
                   'Progress, not perfection',
                   style: TextStyle(
-                    color: _darkPurple,
+                    color: AppColors.textDark,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -431,7 +426,7 @@ class ProgressScreen extends StatelessWidget {
                 Text(
                   'Celebrate effort and small improvements every day.',
                   style: TextStyle(
-                    color: _darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 12,
                     height: 1.4,
                   ),

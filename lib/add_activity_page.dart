@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-
-const Color primaryPurple = Color(0xFF7566D9);
-const Color backgroundColor = Color(0xFFFAF8FF);
-const Color darkPurple = Color(0xFF30285E);
-
+import 'core/app_colors.dart';
 class AddActivityPage extends StatefulWidget {
   const AddActivityPage({super.key});
 
@@ -38,10 +34,10 @@ class _AddActivityPageState extends State<AddActivityPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: primaryPurple,
+              primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Colors.white,
-              onSurface: darkPurple,
+              onSurface: AppColors.textDark,
             ),
           ),
           child: child!,
@@ -107,7 +103,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
       backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: backgroundColor,
-        foregroundColor: darkPurple,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         title: const Text(
           'Add Activity',
@@ -127,7 +123,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [primaryPurple, Color(0xFF9B8FF0)],
+                      colors: [AppColors.primary, Color(0xFF9B8FF0)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -165,7 +161,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                 const Text(
                   'Activity details',
                   style: TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -197,7 +193,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                 const Text(
                   'Schedule',
                   style: TextStyle(
-                    color: darkPurple,
+                    color: AppColors.textDark,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -235,7 +231,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryPurple,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -254,7 +250,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: primaryPurple),
+      prefixIcon: Icon(icon, color: AppColors.primary),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
@@ -268,7 +264,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(
-          color: primaryPurple,
+          color: AppColors.primary,
           width: 1.5,
         ),
       ),
@@ -299,10 +295,10 @@ class _AddActivityPageState extends State<AddActivityPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0EDFF),
+                  color: AppColors.softPurple,
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, color: primaryPurple),
+                child: Icon(icon, color: AppColors.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -312,7 +308,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: darkPurple,
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -320,7 +316,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        color: Color(0xFF89849F),
+                        color: AppColors.textMuted,
                         fontSize: 13,
                       ),
                     ),
@@ -329,7 +325,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
               ),
               const Icon(
                 Icons.chevron_right_rounded,
-                color: primaryPurple,
+                color: AppColors.primary,
               ),
             ],
           ),
