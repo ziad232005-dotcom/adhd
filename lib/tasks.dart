@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_task.dart';
 import 'child.dart';
+import 'manage_rewards.dart';
 
 const Color tasksPurple = Color(0xFF7566D9);
 const Color tasksDarkPurple = Color(0xFF30285E);
@@ -123,7 +124,76 @@ _buildStatistics(
   weeklyPoints: weeklyPoints,
 ),
 
+const SizedBox(height: 18),
+
+Container(
+  padding: const EdgeInsets.all(18),
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(22),
+    border: Border.all(color: const Color(0xFFECE7FA)),
+  ),
+  child: Row(
+    children: [
+      Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: tasksSoftPurple,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Icon(
+          Icons.card_giftcard_rounded,
+          color: tasksPurple,
+          size: 25,
+        ),
+      ),
+      const SizedBox(width: 12),
+      const Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reward Management',
+              style: TextStyle(
+                color: tasksDarkPurple,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Create rewards and set point goals.',
+              style: TextStyle(
+                color: Color(0xFF89849F),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+      IconButton(
+        tooltip: 'Manage rewards',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ManageRewardsScreen(),
+            ),
+          );
+        },
+        icon: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          color: tasksPurple,
+          size: 19,
+        ),
+      ),
+    ],
+  ),
+),
+
 const SizedBox(height: 28),
+
 
 
                   if (tasks.isEmpty)

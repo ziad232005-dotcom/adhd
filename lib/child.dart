@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'tova/tova_screens.dart';
 
 const Color childPrimary = Color(0xFF7566D9);
 const Color childBackground = Color(0xFFF8F7FF);
@@ -82,6 +83,109 @@ class ChildObservation {
   }
 }
 
+class FocusSession {
+  final int durationMinutes;
+  final DateTime completedAt;
+
+  const FocusSession({
+    required this.durationMinutes,
+    required this.completedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'durationMinutes': durationMinutes,
+        'completedAt': completedAt.toIso8601String(),
+      };
+
+  factory FocusSession.fromJson(Map<String, dynamic> json) {
+    return FocusSession(
+      durationMinutes: json['durationMinutes'] as int,
+      completedAt: DateTime.parse(json['completedAt'] as String),
+    );
+  }
+}
+class MoodEntry {
+  final String mood;
+  final DateTime recordedAt;
+
+  const MoodEntry({
+    required this.mood,
+    required this.recordedAt,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mood': mood,
+      'recordedAt': recordedAt.toIso8601String(),
+    };
+  }
+
+  factory MoodEntry.fromJson(Map<String, dynamic> json) {
+    return MoodEntry(
+      mood: json['mood'] as String,
+      recordedAt: DateTime.parse(json['recordedAt'] as String),
+    );
+  }
+}
+class ChildReward {
+  final int id;
+  final String title;
+  final String description;
+  final int targetPoints;
+  final DateTime? achievedAt;
+
+  const ChildReward({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.targetPoints,
+    this.achievedAt,
+  });
+
+  bool isAchieved(int currentPoints) {
+    return achievedAt != null || currentPoints >= targetPoints;
+  }
+
+  ChildReward copyWith({
+    int? id,
+    String? title,
+    String? description,
+    int? targetPoints,
+    DateTime? achievedAt,
+    bool clearAchievedAt = false,
+  }) {
+    return ChildReward(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      targetPoints: targetPoints ?? this.targetPoints,
+      achievedAt: clearAchievedAt
+          ? null
+          : achievedAt ?? this.achievedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'targetPoints': targetPoints,
+        'achievedAt': achievedAt?.toIso8601String(),
+      };
+
+  factory ChildReward.fromJson(Map<String, dynamic> json) {
+    return ChildReward(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      targetPoints: json['targetPoints'] as int,
+      achievedAt: json['achievedAt'] == null
+          ? null
+          : DateTime.parse(json['achievedAt'] as String),
+    );
+  }
+}
+
 class ChildAppState extends ChangeNotifier {
   ChildAppState._() {
     _expiryTimer = Timer.periodic(
@@ -94,23 +198,56 @@ class ChildAppState extends ChangeNotifier {
 
   static const _storageKey = 'mazid_child_task_state_v1';
 
+int _nextRewardId = 1;
+
+final List<ChildReward> rewards = [];
+
+final Set<int> _achievedRewardIds = {};
+
+Set<int> get achievedRewardIds =>
+    Set<int>.unmodifiable(_achievedRewardIds);
+
   int _nextTaskId = 5;
   int points = 0;
   String? _mood;
-
+final List<MoodEntry> moodHistory = [];
   String? get mood => _mood;
 
-  set mood(String? value) {
-    _mood = value;
-    _saveData();
-    notifyListeners();
+set mood(String? value) {
+  _mood = value;
+  _saveData();
+  notifyListeners();
+}
+
+// Add this method directly after the mood setter.
+void addMoodEntry(String moodValue) {
+  _mood = moodValue;
+
+  moodHistory.insert(
+    0,
+    MoodEntry(
+      mood: moodValue,
+      recordedAt: DateTime.now(),
+    ),
+  );
+
+  // Keep the latest 100 mood entries.
+  if (moodHistory.length > 100) {
+    moodHistory.removeRange(100, moodHistory.length);
   }
+
+  _saveData();
+  notifyListeners();
+}
+
 
   Timer? _expiryTimer;
 
   final Map<int, DateTime> _lastCompletedAt = {};
   final List<TaskCompletion> completionHistory = [];
+  int get totalTasksCompleted => completionHistory.length;
 final List<ChildObservation> observations = [];
+final List<FocusSession> focusSessions = [];
 void addObservation({
   required String title,
   required String description,
@@ -163,8 +300,39 @@ void addObservation({
       final json = jsonDecode(raw) as Map<String, dynamic>;
 
       points = json['points'] as int? ?? 0;
+      _nextRewardId = json['nextRewardId'] as int? ?? 1;
+
+rewards
+  ..clear()
+  ..addAll(
+    (json['rewards'] as List<dynamic>? ?? []).map(
+      (item) => ChildReward.fromJson(
+        Map<String, dynamic>.from(item as Map),
+      ),
+    ),
+  );
+
+_achievedRewardIds
+  ..clear()
+  ..addAll(
+    (json['achievedRewardIds'] as List<dynamic>? ?? [])
+        .map((id) => id as int),
+  );
+
+// استرجاع أي أهداف تحققت قبل حفظ آخر حالة.
+_updateAchievedRewards();
+
       _nextTaskId = json['nextTaskId'] as int? ?? 5;
       _mood = json['mood'] as String?;
+      moodHistory
+  ..clear()
+  ..addAll(
+    (json['moodHistory'] as List<dynamic>? ?? []).map(
+      (item) => MoodEntry.fromJson(
+        Map<String, dynamic>.from(item as Map),
+      ),
+    ),
+  );
 
       final savedTasks = json['tasks'] as List<dynamic>?;
 
@@ -214,12 +382,22 @@ observations
       ),
     ),
   );
+  focusSessions
+  ..clear()
+  ..addAll(
+    (json['focusSessions'] as List<dynamic>? ?? []).map(
+      (item) => FocusSession.fromJson(
+        Map<String, dynamic>.from(item as Map),
+      ),
+    ),
+  );
 
 notifyListeners();
     } catch (e) {
       debugPrint('Could not load saved task data: $e');
     }
   }
+  
 
 Future<void> _saveData() async {
   final prefs = await SharedPreferences.getInstance();
@@ -228,7 +406,7 @@ Future<void> _saveData() async {
     'points': points,
     'nextTaskId': _nextTaskId,
     'mood': _mood,
-
+'moodHistory': moodHistory.map((entry) => entry.toJson()).toList(),
     'tasks': tasks.map((task) => {
           'id': task.id,
           'title': task.title,
@@ -244,13 +422,51 @@ Future<void> _saveData() async {
         completionHistory.map((record) => record.toJson()).toList(),
 
     // Save Recent Observations
-    'observations': observations.map((o) => o.toJson()).toList(),
-  };
+    'observations': 
+    observations.map((o) => o.toJson()).toList(),
+
+    'focusSessions':
+    focusSessions.map((session) => session.toJson()).toList(),
+ 
+ 'nextRewardId': _nextRewardId,
+
+'rewards': rewards
+    .map((reward) => reward.toJson())
+    .toList(),
+
+'achievedRewardIds': _achievedRewardIds.toList(),
+
+ };
 
   await prefs.setString(_storageKey, jsonEncode(json));
 }
 
+void addFocusSession(int durationMinutes) {
+  focusSessions.insert(
+    0,
+    FocusSession(
+      durationMinutes: durationMinutes,
+      completedAt: DateTime.now(),
+    ),
+  );
 
+  // Keep the latest 100 focus sessions.
+  if (focusSessions.length > 100) {
+    focusSessions.removeRange(100, focusSessions.length);
+  }
+
+  _saveData();
+  notifyListeners();
+}
+
+int get totalFocusMinutes {
+  return focusSessions.fold(
+    0,
+    (total, session) => total + session.durationMinutes,
+  );
+}
+
+int get completedFocusSessions => focusSessions.length;
   bool isCompleted(ChildTask task) {
     final completedAt = _lastCompletedAt[task.id];
 
@@ -303,8 +519,8 @@ bool completeTask(ChildTask task) {
   );
 
   // إضافة النقاط مرة واحدة عند إكمال المهمة.
-  points += task.points;
-
+points += task.points;
+_updateAchievedRewards();
   observations.insert(
     0,
     ChildObservation(
@@ -382,6 +598,98 @@ bool completeTask(ChildTask task) {
   void _refreshExpiredTasks() {
     // isCompleted checks the actual time, so notify screens to refresh
     // when a task's 24-hour lock has expired.
+    notifyListeners();
+  }
+
+// إضافة مكافأة جديدة بواسطة ولي الأمر.
+void addReward({
+  required String title,
+  required String description,
+  required int targetPoints,
+}) {
+  final cleanTitle = title.trim();
+  final cleanDescription = description.trim();
+
+  if (cleanTitle.isEmpty ||
+      targetPoints <= 0 ||
+      cleanDescription.isEmpty) {
+    return;
+  }
+
+  rewards.add(
+    ChildReward(
+      id: _nextRewardId++,
+      title: cleanTitle,
+      description: cleanDescription,
+      targetPoints: targetPoints,
+    ),
+  );
+
+  _updateAchievedRewards();
+  _saveData();
+  notifyListeners();
+}
+
+// تعديل مكافأة موجودة.
+void updateReward({
+  required int id,
+  required String title,
+  required String description,
+  required int targetPoints,
+}) {
+  final index = rewards.indexWhere((reward) => reward.id == id);
+
+  if (index == -1 ||
+      title.trim().isEmpty ||
+      description.trim().isEmpty ||
+      targetPoints <= 0) {
+    return;
+  }
+
+  final oldReward = rewards[index];
+
+  rewards[index] = ChildReward(
+    id: oldReward.id,
+    title: title.trim(),
+    description: description.trim(),
+    targetPoints: targetPoints,
+    achievedAt: oldReward.achievedAt,
+  );
+
+  _updateAchievedRewards();
+  _saveData();
+  notifyListeners();
+}
+
+// حذف مكافأة.
+void deleteReward(int id) {
+  rewards.removeWhere((reward) => reward.id == id);
+  _achievedRewardIds.remove(id);
+
+  _saveData();
+  notifyListeners();
+}
+
+// تحديث سجل المكافآت التي وصل الطفل إلى أهدافها.
+  // تحديث المكافآت التي وصل الطفل إلى نقاطها المطلوبة
+  void _updateAchievedRewards() {
+    for (final reward in rewards) {
+      if (points >= reward.targetPoints) {
+        _achievedRewardIds.add(reward.id);
+      }
+    }
+  }
+
+  // هل حقق الطفل هذه المكافأة؟
+  bool hasAchievedReward(ChildReward reward) {
+    return _achievedRewardIds.contains(reward.id) ||
+        points >= reward.targetPoints;
+  }
+
+  // تصفير النقاط فقط، دون حذف سجل المهام أو جلسات التركيز.
+  Future<void> resetPoints() async {
+    points = 0;
+    await _saveData();
     notifyListeners();
   }
 
@@ -490,7 +798,9 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress = data.completedCount / data.tasks.length;
+    final progress = data.tasks.isEmpty
+    ? 0.0
+    : data.completedCount / data.tasks.length;
     return Scaffold(
       backgroundColor: childBackground,
       appBar: AppBar(
@@ -544,7 +854,21 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           const Text('What would you like to do?', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: childText)),
           const SizedBox(height: 12),
           _navCard('My Tasks', 'Finish little tasks and earn points.', Icons.checklist_rounded, const Color(0xFF43B89C), () => open(const ChildTasksScreen())),
-          _navCard('Focus Time', 'Take one task at a time.', Icons.timer_rounded, childPrimary, () => open(const FocusTimerScreen())),
+         _navCard(
+  'Focus Time',
+  'Take one task at a time.',
+  Icons.timer_rounded,
+  childPrimary,
+  () => open(const FocusTimerScreen()),
+),
+
+_navCard(
+  'TOVA Attention Assessment',
+  'Explore a supervised attention activity.',
+  Icons.center_focus_strong_rounded,
+  const Color(0xFF5C9FE8),
+  () => open(const TovaWelcomeScreen()),
+),
           _navCard('How Do I Feel?', data.mood == null ? 'Choose the feeling that fits you.' : 'Today I feel ${data.mood}.', Icons.mood_rounded, const Color(0xFFFFA45B), () => open(const ChildCheckInScreen())),
           _navCard('My Progress', 'See what you have achieved.', Icons.insights_rounded, const Color(0xFF5C9FE8), () => open(const ChildProgressScreen())),
           _navCard('My Rewards', 'Your points are worth celebrating!', Icons.card_giftcard_rounded, const Color(0xFFE88EB3), () => open(const ChildRewardsScreen())),
@@ -705,70 +1029,563 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});
+
   @override
-  State<FocusTimerScreen> createState() => _FocusTimerScreenState();
+  State<FocusTimerScreen> createState() =>
+      _FocusTimerScreenState();
 }
 
 class _FocusTimerScreenState extends State<FocusTimerScreen> {
-  static const initialSeconds = 5 * 60;
-  int remainingSeconds = initialSeconds;
+  static const List<int> presetMinutes = [5, 10, 15, 20, 25];
+
+  final TextEditingController _customMinutesController =
+      TextEditingController();
+
+  int selectedMinutes = 10;
+  int remainingSeconds = 10 * 60;
+
   Timer? timer;
+
   bool isRunning = false;
   bool isFinished = false;
+  bool isCustomSelected = false;
+  bool sessionSaved = false;
 
-  void toggleTimer() {
-    if (isFinished) { resetTimer(); return; }
-    if (isRunning) {
-      timer?.cancel();
-      setState(() => isRunning = false);
+  final ChildAppState data = ChildAppState.instance;
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    _customMinutesController.dispose();
+    super.dispose();
+  }
+
+  void selectDuration(int minutes) {
+    if (isRunning) return;
+
+    if (minutes < 1 || minutes > 180) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Choose a duration between 1 and 180 minutes.'),
+        ),
+      );
       return;
     }
-    setState(() => isRunning = true);
-    timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) { t.cancel(); return; }
-      if (remainingSeconds <= 1) {
-        t.cancel();
-        setState(() { remainingSeconds = 0; isRunning = false; isFinished = true; });
-      } else {
-        setState(() => remainingSeconds--);
-      }
+
+    timer?.cancel();
+
+    setState(() {
+      selectedMinutes = minutes;
+      remainingSeconds = minutes * 60;
+      isRunning = false;
+      isFinished = false;
+      isCustomSelected = !presetMinutes.contains(minutes);
+      sessionSaved = false;
+    });
+  }
+
+  void chooseCustomDuration() {
+    final minutes = int.tryParse(
+      _customMinutesController.text.trim(),
+    );
+
+    if (minutes == null || minutes < 1 || minutes > 180) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Enter a whole number between 1 and 180 minutes.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    selectDuration(minutes);
+  }
+
+  void startTimer() {
+    if (isRunning) return;
+
+    if (isFinished) {
+      resetTimer();
+      return;
+    }
+
+    if (remainingSeconds <= 0) return;
+
+    setState(() {
+      isRunning = true;
+    });
+
+    timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (t) {
+        if (!mounted) {
+          t.cancel();
+          return;
+        }
+
+        if (remainingSeconds <= 1) {
+          t.cancel();
+
+          setState(() {
+            remainingSeconds = 0;
+            isRunning = false;
+            isFinished = true;
+          });
+
+          saveCompletedSession();
+        } else {
+          setState(() {
+            remainingSeconds--;
+          });
+        }
+      },
+    );
+  }
+
+  void pauseTimer() {
+    timer?.cancel();
+
+    setState(() {
+      isRunning = false;
     });
   }
 
   void resetTimer() {
     timer?.cancel();
-    setState(() { remainingSeconds = initialSeconds; isRunning = false; isFinished = false; });
+
+    setState(() {
+      remainingSeconds = selectedMinutes * 60;
+      isRunning = false;
+      isFinished = false;
+      sessionSaved = false;
+    });
+  }
+
+  void saveCompletedSession() {
+    if (sessionSaved) return;
+
+    sessionSaved = true;
+
+    data.addFocusSession(selectedMinutes);
+
+    data.addObservation(
+      title: 'Focus session completed',
+      description:
+          'Your child completed a $selectedMinutes-minute focus session.',
+      type: 'focus',
+    );
+  }
+
+  String get formattedTime {
+    final minutes = (remainingSeconds ~/ 60)
+        .toString()
+        .padLeft(2, '0');
+
+    final seconds = (remainingSeconds % 60)
+        .toString()
+        .padLeft(2, '0');
+
+    return '$minutes:$seconds';
+  }
+
+  double get progress {
+    final totalSeconds = selectedMinutes * 60;
+
+    if (totalSeconds <= 0) return 0;
+
+    return 1 - (remainingSeconds / totalSeconds);
   }
 
   @override
-  void dispose() { timer?.cancel(); super.dispose(); }
-
-  @override
   Widget build(BuildContext context) {
-    final m = (remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final s = (remainingSeconds % 60).toString().padLeft(2, '0');
     return Scaffold(
       backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('Focus Time'), backgroundColor: childBackground, elevation: 0),
-      body: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        _circleIcon(Icons.stars_rounded, 116),
-        const SizedBox(height: 22),
-        Text(isFinished ? 'Amazing Job!' : 'You Can Do It!', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: childText)),
-        const SizedBox(height: 10),
-        Text(isFinished ? 'You finished your focus session!' : 'Focus on one little thing at a time.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
-        const SizedBox(height: 28),
-        Text('$m:$s', style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold, color: childPrimary)),
-        const SizedBox(height: 24),
-        _primaryButton(isFinished ? 'Start Again' : isRunning ? 'Pause' : 'Start Focus', isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded, toggleTimer),
-        TextButton(onPressed: resetTimer, child: const Text('Reset Timer', style: TextStyle(color: childPrimary))),
-        if (isFinished) const Text('Take a little break. You did great! 🌟', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, color: childText)),
-      ]))),
+      appBar: AppBar(
+        title: const Text(
+          'Focus Time',
+          style: TextStyle(
+            color: childText,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: childBackground,
+        foregroundColor: childText,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    childPrimary,
+                    Color(0xFF9B8FF0),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Focus Time ✨',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 23,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Choose your time and take one small step.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Icon(
+                    Icons.timer_rounded,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 26),
+
+            const Text(
+              'How long would you like to focus?',
+              style: TextStyle(
+                color: childText,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: presetMinutes.map((minutes) {
+                final selected =
+                    selectedMinutes == minutes &&
+                    !isCustomSelected;
+
+                return ChoiceChip(
+                  label: Text('$minutes min'),
+                  selected: selected,
+                  onSelected: isRunning
+                      ? null
+                      : (_) => selectDuration(minutes),
+                  selectedColor: childPrimary,
+                  backgroundColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: selected ? Colors.white : childText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  side: BorderSide(
+                    color: selected
+                        ? childPrimary
+                        : const Color(0xFFE8E2F8),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isCustomSelected
+                      ? childPrimary
+                      : const Color(0xFFE8E2F8),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Choose your own time',
+                    style: TextStyle(
+                      color: childText,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _customMinutesController,
+                          keyboardType: TextInputType.number,
+                          enabled: !isRunning,
+                          decoration: InputDecoration(
+                            hintText: 'Minutes (1–180)',
+                            filled: true,
+                            fillColor: childBackground,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed:
+                            isRunning ? null : chooseCustomDuration,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: childPrimary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Set'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 28,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    isFinished
+                        ? Icons.emoji_events_rounded
+                        : Icons.self_improvement_rounded,
+                    color: isFinished
+                        ? const Color(0xFFFFB547)
+                        : childPrimary,
+                    size: 56,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Text(
+                    isFinished
+                        ? 'Amazing Job! '
+                        : isRunning
+                            ? 'You Can Do It!'
+                            : 'Ready When You Are',
+                    style: const TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                      color: childText,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    isFinished
+                        ? 'You completed your focus session!'
+                        : 'Your goal: $selectedMinutes minutes',
+                    style: const TextStyle(
+                      color: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Text(
+                    formattedTime,
+                    style: const TextStyle(
+                      fontSize: 58,
+                      fontWeight: FontWeight.bold,
+                      color: childPrimary,
+                      fontFeatures: [],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      color: childPrimary,
+                      backgroundColor: childBackground,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: isFinished
+                                ? resetTimer
+                                : isRunning
+                                    ? pauseTimer
+                                    : startTimer,
+                            icon: Icon(
+                              isFinished
+                                  ? Icons.replay_rounded
+                                  : isRunning
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                            ),
+                            label: Text(
+                              isFinished
+                                  ? 'Again'
+                                  : isRunning
+                                      ? 'Pause'
+                                      : 'Start Focus',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: childPrimary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton(
+                        onPressed: resetTimer,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: childPrimary,
+                          minimumSize: const Size(58, 52),
+                          side: const BorderSide(
+                            color: childPrimary,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child: const Icon(Icons.refresh_rounded),
+                      ),
+                    ],
+                  ),
+
+                  if (isFinished) ...[
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Take a little break. You did great! 🌟',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: childText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            AnimatedBuilder(
+              animation: data,
+              builder: (context, child) {
+                return Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0EDFF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.insights_rounded,
+                        color: childPrimary,
+                        size: 32,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Your Focus Journey',
+                              style: TextStyle(
+                                color: childText,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${data.completedFocusSessions} sessions completed',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                              ),
+                            ),
+                            Text(
+                              '${data.totalFocusMinutes} minutes focused in total',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
+
 class ChildCheckInScreen extends StatefulWidget {
   const ChildCheckInScreen({super.key});
+
   @override
   State<ChildCheckInScreen> createState() => _ChildCheckInScreenState();
 }
@@ -776,6 +1593,7 @@ class ChildCheckInScreen extends StatefulWidget {
 class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
   final data = ChildAppState.instance;
   String? selectedMood;
+
   final moods = const [
     ('Happy', '😊', 'Something made me smile.'),
     ('Calm', '😌', 'I feel peaceful.'),
@@ -785,63 +1603,147 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
   ];
 
   @override
-  void initState() { super.initState(); selectedMood = data.mood; }
+  void initState() {
+    super.initState();
+    selectedMood = data.mood;
+  }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: childBackground,
+      appBar: AppBar(
+        title: const Text('How Do I Feel?'),
         backgroundColor: childBackground,
-        appBar: AppBar(title: const Text('How Do I Feel?'), backgroundColor: childBackground, elevation: 0),
-        body: SafeArea(child: Column(children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
-            child: Text('How are you feeling today?', textAlign: TextAlign.center, style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: childText)),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text('There are no wrong answers. Choose what feels right.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
-          ),
-          Expanded(child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: moods.map((mood) {
-              final chosen = selectedMood == mood.$1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: () => setState(() => selectedMood = mood.$1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: chosen ? childPrimary.withValues(alpha: .13) : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: chosen ? childPrimary : Colors.transparent, width: 2),
-                    ),
-                    child: Row(children: [
-                      Text(mood.$2, style: const TextStyle(fontSize: 32)),
-                      const SizedBox(width: 14),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(mood.$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: childText)),
-                        const SizedBox(height: 4),
-                        Text(mood.$3, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                      ])),
-                      Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? childPrimary : Colors.black26),
-                    ]),
-                  ),
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 8),
+              child: Text(
+                'How are you feeling today?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
                 ),
-              );
-            }).toList(),
-          )),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: _primaryButton('Save My Mood', Icons.favorite_rounded, selectedMood == null ? null : () {
-              data.mood = selectedMood;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Thanks for sharing. You feel ${selectedMood!.toLowerCase()} today 💜')));
-              Navigator.pop(context);
-            }),
-          ),
-        ])),
-      );
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'There are no wrong answers. Choose what feels right.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black54),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: moods.map((mood) {
+                  final chosen = selectedMood == mood.$1;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        setState(() {
+                          selectedMood = mood.$1;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: chosen
+                              ? childPrimary.withValues(alpha: .13)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: chosen
+                                ? childPrimary
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              mood.$2,
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    mood.$1,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: childText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    mood.$3,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              chosen
+                                  ? Icons.check_circle_rounded
+                                  : Icons.circle_outlined,
+                              color: chosen ? childPrimary : Colors.black26,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: _primaryButton(
+                'Save My Mood',
+                Icons.favorite_rounded,
+                selectedMood == null
+                    ? null
+                    : () {
+                        final moodValue = selectedMood!;
+
+                        data.addMoodEntry(moodValue);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Thanks for sharing. '
+                              'You feel ${moodValue.toLowerCase()} today ',
+                            ),
+                          ),
+                        );
+
+                        Navigator.pop(context);
+                      },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class ChildRewardsScreen extends StatelessWidget {
@@ -850,51 +1752,439 @@ class ChildRewardsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = ChildAppState.instance;
-    final rewards = const [
-      ('Shining Star', 'Complete your first task', 10, Icons.star_rounded),
-      ('Focus Champion', 'Collect 30 points', 30, Icons.bolt_rounded),
-      ('Super Achiever', 'Collect 60 points', 60, Icons.emoji_events_rounded),
-    ];
-    return Scaffold(
-      backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('My Rewards'), backgroundColor: childBackground, elevation: 0),
-      body: ListView(padding: const EdgeInsets.all(20), children: [
-        Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(color: childPrimary, borderRadius: BorderRadius.circular(24)),
-          child: Row(children: [
-            const Icon(Icons.stars_rounded, color: Colors.white, size: 44),
-            const SizedBox(width: 14),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Your points', style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 4),
-              Text('${data.points}', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-            ])),
-          ]),
-        ),
-        const SizedBox(height: 22),
-        const Text('Achievement badges', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: childText)),
-        const SizedBox(height: 12),
-        ...rewards.map((r) {
-          final unlocked = data.points >= r.$3;
-          return Card(
-            elevation: 0, color: Colors.white, margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(width: 50, height: 50, decoration: BoxDecoration(color: (unlocked ? const Color(0xFFFFB547) : Colors.grey).withValues(alpha: .16), borderRadius: BorderRadius.circular(15)), child: Icon(r.$4, color: unlocked ? const Color(0xFFFFB547) : Colors.grey, size: 30)),
-              title: Text(r.$1, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(r.$2),
-              trailing: Icon(unlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded, color: unlocked ? const Color(0xFF43B89C) : Colors.grey),
-            ),
+
+    return AnimatedBuilder(
+      animation: data,
+      builder: (context, child) {
+        final points = data.points;
+
+        final rewards = [...data.rewards]
+          ..sort(
+            (a, b) => a.targetPoints.compareTo(b.targetPoints),
           );
-        }),
-        const SizedBox(height: 8),
-        const Text('Keep trying. Every small step counts! 💜', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
-      ]),
+
+        final unlockedCount = rewards
+            .where((reward) => data.hasAchievedReward(reward))
+            .length;
+
+        final nextReward = rewards.cast<ChildReward?>().firstWhere(
+          (reward) =>
+              reward != null && !data.hasAchievedReward(reward),
+          orElse: () => null,
+        );
+
+        final progress = nextReward == null
+            ? 1.0
+            : (points / nextReward.targetPoints)
+                .clamp(0.0, 1.0)
+                .toDouble();
+
+        return Scaffold(
+          backgroundColor: childBackground,
+          appBar: AppBar(
+            title: const Text(
+              'My Rewards',
+              style: TextStyle(
+                color: childText,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: childBackground,
+            elevation: 0,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              // Current points
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      childPrimary,
+                      Color(0xFF998BEA),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.stars_rounded,
+                      color: Colors.white,
+                      size: 44,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Your points',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$points',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$unlockedCount of ${rewards.length} rewards achieved',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // Next reward
+              _rewardPanel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Your next goal 🎯',
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                        color: childText,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (rewards.isEmpty) ...[
+                      const Icon(
+                        Icons.card_giftcard_rounded,
+                        color: childPrimary,
+                        size: 34,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Your parent has not added any rewards yet.',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          height: 1.5,
+                        ),
+                      ),
+                    ] else if (nextReward == null) ...[
+                      const Text(
+                        'Amazing! You achieved every reward! 🏆',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: childPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Keep completing tasks and collecting points.',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const LinearProgressIndicator(
+                        value: 1,
+                        minHeight: 10,
+                        color: Color(0xFF43B89C),
+                        backgroundColor: childBackground,
+                      ),
+                    ] else ...[
+                      Text(
+                        nextReward.title,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: childPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        nextReward.description,
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(nextReward.targetPoints - points).clamp(0, nextReward.targetPoints)} more points to reach your goal.',
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 10,
+                          color: const Color(0xFFFFB547),
+                          backgroundColor: childBackground,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(progress * 100).round()}% towards your goal',
+                        style: const TextStyle(
+                          color: childPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$points / ${nextReward.targetPoints} points',
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Your Rewards 🏆',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              if (rewards.isEmpty)
+                _rewardPanel(
+                  child: const Text(
+                    'Your rewards will appear here once your parent adds them.',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      height: 1.5,
+                    ),
+                  ),
+                )
+              else
+                ...rewards.map((reward) {
+                  final achieved = data.hasAchievedReward(reward);
+
+                  final progress = (points / reward.targetPoints)
+                      .clamp(0.0, 1.0)
+                      .toDouble();
+
+                  return Card(
+                    elevation: 0,
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(
+                        color: achieved
+                            ? const Color(0xFFBDEBDD)
+                            : const Color(0xFFECE7FA),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: (achieved
+                                          ? const Color(0xFF43B89C)
+                                          : const Color(0xFFFFB547))
+                                      .withValues(alpha: 0.16),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Icon(
+                                  achieved
+                                      ? Icons.emoji_events_rounded
+                                      : Icons.card_giftcard_rounded,
+                                  color: achieved
+                                      ? const Color(0xFF27966F)
+                                      : const Color(0xFFE5A14C),
+                                  size: 29,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      reward.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: childText,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      reward.description,
+                                      style: const TextStyle(
+                                        color: Colors.black54,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 7),
+                                    Text(
+                                      '${reward.targetPoints} points required',
+                                      style: const TextStyle(
+                                        color: childPrimary,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                achieved
+                                    ? Icons.check_circle_rounded
+                                    : Icons.lock_outline_rounded,
+                                color: achieved
+                                    ? const Color(0xFF43B89C)
+                                    : Colors.grey,
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          if (achieved)
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.verified_rounded,
+                                  size: 17,
+                                  color: Color(0xFF27966F),
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Reward achieved! 🎉',
+                                  style: TextStyle(
+                                    color: Color(0xFF27966F),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 7,
+                                color: childPrimary,
+                                backgroundColor: childBackground,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              '$points / ${reward.targetPoints} points',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+              const SizedBox(height: 10),
+
+              _rewardPanel(
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.favorite_rounded,
+                      color: childPrimary,
+                      size: 28,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Every step matters! 💜',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: childText,
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Keep trying, complete your tasks, '
+                            'and celebrate your progress.',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _rewardPanel({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: childPrimary.withValues(alpha: 0.12),
+        ),
+      ),
+      child: child,
     );
   }
 }
+
 
 class ChildProgressScreen extends StatelessWidget {
   const ChildProgressScreen({super.key});
@@ -902,29 +2192,553 @@ class ChildProgressScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = ChildAppState.instance;
-    final progress = data.completedCount / data.tasks.length;
-    return Scaffold(
-      backgroundColor: childBackground,
-      appBar: AppBar(title: const Text('My Progress'), backgroundColor: childBackground, elevation: 0),
-      body: ListView(padding: const EdgeInsets.all(20), children: [
-        _whitePanel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Look how far you’ve come!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: childText)),
-          const SizedBox(height: 8),
-          Text('${data.completedCount} of ${data.tasks.length} tasks completed', style: const TextStyle(color: Colors.black54)),
-          const SizedBox(height: 18),
-          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: progress, minHeight: 12, color: childPrimary, backgroundColor: childBackground)),
-          const SizedBox(height: 8),
-          Text('${(progress * 100).round()}% complete', style: const TextStyle(color: childPrimary, fontWeight: FontWeight.bold)),
-        ])),
-        const SizedBox(height: 14),
-        _infoCard(Icons.stars_rounded, 'Points collected', '${data.points}', const Color(0xFFFFB547)),
-        _infoCard(Icons.check_circle_rounded, 'Tasks completed', '${data.completedCount}', const Color(0xFF43B89C)),
-        _infoCard(Icons.mood_rounded, 'Latest mood', data.mood ?? 'Not shared yet', childPrimary),
-        const SizedBox(height: 12),
-        const Text('Progress is about trying, not being perfect. 🌱', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, height: 1.5)),
-      ]),
+
+    return AnimatedBuilder(
+      animation: data,
+      builder: (context, child) {
+        final tasks = data.tasks;
+
+        final progress = tasks.isEmpty
+            ? 0.0
+            : data.completedCount / tasks.length;
+
+        final weeklyTasks = data.weeklyCompletedCount;
+        final weeklyPoints = data.weeklyPoints;
+
+        final now = DateTime.now();
+        final weekStart = now.subtract(const Duration(days: 7));
+
+        final weeklyFocusSessions = data.focusSessions.where((session) {
+          return !session.completedAt.isBefore(weekStart) &&
+              !session.completedAt.isAfter(now);
+        }).toList();
+
+        final weeklyFocusMinutes = weeklyFocusSessions.fold<int>(
+          0,
+          (total, session) => total + session.durationMinutes,
+        );
+
+        final recentTasks = data.weeklyCompletions.take(5).toList();
+        final recentFocus = weeklyFocusSessions.take(5).toList();
+
+        return Scaffold(
+          backgroundColor: childBackground,
+          appBar: AppBar(
+            title: const Text(
+              'My Progress',
+              style: TextStyle(
+                color: childText,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: childBackground,
+            elevation: 0,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              // Overall progress
+              _whitePanel(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Look how far you’ve come! 🌟',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: childText,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${data.completedCount} of ${tasks.length} tasks completed today',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 18),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        minHeight: 12,
+                        color: childPrimary,
+                        backgroundColor: childBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${(progress * 100).round()}% of tasks currently completed',
+                      style: const TextStyle(
+                        color: childPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              const Text(
+                'Your Achievements',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _infoCard(
+                Icons.stars_rounded,
+                'Total points collected',
+                '${data.points}',
+                const Color(0xFFFFB547),
+              ),
+
+              _infoCard(
+                Icons.check_circle_rounded,
+                'Total tasks completed',
+                '${data.totalTasksCompleted}',
+                const Color(0xFF43B89C),
+              ),
+
+              _infoCard(
+                Icons.timer_rounded,
+                'Focus sessions completed',
+                '${data.completedFocusSessions}',
+                const Color(0xFF5C9FE8),
+              ),
+
+              _infoCard(
+                Icons.hourglass_bottom_rounded,
+                'Total focus time',
+                '${data.totalFocusMinutes} minutes',
+                childPrimary,
+              ),
+
+             
+_infoCard(
+  Icons.mood_rounded,
+  'Latest mood',
+  data.mood ?? 'Not shared yet',
+  const Color(0xFFE88EB3),
+),
+
+const SizedBox(height: 16),
+
+// Mood History
+_buildMoodHistory(data),
+
+const SizedBox(height: 22),
+
+
+              // Weekly activity
+              const Text(
+                'Your Last 7 Days 📅',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _whitePanel(
+                Column(
+                  children: [
+                    _weeklyRow(
+                      Icons.check_circle_rounded,
+                      'Tasks completed',
+                      '$weeklyTasks',
+                      const Color(0xFF43B89C),
+                    ),
+                    const Divider(height: 24),
+                    _weeklyRow(
+                      Icons.stars_rounded,
+                      'Points earned',
+                      '$weeklyPoints',
+                      const Color(0xFFFFB547),
+                    ),
+                    const Divider(height: 24),
+                    _weeklyRow(
+                      Icons.timer_rounded,
+                      'Focus sessions',
+                      '${weeklyFocusSessions.length}',
+                      const Color(0xFF5C9FE8),
+                    ),
+                    const Divider(height: 24),
+                    _weeklyRow(
+                      Icons.schedule_rounded,
+                      'Focus minutes',
+                      '$weeklyFocusMinutes',
+                      childPrimary,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // Recent task history
+              const Text(
+                'Recent Task Achievements',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              if (recentTasks.isEmpty)
+                _emptyProgress(
+                  Icons.emoji_events_outlined,
+                  'Your first achievement is waiting!',
+                  'Complete a task to see it here.',
+                )
+              else
+                ...recentTasks.map((record) {
+                  return Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFE9F8F0),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: Color(0xFF27966F),
+                        ),
+                      ),
+                      title: Text(
+                        record.taskTitle,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: childText,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _formatProgressDate(record.completedAt),
+                      ),
+                      trailing: Text(
+                        '+${record.pointsEarned}',
+                        style: const TextStyle(
+                          color: childPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+              const SizedBox(height: 22),
+
+              // Recent focus history
+              const Text(
+                'Focus Journey ⏱️',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: childText,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              if (recentFocus.isEmpty)
+                _emptyProgress(
+                  Icons.self_improvement_rounded,
+                  'Ready for your first focus session?',
+                  'Choose a time in Focus Time and get started!',
+                )
+              else
+                ...recentFocus.map((session) {
+                  return Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFF0EDFF),
+                        child: Icon(
+                          Icons.timer_rounded,
+                          color: childPrimary,
+                        ),
+                      ),
+                      title: Text(
+                        '${session.durationMinutes}-minute focus session',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: childText,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _formatProgressDate(session.completedAt),
+                      ),
+                      trailing: const Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF43B89C),
+                      ),
+                    ),
+                  );
+                }),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Progress is about trying, not being perfect. 🌱',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
+
+  Widget _weeklyRow(
+    IconData icon,
+    String title,
+    String value,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 27),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: childText,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: childText,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _emptyProgress(
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 40, color: childPrimary),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: childText,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.black54,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatProgressDate(DateTime date) {
+    final local = date.toLocal();
+
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+
+    return '$day/$month/${local.year} • $hour:$minute';
+  }
+Widget _buildMoodHistory(ChildAppState data) {
+  final history = data.moodHistory;
+
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: childPrimary.withValues(alpha: 0.12),
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              Icons.favorite_rounded,
+              color: childPrimary,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Mood History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: childText,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Your recent feelings',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.black54,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        if (history.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 18),
+            child: Center(
+              child: Column(
+                children: [
+                  Text(
+                    '💜',
+                    style: TextStyle(fontSize: 36),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Your mood journey starts here!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Check in to record how you feel.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...history.take(7).map((entry) {
+            final moodInfo = _moodDetails(entry.mood);
+            final date = entry.recordedAt;
+            final dateText =
+                '${date.day.toString().padLeft(2, '0')}/'
+                '${date.month.toString().padLeft(2, '0')}/'
+                '${date.year}';
+            final timeText =
+                '${date.hour.toString().padLeft(2, '0')}:'
+                '${date.minute.toString().padLeft(2, '0')}';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: childPrimary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      moodInfo.$2,
+                      style: const TextStyle(fontSize: 25),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.mood,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: childText,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '$dateText • $timeText',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    ),
+  );
+}
+
+(String, String) _moodDetails(String mood) {
+  switch (mood) {
+    case 'Happy':
+      return ('Happy', '😊');
+    case 'Calm':
+      return ('Calm', '😌');
+    case 'Sad':
+      return ('Sad', '😢');
+    case 'Angry':
+      return ('Angry', '😠');
+    case 'Worried':
+      return ('Worried', '😟');
+    default:
+      return ('Unknown', '💜');
+  }
+}
+
 }
 
 Widget _circleIcon(IconData icon, double size) => Container(
