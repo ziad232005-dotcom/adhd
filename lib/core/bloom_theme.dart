@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class BloomBrand {
   const BloomBrand._();
 
-  static const String name = 'Bloom';
+  static const String name = 'MΛZID';
   static const String tagline = 'ADHD Parent Support';
 }
 
