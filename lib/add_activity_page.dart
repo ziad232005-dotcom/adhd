@@ -100,9 +100,9 @@ class _AddActivityPageState extends State<AddActivityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.textDark,
         elevation: 0,
         title: const Text(
