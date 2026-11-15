@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:pinput/pinput.dart';
 import 'parent.dart';
 import 'child.dart';
+import 'core/app_features.dart';
 import 'core/bloom_theme.dart';
 import 'core/widgets/bloom_widgets.dart';
 
@@ -199,7 +200,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       return;
     }
 
-    // Keep the existing verification flow and parameter names.
+    if (!AppFeatures.smsVerification) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPVerificationScreen(
+            destination: emailController.text.trim(),
+            method: 'Email',
+          ),
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -412,7 +425,7 @@ class VerificationChoiceScreen extends StatelessWidget {
               ),
             ),
           ),
-          if (phone.isNotEmpty) ...[
+          if (AppFeatures.smsVerification && phone.isNotEmpty) ...[
             const SizedBox(height: 16),
             verificationCard(
               icon: Icons.sms_outlined,
