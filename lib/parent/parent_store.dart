@@ -282,6 +282,23 @@ class ParentStore extends ChangeNotifier {
     _changed();
   }
 
+  void updateReminder({
+    required int id,
+    required String title,
+    required DateTime dueAt,
+  }) {
+    final index = reminders.indexWhere((r) => r.id == id);
+    if (index == -1) return;
+    reminders[index] = ParentReminder(
+      id: id,
+      title: title.trim(),
+      dueAt: dueAt,
+      done: reminders[index].done,
+    );
+    _sortReminders();
+    _changed();
+  }
+
   void toggleReminder(int id) {
     final index = reminders.indexWhere((r) => r.id == id);
     if (index == -1) return;

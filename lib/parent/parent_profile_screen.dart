@@ -97,10 +97,10 @@ class ParentProfileScreen extends StatelessWidget {
       },
     );
 
+    // The controllers are not disposed here: the sheet is still animating
+    // out when this line runs, and disposing them now would throw.
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
-    nameController.dispose();
-    phoneController.dispose();
 
     if (saved != true) return;
 

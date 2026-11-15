@@ -22,6 +22,7 @@ import 'parent/parent_profile_screen.dart';
 import 'parent/parent_store.dart';
 import 'parent/parent_ui.dart';
 import 'parent/quick_actions_screen.dart';
+import 'parent/reminder_form_screen.dart';
 import 'parent/reminders_screen.dart';
 import 'parent/weekly_report_screen.dart';
 //اللوان ال انا مستخدمها في Dashboard parent
@@ -400,7 +401,7 @@ Future<void> _saveActivities() async {
         subtitle: 'Medication, appointments and more',
         icon: Icons.alarm_add_rounded,
         color: const Color(0xFFFFF1D6),
-        onTap: () => showAddReminderDialog(context),
+        onTap: () => openReminderForm(context),
       ),
       ParentAction(
         title: 'Weekly Report',
@@ -1386,9 +1387,9 @@ Widget _buildRoutineCard() {
                         });
                         await _saveRoutines();
                       } else if (value == 'reminder') {
-                        await showAddReminderDialog(
+                        await openReminderForm(
                           context,
-                          title: routine[i]['title']?.toString(),
+                          initialTitle: routine[i]['title']?.toString(),
                         );
                       }
                     },
@@ -1582,7 +1583,6 @@ Navigator.pop(dialogContext);
     },
   );
 
-  titleController.dispose();
 }
 Widget _buildActivities() {
   if (!_activitiesLoaded) {
@@ -2031,7 +2031,7 @@ String _formatObservationTime(DateTime timestamp) {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => showAddReminderDialog(context),
+                  onPressed: () => openReminderForm(context),
                   child: const Text('Add reminder'),
                 ),
               ],

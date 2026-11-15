@@ -2,134 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'parent_store.dart';
 import 'parent_ui.dart';
-
-/// Opens the dialog used to create a reminder. Returns true when saved.
-Future<bool> showAddReminderDialog(
-  BuildContext context, {
-  String? title,
-  DateTime? dueAt,
-}) async {
-  final titleController = TextEditingController(text: title ?? '');
-  var date = dueAt ?? DateTime.now();
-  var time = TimeOfDay.fromDateTime(
-    dueAt ?? DateTime.now().add(const Duration(hours: 1)),
-  );
-
-  final saved = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
-            title: const Text(
-              'New Reminder',
-              style: TextStyle(
-                color: ParentUi.dark,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Reminder',
-                    prefixIcon: Icon(Icons.edit_rounded),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.calendar_today_rounded,
-                    color: ParentUi.purple,
-                  ),
-                  title: const Text('Date'),
-                  subtitle: Text(parentDayLabel(date)),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: date,
-                      firstDate:
-                          DateTime.now().subtract(const Duration(days: 1)),
-                      lastDate:
-                          DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) {
-                      setDialogState(() => date = picked);
-                    }
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.access_time_rounded,
-                    color: ParentUi.purple,
-                  ),
-                  title: const Text('Time'),
-                  subtitle: Text(time.format(context)),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: time,
-                    );
-                    if (picked != null) {
-                      setDialogState(() => time = picked);
-                    }
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: ParentUi.purple,
-                ),
-                onPressed: () {
-                  if (titleController.text.trim().isEmpty) {
-                    showParentSnack(
-                      dialogContext,
-                      'Please enter a reminder.',
-                    );
-                    return;
-                  }
-                  Navigator.pop(dialogContext, true);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-
-  final text = titleController.text.trim();
-  titleController.dispose();
-
-  if (saved != true) return false;
-
-  ParentStore.instance.addReminder(
-    title: text,
-    dueAt: DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    ),
-  );
-  return true;
-}
+import 'reminder_form_screen.dart';
 
 class RemindersScreen extends StatelessWidget {
   const RemindersScreen({super.key});
@@ -144,7 +17,7 @@ class RemindersScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: ParentUi.purple,
         foregroundColor: Colors.white,
-        onPressed: () => showAddReminderDialog(context),
+        onPressed: () => openReminderForm(context),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add reminder'),
       ),
@@ -160,7 +33,7 @@ class RemindersScreen extends StatelessWidget {
                     'Add reminders for medication, appointments or '
                     'tomorrow’s preparation.',
                 actionLabel: 'Add reminder',
-                onAction: () => showAddReminderDialog(context),
+                onAction: () => openReminderForm(context),
               );
             }
 
@@ -193,6 +66,10 @@ class RemindersScreen extends StatelessWidget {
                     showParentSnack(context, 'Reminder deleted');
                   },
                   child: ParentCard(
+                    onTap: () => openReminderForm(
+                      context,
+                      reminder: reminder,
+                    ),
                     child: Row(
                       children: [
                         IconButton(
