@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 /// Brand constants. Change [name] here to rename the app everywhere the
 /// design system uses it.
-class BloomBrand {
-  const BloomBrand._();
+class MazidBrand {
+  const MazidBrand._();
 
   static const String name = 'MΛZID';
   static const String tagline = 'ADHD Parent Support';
 }
 
-/// Colors sampled from the Bloom UI/UX design.
-class BloomColors {
-  const BloomColors._();
+/// Colors sampled from the UI/UX design.
+class MazidColors {
+  const MazidColors._();
 
   static const Color primary = Color(0xFF6557D9);
   static const Color primaryBright = Color(0xFF7664E8);
@@ -38,8 +38,8 @@ class BloomColors {
 }
 
 /// Spacing and radius values shared by all screens.
-class BloomSpacing {
-  const BloomSpacing._();
+class MazidSpacing {
+  const MazidSpacing._();
 
   static const double screenPadding = 24;
   static const double fieldRadius = 14;
@@ -47,65 +47,65 @@ class BloomSpacing {
   static const double cardRadius = 20;
 }
 
-/// Builds the app-wide [ThemeData] for Bloom.
-class BloomTheme {
-  const BloomTheme._();
+/// Builds the app-wide [ThemeData] for MΛZID.
+class MazidTheme {
+  const MazidTheme._();
 
   static const String fontFamily = 'Cairo';
 
   static OutlineInputBorder _border(Color color, [double width = 1]) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(BloomSpacing.fieldRadius),
+      borderRadius: BorderRadius.circular(MazidSpacing.fieldRadius),
       borderSide: BorderSide(color: color, width: width),
     );
   }
 
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: BloomColors.primary,
-      primary: BloomColors.primary,
-      surface: BloomColors.surface,
-      error: BloomColors.error,
+      seedColor: MazidColors.primary,
+      primary: MazidColors.primary,
+      surface: MazidColors.surface,
+      error: MazidColors.error,
     );
 
     return ThemeData(
       useMaterial3: true,
       fontFamily: fontFamily,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: BloomColors.background,
+      scaffoldBackgroundColor: MazidColors.background,
       appBarTheme: const AppBarTheme(
-        backgroundColor: BloomColors.background,
+        backgroundColor: MazidColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        foregroundColor: BloomColors.textDark,
+        foregroundColor: MazidColors.textDark,
         titleTextStyle: TextStyle(
           fontFamily: fontFamily,
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: BloomColors.textDark,
+          color: MazidColors.textDark,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: BloomColors.surface,
+        fillColor: MazidColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         hintStyle: const TextStyle(
-          color: BloomColors.textMuted,
+          color: MazidColors.textMuted,
           fontSize: 14,
         ),
-        prefixIconColor: BloomColors.textMuted,
-        suffixIconColor: BloomColors.textMuted,
-        border: _border(BloomColors.border),
-        enabledBorder: _border(BloomColors.border),
-        focusedBorder: _border(BloomColors.primary, 1.6),
-        errorBorder: _border(BloomColors.error),
-        focusedErrorBorder: _border(BloomColors.error, 1.6),
+        prefixIconColor: MazidColors.textMuted,
+        suffixIconColor: MazidColors.textMuted,
+        border: _border(MazidColors.border),
+        enabledBorder: _border(MazidColors.border),
+        focusedBorder: _border(MazidColors.primary, 1.6),
+        errorBorder: _border(MazidColors.error),
+        focusedErrorBorder: _border(MazidColors.error, 1.6),
         errorStyle: const TextStyle(
-          color: BloomColors.error,
+          color: MazidColors.error,
           fontSize: 12,
         ),
       ),
@@ -113,17 +113,17 @@ class BloomTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
         ),
-        side: const BorderSide(color: BloomColors.border, width: 1.5),
+        side: const BorderSide(color: MazidColors.border, width: 1.5),
         fillColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return BloomColors.primary;
+            return MazidColors.primary;
           }
-          return BloomColors.surface;
+          return MazidColors.surface;
         }),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: BloomColors.primary,
+          foregroundColor: MazidColors.primary,
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontWeight: FontWeight.w600,
@@ -132,13 +132,13 @@ class BloomTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: BloomColors.textDark,
+        backgroundColor: MazidColors.textDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: BloomColors.border,
+        color: MazidColors.border,
         thickness: 1,
       ),
     );

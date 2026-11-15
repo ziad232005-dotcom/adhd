@@ -6,8 +6,8 @@ import 'package:pinput/pinput.dart';
 import 'parent.dart';
 import 'child.dart';
 import 'core/app_features.dart';
-import 'core/bloom_theme.dart';
-import 'core/widgets/bloom_widgets.dart';
+import 'core/mazid_theme.dart';
+import 'core/widgets/mazid_widgets.dart';
 
 
 
@@ -20,8 +20,8 @@ Future<void> main() async {
 }
 
 
-const primaryColor = BloomColors.primary;
-const backgroundColor = BloomColors.background;
+const primaryColor = MazidColors.primary;
+const backgroundColor = MazidColors.background;
 
 class ADHDCompanionApp extends StatelessWidget {
   const ADHDCompanionApp({super.key});
@@ -30,8 +30,8 @@ class ADHDCompanionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: BloomBrand.name,
-      theme: BloomTheme.light(),
+      title: MazidBrand.name,
+      theme: MazidTheme.light(),
       home: const WelcomeScreen(),
     );
   }
@@ -44,24 +44,24 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       showBack: false,
       child: Column(
         children: [
           const SizedBox(height: 48),
-          const BloomMascot(size: 120),
+          const MazidMascot(size: 120),
           const SizedBox(height: 8),
           const Text(
-            BloomBrand.name,
+            MazidBrand.name,
             style: TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.bold,
-              color: BloomColors.primary,
+              color: MazidColors.primary,
             ),
           ),
           const Text(
-            BloomBrand.tagline,
-            style: TextStyle(fontSize: 16, color: BloomColors.textDark),
+            MazidBrand.tagline,
+            style: TextStyle(fontSize: 16, color: MazidColors.textDark),
           ),
           const SizedBox(height: 72),
           const Text(
@@ -71,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
               fontSize: 27,
               height: 1.2,
               fontWeight: FontWeight.bold,
-              color: BloomColors.textDark,
+              color: MazidColors.textDark,
             ),
           ),
           const SizedBox(height: 16),
@@ -82,11 +82,11 @@ class WelcomeScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               height: 1.6,
-              color: BloomColors.textMuted,
+              color: MazidColors.textMuted,
             ),
           ),
           const SizedBox(height: 40),
-          BloomPrimaryButton(
+          MazidPrimaryButton(
             label: 'Get Started',
             onPressed: () => Navigator.push(
               context,
@@ -96,9 +96,9 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          BloomOutlineButton(
+          MazidOutlineButton(
             label: 'Sign In',
-            borderColor: BloomColors.primary,
+            borderColor: MazidColors.primary,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -238,53 +238,53 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       child: Form(
         key: formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const BloomAuthHeader(
+            const MazidAuthHeader(
               title: 'Create Your Account',
-              subtitle: 'Join ${BloomBrand.name} and start your journey to\n'
+              subtitle: 'Join ${MazidBrand.name} and start your journey to\n'
                   'better support your child.',
             ),
             const SizedBox(height: 28),
-            BloomTextField(
+            MazidTextField(
               controller: nameController,
               label: 'Full Name',
               hint: 'Your full name',
               icon: Icons.person_outline,
               textCapitalization: TextCapitalization.words,
-              validator: (value) => BloomValidators.requiredText(
+              validator: (value) => MazidValidators.requiredText(
                 value,
                 'Please enter your full name.',
               ),
             ),
             const SizedBox(height: 16),
-            BloomTextField(
+            MazidTextField(
               controller: emailController,
               label: 'Email Address',
               hint: 'you@example.com',
               icon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
-              validator: BloomValidators.email,
+              validator: MazidValidators.email,
             ),
             const SizedBox(height: 16),
-            BloomTextField(
+            MazidTextField(
               controller: phoneController,
               label: 'Phone Number (Optional)',
               hint: 'Your phone number',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
-              validator: BloomValidators.optionalPhone,
+              validator: MazidValidators.optionalPhone,
             ),
             const SizedBox(height: 16),
-            const BloomFieldLabel('Date of Birth'),
+            const MazidFieldLabel('Date of Birth'),
             InkWell(
               onTap: selectDateOfBirth,
-              borderRadius: BorderRadius.circular(BloomSpacing.fieldRadius),
+              borderRadius: BorderRadius.circular(MazidSpacing.fieldRadius),
               child: InputDecorator(
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.calendar_month_outlined, size: 20),
@@ -294,23 +294,23 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     color: selectedDateOfBirth == null
-                        ? BloomColors.textMuted
-                        : BloomColors.textDark,
+                        ? MazidColors.textMuted
+                        : MazidColors.textDark,
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            BloomPasswordField(
+            MazidPasswordField(
               controller: passwordController,
               label: 'Password',
               hint: 'At least 8 characters',
-              validator: BloomValidators.password,
+              validator: MazidValidators.password,
             ),
             const SizedBox(height: 4),
-            BloomPasswordChecklist(controller: passwordController),
+            MazidPasswordChecklist(controller: passwordController),
             const SizedBox(height: 16),
-            BloomPasswordField(
+            MazidPasswordField(
               controller: confirmPasswordController,
               label: 'Confirm Password',
               hint: 'Re-enter password',
@@ -345,7 +345,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         height: 1.4,
-                        color: BloomColors.textDark,
+                        color: MazidColors.textDark,
                       ),
                     ),
                   ),
@@ -353,7 +353,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            BloomPrimaryButton(
+            MazidPrimaryButton(
               label: 'Create Account',
               onPressed: continueToVerification,
             ),
@@ -363,7 +363,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               children: [
                 const Text(
                   'Already have an account?',
-                  style: TextStyle(color: BloomColors.textMuted),
+                  style: TextStyle(color: MazidColors.textMuted),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -400,11 +400,11 @@ class VerificationChoiceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const BloomAuthHeader(
+          const MazidAuthHeader(
             icon: Icons.verified_user_outlined,
             title: 'Verify Your Account',
             subtitle: 'Choose how you would like to receive\n'
@@ -447,7 +447,7 @@ class VerificationChoiceScreen extends StatelessWidget {
             'We will send you a 6-digit code.\n'
             'It expires in 5 minutes.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: BloomColors.textMuted, fontSize: 12),
+            style: TextStyle(color: MazidColors.textMuted, fontSize: 12),
           ),
         ],
       ),
@@ -724,11 +724,11 @@ if (response.statusCode >= 200 &&
         textStyle: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: BloomColors.textDark,
+          color: MazidColors.textDark,
         ),
         decoration: BoxDecoration(
-          color: BloomColors.surface,
-          border: Border.all(color: BloomColors.border),
+          color: MazidColors.surface,
+          border: Border.all(color: MazidColors.border),
           borderRadius: BorderRadius.circular(12),
         ),
       );
@@ -744,11 +744,11 @@ if (response.statusCode >= 200 &&
     final isEmail = _isEmail;
     final basePin = _basePinTheme;
 
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          BloomAuthHeader(
+          MazidAuthHeader(
             icon: isEmail ? Icons.mail_outline_rounded : Icons.sms_outlined,
             title: isEmail ? 'Verify Your Email' : 'Verify Your Number',
             subtitle: 'Enter the 6-digit code for\n${widget.destination}',
@@ -761,11 +761,11 @@ if (response.statusCode >= 200 &&
               keyboardType: TextInputType.number,
               defaultPinTheme: basePin,
               focusedPinTheme: basePin.copyDecorationWith(
-                border: Border.all(color: BloomColors.primary, width: 2),
+                border: Border.all(color: MazidColors.primary, width: 2),
               ),
               submittedPinTheme: basePin.copyDecorationWith(
-                color: BloomColors.softPurple,
-                border: Border.all(color: BloomColors.primary),
+                color: MazidColors.softPurple,
+                border: Border.all(color: MazidColors.primary),
               ),
             ),
           ),
@@ -776,12 +776,12 @@ if (response.statusCode >= 200 &&
                 : 'We will send a verification code to ${widget.destination}.',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: BloomColors.textMuted,
+              color: MazidColors.textMuted,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 24),
-          BloomPrimaryButton(
+          MazidPrimaryButton(
             label: 'Verify & Continue',
             isLoading: isVerifying,
             onPressed: isSending ? null : verifyOtp,
@@ -931,30 +931,30 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       child: Form(
         key: formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const BloomAuthHeader(
-              mascot: BloomAssets.octopus,
+            const MazidAuthHeader(
+              mascot: MazidAssets.octopus,
               mascotSize: 88,
               title: 'Welcome back!',
               subtitle: 'Sign in to continue your journey.',
             ),
             const SizedBox(height: 28),
-            BloomTextField(
+            MazidTextField(
               controller: emailController,
               label: 'Email Address',
               hint: 'you@example.com',
               icon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
-              validator: BloomValidators.email,
+              validator: MazidValidators.email,
             ),
             const SizedBox(height: 16),
-            BloomPasswordField(
+            MazidPasswordField(
               controller: passwordController,
               label: 'Password',
               hint: 'Enter your password',
@@ -982,7 +982,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
                     'Remember me',
                     style: TextStyle(
                       fontSize: 13,
-                      color: BloomColors.textDark,
+                      color: MazidColors.textDark,
                     ),
                   ),
                 ),
@@ -993,7 +993,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            BloomPrimaryButton(label: 'Sign In', onPressed: signIn),
+            MazidPrimaryButton(label: 'Sign In', onPressed: signIn),
             const SizedBox(height: 20),
             const Row(
               children: [
@@ -1003,7 +1003,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
                   child: Text(
                     'or',
                     style: TextStyle(
-                      color: BloomColors.textMuted,
+                      color: MazidColors.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -1012,13 +1012,13 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            BloomOutlineButton(
+            MazidOutlineButton(
               label: 'Continue with Google',
               icon: const Icon(Icons.g_mobiledata, size: 28),
               onPressed: () => socialSignIn('Google'),
             ),
             const SizedBox(height: 12),
-            BloomOutlineButton(
+            MazidOutlineButton(
               label: 'Continue with Apple',
               icon: const Icon(Icons.apple, size: 22),
               onPressed: () => socialSignIn('Apple'),
@@ -1029,7 +1029,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
               children: [
                 const Text(
                   "Don't have an account?",
-                  style: TextStyle(color: BloomColors.textMuted),
+                  style: TextStyle(color: MazidColors.textMuted),
                 ),
                 TextButton(
                   onPressed: () => Navigator.push(
@@ -1089,20 +1089,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BloomAuthScaffold(
+    return MazidAuthScaffold(
       child: Form(
         key: formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const BloomAuthHeader(
+            const MazidAuthHeader(
               icon: Icons.mail_outline_rounded,
               title: 'Forgot Password?',
               subtitle: "Enter your email address and we'll send\n"
                   'you a code to reset your password.',
             ),
             const SizedBox(height: 28),
-            BloomTextField(
+            MazidTextField(
               controller: emailController,
               label: 'Email Address',
               hint: 'you@example.com',
@@ -1110,10 +1110,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
               autocorrect: false,
-              validator: BloomValidators.email,
+              validator: MazidValidators.email,
             ),
             const SizedBox(height: 24),
-            BloomPrimaryButton(
+            MazidPrimaryButton(
               label: 'Send Code',
               onPressed: sendResetRequest,
             ),
@@ -1123,7 +1123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               children: [
                 const Text(
                   'Remember your password?',
-                  style: TextStyle(color: BloomColors.textMuted),
+                  style: TextStyle(color: MazidColors.textMuted),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -1229,7 +1229,7 @@ Widget appButton({
   required String text,
   required VoidCallback onPressed,
 }) {
-  return BloomPrimaryButton(label: text, onPressed: onPressed);
+  return MazidPrimaryButton(label: text, onPressed: onPressed);
 }
 
 Widget verificationCard({
@@ -1239,12 +1239,12 @@ Widget verificationCard({
   required VoidCallback onTap,
 }) {
   return Card(
-    color: BloomColors.surface,
+    color: MazidColors.surface,
     elevation: 0,
     margin: EdgeInsets.zero,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(BloomSpacing.cardRadius),
-      side: const BorderSide(color: BloomColors.border),
+      borderRadius: BorderRadius.circular(MazidSpacing.cardRadius),
+      side: const BorderSide(color: MazidColors.border),
     ),
     child: ListTile(
       contentPadding: const EdgeInsets.all(14),
@@ -1252,29 +1252,29 @@ Widget verificationCard({
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: BloomColors.softPurple,
+          color: MazidColors.softPurple,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: BloomColors.primary),
+        child: Icon(icon, color: MazidColors.primary),
       ),
       title: Text(
         title,
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: BloomColors.textDark,
+          color: MazidColors.textDark,
         ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 5),
         child: Text(
           subtitle,
-          style: const TextStyle(color: BloomColors.textMuted),
+          style: const TextStyle(color: MazidColors.textMuted),
         ),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: BloomColors.textMuted,
+        color: MazidColors.textMuted,
       ),
       onTap: onTap,
     ),

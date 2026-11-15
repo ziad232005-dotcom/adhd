@@ -28,7 +28,7 @@ flutter:
 
   assets:
     - images/
-    - images/bloom/
+    - images/mazid/
 
   fonts:
     - family: Cairo

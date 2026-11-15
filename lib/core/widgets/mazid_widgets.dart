@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../bloom_theme.dart';
+import '../mazid_theme.dart';
 
 /// Paths of the octopus mascot images used across the app.
-class BloomAssets {
-  const BloomAssets._();
+class MazidAssets {
+  const MazidAssets._();
 
-  static const String octopus = 'images/bloom/octopus.png';
-  static const String octopusHeart = 'images/bloom/octopus_heart.png';
-  static const String octopusCelebrate = 'images/bloom/octopus_celebrate.png';
-  static const String octopusIdea = 'images/bloom/octopus_idea.png';
-  static const String octopusGlasses = 'images/bloom/octopus_glasses.png';
+  static const String octopus = 'images/mazid/octopus.png';
+  static const String octopusHeart = 'images/mazid/octopus_heart.png';
+  static const String octopusCelebrate = 'images/mazid/octopus_celebrate.png';
+  static const String octopusIdea = 'images/mazid/octopus_idea.png';
+  static const String octopusGlasses = 'images/mazid/octopus_glasses.png';
   static const String octopusHeadphones =
-      'images/bloom/octopus_headphones.png';
+      'images/mazid/octopus_headphones.png';
 }
 
-/// The Bloom octopus mascot.
-class BloomMascot extends StatelessWidget {
-  const BloomMascot({
+/// The MΛZID octopus mascot.
+class MazidMascot extends StatelessWidget {
+  const MazidMascot({
     super.key,
-    this.asset = BloomAssets.octopus,
+    this.asset = MazidAssets.octopus,
     this.size = 96,
   });
 
@@ -38,8 +38,8 @@ class BloomMascot extends StatelessWidget {
 }
 
 /// Soft wave decoration shown at the bottom of the authentication screens.
-class BloomWave extends StatelessWidget {
-  const BloomWave({super.key, this.height = 75});
+class MazidWave extends StatelessWidget {
+  const MazidWave({super.key, this.height = 75});
 
   final double height;
 
@@ -59,7 +59,7 @@ class _WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = BloomColors.wave
+      ..color = MazidColors.wave
       ..style = PaintingStyle.fill;
 
     final path = Path()
@@ -89,8 +89,8 @@ class _WavePainter extends CustomPainter {
 
 /// Page layout shared by the authentication screens: optional back button,
 /// scrollable content and the bottom wave.
-class BloomAuthScaffold extends StatelessWidget {
-  const BloomAuthScaffold({
+class MazidAuthScaffold extends StatelessWidget {
+  const MazidAuthScaffold({
     super.key,
     required this.child,
     this.showBack = true,
@@ -104,7 +104,7 @@ class BloomAuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BloomColors.background,
+      backgroundColor: MazidColors.background,
       body: Stack(
         children: [
           if (showWave)
@@ -112,7 +112,7 @@ class BloomAuthScaffold extends StatelessWidget {
               left: 0,
               right: 0,
               bottom: 0,
-              child: BloomWave(),
+              child: MazidWave(),
             ),
           SafeArea(
             child: Column(
@@ -128,7 +128,7 @@ class BloomAuthScaffold extends StatelessWidget {
                         icon: const Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: BloomColors.textDark,
+                          color: MazidColors.textDark,
                         ),
                       ),
                     ),
@@ -136,9 +136,9 @@ class BloomAuthScaffold extends StatelessWidget {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
-                      BloomSpacing.screenPadding,
-                      showBack ? 4 : BloomSpacing.screenPadding,
-                      BloomSpacing.screenPadding,
+                      MazidSpacing.screenPadding,
+                      showBack ? 4 : MazidSpacing.screenPadding,
+                      MazidSpacing.screenPadding,
                       32,
                     ),
                     child: child,
@@ -154,8 +154,8 @@ class BloomAuthScaffold extends StatelessWidget {
 }
 
 /// Centered header: mascot (or icon badge), title and subtitle.
-class BloomAuthHeader extends StatelessWidget {
-  const BloomAuthHeader({
+class MazidAuthHeader extends StatelessWidget {
+  const MazidAuthHeader({
     super.key,
     required this.title,
     this.subtitle,
@@ -174,16 +174,16 @@ class BloomAuthHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (mascot != null) BloomMascot(asset: mascot!, size: mascotSize),
+        if (mascot != null) MazidMascot(asset: mascot!, size: mascotSize),
         if (mascot == null && icon != null)
           Container(
             width: 96,
             height: 96,
             decoration: const BoxDecoration(
-              color: BloomColors.softPurple,
+              color: MazidColors.softPurple,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 40, color: BloomColors.primary),
+            child: Icon(icon, size: 40, color: MazidColors.primary),
           ),
         const SizedBox(height: 16),
         Text(
@@ -192,7 +192,7 @@ class BloomAuthHeader extends StatelessWidget {
           style: const TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            color: BloomColors.textDark,
+            color: MazidColors.textDark,
           ),
         ),
         if (subtitle != null) ...[
@@ -203,7 +203,7 @@ class BloomAuthHeader extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: BloomColors.textMuted,
+              color: MazidColors.textMuted,
             ),
           ),
         ],
@@ -213,8 +213,8 @@ class BloomAuthHeader extends StatelessWidget {
 }
 
 /// Filled primary button (full width, pill shaped).
-class BloomPrimaryButton extends StatelessWidget {
-  const BloomPrimaryButton({
+class MazidPrimaryButton extends StatelessWidget {
+  const MazidPrimaryButton({
     super.key,
     required this.label,
     required this.onPressed,
@@ -229,17 +229,17 @@ class BloomPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: BloomSpacing.buttonHeight,
+      height: MazidSpacing.buttonHeight,
       child: FilledButton(
         onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: BloomColors.primary,
+          backgroundColor: MazidColors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: BloomColors.primary.withValues(alpha: 0.6),
+          disabledBackgroundColor: MazidColors.primary.withValues(alpha: 0.6),
           disabledForegroundColor: Colors.white,
           shape: const StadiumBorder(),
           textStyle: const TextStyle(
-            fontFamily: BloomTheme.fontFamily,
+            fontFamily: MazidTheme.fontFamily,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -260,13 +260,13 @@ class BloomPrimaryButton extends StatelessWidget {
 }
 
 /// Outlined secondary button (full width, pill shaped).
-class BloomOutlineButton extends StatelessWidget {
-  const BloomOutlineButton({
+class MazidOutlineButton extends StatelessWidget {
+  const MazidOutlineButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
-    this.borderColor = BloomColors.border,
+    this.borderColor = MazidColors.border,
   });
 
   final String label;
@@ -277,13 +277,13 @@ class BloomOutlineButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = OutlinedButton.styleFrom(
-      foregroundColor: BloomColors.primary,
-      backgroundColor: BloomColors.surface,
+      foregroundColor: MazidColors.primary,
+      backgroundColor: MazidColors.surface,
       side: BorderSide(color: borderColor, width: 1.5),
       shape: const StadiumBorder(),
-      minimumSize: const Size(double.infinity, BloomSpacing.buttonHeight),
+      minimumSize: const Size(double.infinity, MazidSpacing.buttonHeight),
       textStyle: const TextStyle(
-        fontFamily: BloomTheme.fontFamily,
+        fontFamily: MazidTheme.fontFamily,
         fontSize: 15,
         fontWeight: FontWeight.w600,
       ),
@@ -307,8 +307,8 @@ class BloomOutlineButton extends StatelessWidget {
 }
 
 /// Small label shown above an input field.
-class BloomFieldLabel extends StatelessWidget {
-  const BloomFieldLabel(this.text, {super.key});
+class MazidFieldLabel extends StatelessWidget {
+  const MazidFieldLabel(this.text, {super.key});
 
   final String text;
 
@@ -321,7 +321,7 @@ class BloomFieldLabel extends StatelessWidget {
         style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: BloomColors.textDark,
+          color: MazidColors.textDark,
         ),
       ),
     );
@@ -329,8 +329,8 @@ class BloomFieldLabel extends StatelessWidget {
 }
 
 /// Labeled text field with a leading icon.
-class BloomTextField extends StatelessWidget {
-  const BloomTextField({
+class MazidTextField extends StatelessWidget {
+  const MazidTextField({
     super.key,
     required this.controller,
     required this.label,
@@ -358,7 +358,7 @@ class BloomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        BloomFieldLabel(label),
+        MazidFieldLabel(label),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -377,8 +377,8 @@ class BloomTextField extends StatelessWidget {
 }
 
 /// Labeled password field with a show/hide toggle.
-class BloomPasswordField extends StatefulWidget {
-  const BloomPasswordField({
+class MazidPasswordField extends StatefulWidget {
+  const MazidPasswordField({
     super.key,
     required this.controller,
     required this.label,
@@ -394,10 +394,10 @@ class BloomPasswordField extends StatefulWidget {
   final TextInputAction textInputAction;
 
   @override
-  State<BloomPasswordField> createState() => _BloomPasswordFieldState();
+  State<MazidPasswordField> createState() => _MazidPasswordFieldState();
 }
 
-class _BloomPasswordFieldState extends State<BloomPasswordField> {
+class _MazidPasswordFieldState extends State<MazidPasswordField> {
   bool _hidden = true;
 
   @override
@@ -405,7 +405,7 @@ class _BloomPasswordFieldState extends State<BloomPasswordField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        BloomFieldLabel(widget.label),
+        MazidFieldLabel(widget.label),
         TextFormField(
           controller: widget.controller,
           obscureText: _hidden,
@@ -434,8 +434,8 @@ class _BloomPasswordFieldState extends State<BloomPasswordField> {
 }
 
 /// Inline error message shown at the top of a form.
-class BloomErrorBanner extends StatelessWidget {
-  const BloomErrorBanner({super.key, required this.title, this.message});
+class MazidErrorBanner extends StatelessWidget {
+  const MazidErrorBanner({super.key, required this.title, this.message});
 
   final String title;
   final String? message;
@@ -445,10 +445,10 @@ class BloomErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: BloomColors.errorSoft,
-        borderRadius: BorderRadius.circular(BloomSpacing.fieldRadius),
+        color: MazidColors.errorSoft,
+        borderRadius: BorderRadius.circular(MazidSpacing.fieldRadius),
         border: Border.all(
-          color: BloomColors.error.withValues(alpha: 0.25),
+          color: MazidColors.error.withValues(alpha: 0.25),
         ),
       ),
       child: Row(
@@ -456,7 +456,7 @@ class BloomErrorBanner extends StatelessWidget {
         children: [
           const Icon(
             Icons.error_outline,
-            color: BloomColors.error,
+            color: MazidColors.error,
             size: 20,
           ),
           const SizedBox(width: 10),
@@ -467,7 +467,7 @@ class BloomErrorBanner extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: BloomColors.error,
+                    color: MazidColors.error,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -477,7 +477,7 @@ class BloomErrorBanner extends StatelessWidget {
                   Text(
                     message!,
                     style: const TextStyle(
-                      color: BloomColors.textMuted,
+                      color: MazidColors.textMuted,
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -493,8 +493,8 @@ class BloomErrorBanner extends StatelessWidget {
 }
 
 /// Rules a password must follow to be accepted.
-class BloomPasswordPolicy {
-  const BloomPasswordPolicy._();
+class MazidPasswordPolicy {
+  const MazidPasswordPolicy._();
 
   static const int minLength = 8;
 
@@ -514,8 +514,8 @@ class BloomPasswordPolicy {
 }
 
 /// Live checklist that shows which password rules are already satisfied.
-class BloomPasswordChecklist extends StatelessWidget {
-  const BloomPasswordChecklist({super.key, required this.controller});
+class MazidPasswordChecklist extends StatelessWidget {
+  const MazidPasswordChecklist({super.key, required this.controller});
 
   final TextEditingController controller;
 
@@ -530,16 +530,16 @@ class BloomPasswordChecklist extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _rule(
-              'At least ${BloomPasswordPolicy.minLength} characters',
-              BloomPasswordPolicy.hasMinLength(text),
+              'At least ${MazidPasswordPolicy.minLength} characters',
+              MazidPasswordPolicy.hasMinLength(text),
             ),
             _rule(
               'Starts with a capital letter',
-              BloomPasswordPolicy.startsWithCapital(text),
+              MazidPasswordPolicy.startsWithCapital(text),
             ),
             _rule(
               'Has a special character (. # @ !)',
-              BloomPasswordPolicy.hasSpecialCharacter(text),
+              MazidPasswordPolicy.hasSpecialCharacter(text),
             ),
           ],
         );
@@ -548,7 +548,7 @@ class BloomPasswordChecklist extends StatelessWidget {
   }
 
   Widget _rule(String label, bool satisfied) {
-    final color = satisfied ? BloomColors.success : BloomColors.textMuted;
+    final color = satisfied ? MazidColors.success : MazidColors.textMuted;
 
     return Padding(
       padding: const EdgeInsets.only(top: 6),
@@ -568,8 +568,8 @@ class BloomPasswordChecklist extends StatelessWidget {
 }
 
 /// Shared form validators, so the same rules are not copied into every screen.
-class BloomValidators {
-  const BloomValidators._();
+class MazidValidators {
+  const MazidValidators._();
 
   static final RegExp _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
@@ -588,13 +588,13 @@ class BloomValidators {
   static String? password(String? value) {
     final text = value ?? '';
 
-    if (!BloomPasswordPolicy.hasMinLength(text)) {
-      return 'Use at least ${BloomPasswordPolicy.minLength} characters.';
+    if (!MazidPasswordPolicy.hasMinLength(text)) {
+      return 'Use at least ${MazidPasswordPolicy.minLength} characters.';
     }
-    if (!BloomPasswordPolicy.startsWithCapital(text)) {
+    if (!MazidPasswordPolicy.startsWithCapital(text)) {
       return 'The first letter must be a capital letter.';
     }
-    if (!BloomPasswordPolicy.hasSpecialCharacter(text)) {
+    if (!MazidPasswordPolicy.hasSpecialCharacter(text)) {
       return 'Add a special character such as . # @ or !';
     }
     return null;

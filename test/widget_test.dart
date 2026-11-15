@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:adhd/core/bloom_theme.dart';
+import 'package:adhd/core/mazid_theme.dart';
 import 'package:adhd/main.dart';
 
 /// Pumps the app on a phone-sized surface (390 x 844 logical pixels).
@@ -18,7 +18,7 @@ void main() {
       (tester) async {
     await pumpApp(tester);
 
-    expect(find.text(BloomBrand.name), findsOneWidget);
+    expect(find.text(MazidBrand.name), findsOneWidget);
     expect(find.text('Get Started'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
   });
