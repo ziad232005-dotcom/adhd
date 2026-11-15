@@ -12,28 +12,84 @@ class _AskAIScreenState extends State<AskAIScreen> {
 
   final List<Map<String, String>> _messages = [];
 
-  void _sendMessage() {
-    final message = _controller.text.trim();
+  static const List<String> _suggestions = [
+    'Homework is hard to start',
+    'Morning routine tips',
+    'My child loses focus',
+    'Handling big emotions',
+  ];
 
-    if (message.isEmpty) return;
+  // Keyword-based general guidance (no clinical advice).
+  static const List<(List<String>, String)> _tips = [
+    (
+      ['homework', 'study', 'school', 'exam'],
+      'Split homework into short blocks of 10–15 minutes with a small '
+          'break between them. Start with the easiest task, keep the desk '
+          'clear of distractions, and praise the effort after each block.',
+    ),
+    (
+      ['morning', 'routine', 'wake', 'late'],
+      'Use a short visual checklist (3–5 steps) and prepare clothes and '
+          'the school bag the night before. Give one instruction at a '
+          'time and celebrate each finished step.',
+    ),
+    (
+      ['focus', 'attention', 'distract', 'concentrat'],
+      'Try a focus timer with short sessions, remove screens and noise '
+          'from the area, and give a quick movement break afterwards. '
+          'Start with 10 minutes and increase slowly.',
+    ),
+    (
+      ['angry', 'anger', 'emotion', 'tantrum', 'cry', 'upset', 'meltdown'],
+      'Stay calm and name the feeling together ("You seem upset"). Offer '
+          'a calm-down space and deep breaths, and talk about what '
+          'happened only after your child feels settled.',
+    ),
+    (
+      ['sleep', 'bed', 'night'],
+      'Keep a fixed bedtime routine, dim lights and stop screens an hour '
+          'before bed. A quiet activity such as reading helps the body '
+          'wind down.',
+    ),
+    (
+      ['reward', 'points', 'motivat'],
+      'Set small, clear goals and reward effort quickly. Use the Rewards '
+          'section to create point goals your child can see and reach.',
+    ),
+  ];
+
+  static const String _fallback =
+      'Thanks for sharing. Try breaking the activity into small, clear '
+      'steps, giving one instruction at a time, and praising your '
+      'child for their effort.';
+
+  String _replyFor(String message) {
+    final text = message.toLowerCase();
+
+    for (final tip in _tips) {
+      if (tip.$1.any(text.contains)) return '${tip.$2}\n\n$_disclaimer';
+    }
+    return '$_fallback\n\n$_disclaimer';
+  }
+
+  static const String _disclaimer =
+      'This is general guidance, not a clinical assessment. Talk to your '
+      'child’s specialist for personal advice.';
+
+  void _send(String message) {
+    final text = message.trim();
+
+    if (text.isEmpty) return;
 
     setState(() {
-      _messages.add({
-        'text': message,
-        'sender': 'parent',
-      });
-      _messages.add({
-        'text':
-            'Thanks for sharing. Try breaking the activity into small, '
-            'clear steps, giving one instruction at a time, and praising '
-            'your child for their effort. This is general guidance, not '
-            'a clinical assessment.',
-        'sender': 'ai',
-      });
+      _messages.add({'text': text, 'sender': 'parent'});
+      _messages.add({'text': _replyFor(text), 'sender': 'ai'});
     });
 
     _controller.clear();
   }
+
+  void _sendMessage() => _send(_controller.text);
 
   @override
   void dispose() {
@@ -58,7 +114,24 @@ class _AskAIScreenState extends State<AskAIScreen> {
             color: darkPurple,
           ),
         ),
-
+        title: const Text(
+          'Ask AI',
+          style: TextStyle(
+            color: darkPurple,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          if (_messages.isNotEmpty)
+            IconButton(
+              tooltip: 'Clear chat',
+              onPressed: () => setState(_messages.clear),
+              icon: const Icon(
+                Icons.delete_sweep_outlined,
+                color: darkPurple,
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -94,6 +167,27 @@ class _AskAIScreenState extends State<AskAIScreen> {
                               color: Colors.grey.shade600,
                               height: 1.5,
                             ),
+                          ),
+                          const SizedBox(height: 22),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              for (final suggestion in _suggestions)
+                                ActionChip(
+                                  label: Text(suggestion),
+                                  backgroundColor: Colors.white,
+                                  side: const BorderSide(
+                                    color: Color(0xFFEFEAFB),
+                                  ),
+                                  labelStyle: const TextStyle(
+                                    color: darkPurple,
+                                    fontSize: 12,
+                                  ),
+                                  onPressed: () => _send(suggestion),
+                                ),
+                            ],
                           ),
                         ],
                       ),

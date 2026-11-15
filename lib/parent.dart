@@ -13,35 +13,22 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'activity_calendar_page.dart';
 import 'view_routine.dart';
+import 'manage_rewards.dart';
+import 'parent/add_child_screen.dart';
+import 'parent/notifications_screen.dart';
+import 'parent/overview_details_screen.dart';
+import 'parent/parent_insights.dart';
+import 'parent/parent_profile_screen.dart';
+import 'parent/parent_store.dart';
+import 'parent/parent_ui.dart';
+import 'parent/quick_actions_screen.dart';
+import 'parent/reminders_screen.dart';
+import 'parent/weekly_report_screen.dart';
 //اللوان ال انا مستخدمها في Dashboard parent
 const Color primaryPurple = Color(0xFF7566D9);
 const Color dashboardBackground = Color(0xFFFAF8FF);
 const Color darkPurple = Color(0xFF30285E);
 const Color softPurple = Color(0xFFF0EDFF);
-//بيانات ال child  ال بتظهر علي dashboard parent 
-class DashboardChild {
-  final String name;
-  final int age;
-  final String grade;
-  final String? imagePath;
-
-  const DashboardChild({
-    required this.name,
-    required this.age,
-    required this.grade,
-    this.imagePath,
-  });
-
-  DashboardChild copyWith({String? imagePath}) {
-    return DashboardChild(
-      name: name,
-      age: age,
-      grade: grade,
-      imagePath: imagePath ?? this.imagePath,
-    );
-  }
-}
-
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
 
@@ -52,7 +39,7 @@ class ParentDashboardScreen extends StatefulWidget {
 
 
 class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
-  int selectedChildIndex = 0;
+  final ParentStore _store = ParentStore.instance;
   int selectedNavIndex = 0;
 
   // Image picker
@@ -70,21 +57,20 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   void initState() {
     super.initState();
 
+    _store.addListener(_onStoreChanged);
     _loadActivities();
     _loadRoutines();
   }
-    final List<DashboardChild> children = [
-    const DashboardChild(
-      name: 'Alex',
-      age: 9,
-      grade: 'Grade 4',
-    ),
-    const DashboardChild(
-      name: 'Maya',
-      age: 7,
-      grade: 'Grade 2',
-    ),
-  ];
+
+  @override
+  void dispose() {
+    _store.removeListener(_onStoreChanged);
+    super.dispose();
+  }
+
+  void _onStoreChanged() {
+    if (mounted) setState(() {});
+  }
 
   // =========================
   // LOAD ROUTINES
@@ -247,9 +233,32 @@ Future<void> _saveActivities() async {
 
 
 
-  DashboardChild get selectedChild => children[selectedChildIndex];
-//تغير صوره البروفايل بتاع الطفل 
+  ParentChild? get selectedChild => _store.selectedChild;
+
+  // Opens the Add child form.
+  Future<void> _addChild() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddChildScreen()),
+    );
+  }
+
+  Future<void> _editChild(ParentChild child) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AddChildScreen(child: child)),
+    );
+  }
+
+  // Changes the selected child's profile photo.
   Future<void> _changeChildPhoto() async {
+    final child = selectedChild;
+
+    if (child == null) {
+      await _addChild();
+      return;
+    }
+
     try {
       final XFile? pickedImage = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -259,30 +268,156 @@ Future<void> _saveActivities() async {
 
       if (pickedImage == null || !mounted) return;
 
-      setState(() {
-        children[selectedChildIndex] = selectedChild.copyWith(
-          imagePath: pickedImage.path,
-        );
-      });
+      _store.updateChild(child.copyWith(imagePath: pickedImage.path));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Child photo updated successfully')),
-      );
+      showParentSnack(context, 'Child photo updated successfully');
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not select the photo')),
-      );
+      showParentSnack(context, 'Could not select the photo');
     }
   }
-//بتعرض رساله للحاجات ال لسه مخلصتش  اسفل الشاشه 
-  void _showMessage(String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$title — coming soon')),
+
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(activities: activities),
+      ),
     );
   }
-  
+
+  Future<void> _addRoutine() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddRoutineScreen()),
+    );
+
+    if (result == null || !mounted) return;
+
+    setState(() {
+      routine.insert(0, {
+        ...result,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      _sortRoutines();
+    });
+
+    await _saveRoutines();
+  }
+
+  Future<void> _openCalendar() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityCalendarPage(
+          activities: activities,
+          onSaveActivities: _saveActivities,
+          onAddActivity: () async {
+            final result = await Navigator.push<Map<String, dynamic>>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddActivityPage(),
+              ),
+            );
+
+            if (result == null || !mounted) return null;
+
+            setState(() {
+              activities.add(result);
+              activities.sort((a, b) {
+                final dateA = DateTime.parse(a['dateTime'] as String);
+                final dateB = DateTime.parse(b['dateTime'] as String);
+                return dateA.compareTo(dateB);
+              });
+            });
+
+            await _saveActivities();
+            return result;
+          },
+        ),
+      ),
+    );
+
+    if (mounted) setState(() {});
+  }
+
+  void _openTab(int index) {
+    setState(() => selectedNavIndex = index);
+  }
+
+  // Every shortcut available to the parent.
+  List<ParentAction> _parentActions() {
+    void open(Widget screen) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    }
+
+    return [
+      ParentAction(
+        title: 'Track Behavior',
+        subtitle: 'Record what you noticed today',
+        icon: Icons.track_changes_rounded,
+        color: const Color(0xFFECE8FF),
+        onTap: () => open(const TrackBehaviorScreen()),
+      ),
+      ParentAction(
+        title: 'Ask AI',
+        subtitle: 'Get general parenting tips',
+        icon: Icons.psychology_alt_rounded,
+        color: const Color(0xFFE4F7EB),
+        onTap: () => open(const AskAIScreen()),
+      ),
+      ParentAction(
+        title: 'Add Task',
+        subtitle: 'Create a new task for your child',
+        icon: Icons.add_task_rounded,
+        color: const Color(0xFFFFF1D6),
+        onTap: () => open(const AddTaskScreen()),
+      ),
+      ParentAction(
+        title: 'Manage Rewards',
+        subtitle: 'Create rewards and point goals',
+        icon: Icons.card_giftcard_rounded,
+        color: const Color(0xFFFFEAF1),
+        onTap: () => open(const ManageRewardsScreen()),
+      ),
+      ParentAction(
+        title: 'Add Routine',
+        subtitle: 'Build a daily routine',
+        icon: Icons.event_repeat_rounded,
+        color: const Color(0xFFECE8FF),
+        onTap: _addRoutine,
+      ),
+      ParentAction(
+        title: 'Activity Calendar',
+        subtitle: 'See and add upcoming activities',
+        icon: Icons.calendar_month_rounded,
+        color: const Color(0xFFE4F7EB),
+        onTap: _openCalendar,
+      ),
+      ParentAction(
+        title: 'Add Reminder',
+        subtitle: 'Medication, appointments and more',
+        icon: Icons.alarm_add_rounded,
+        color: const Color(0xFFFFF1D6),
+        onTap: () => showAddReminderDialog(context),
+      ),
+      ParentAction(
+        title: 'Weekly Report',
+        subtitle: 'Your child’s progress this week',
+        icon: Icons.insights_rounded,
+        color: const Color(0xFFFFEAF1),
+        onTap: () => open(const WeeklyReportScreen()),
+      ),
+      ParentAction(
+        title: 'Child View',
+        subtitle: 'Open the app as your child sees it',
+        icon: Icons.child_care_rounded,
+        color: const Color(0xFFECE8FF),
+        onTap: () => open(ChildTasksScreen()),
+      ),
+    ];
+  }
 
 //مخصصه في ان هي بتبني ال dashboard بتجمع الاقسام
   @override
@@ -305,11 +440,33 @@ body: SafeArea(
                   const SizedBox(height: 14),
                   _buildChildProfile(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle("Today's Overview", 'See details'),
+                  _buildSectionTitle(
+                    "Today's Overview",
+                    'See details',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OverviewDetailsScreen(
+                          routines: routine,
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _buildOverviewCards(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Quick Actions', 'View all'),
+                  _buildSectionTitle(
+                    'Quick Actions',
+                    'View all',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => QuickActionsScreen(
+                          actions: _parentActions(),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _buildQuickActions(),
                   const SizedBox(height: 28),
@@ -348,44 +505,7 @@ Row(
       ),
     ),
     TextButton(
-      onPressed: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ActivityCalendarPage(
-              activities: activities,
-              onSaveActivities: _saveActivities,
-              onAddActivity: () async {
-                final result =
-                    await Navigator.push<Map<String, dynamic>>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddActivityPage(),
-                  ),
-                );
-
-                if (result == null || !mounted) return null;
-
-                setState(() {
-                  activities.add(result);
-                  activities.sort((a, b) {
-                    final dateA =
-                        DateTime.parse(a['dateTime'] as String);
-                    final dateB =
-                        DateTime.parse(b['dateTime'] as String);
-                    return dateA.compareTo(dateB);
-                  });
-                });
-
-                await _saveActivities();
-                return result;
-              },
-            ),
-          ),
-        );
-
-        if (mounted) setState(() {});
-      },
+      onPressed: _openCalendar,
       child: const Text(
         'View calendar',
         style: TextStyle(
@@ -413,14 +533,30 @@ _buildSectionTitle(
   },
 ),
 _buildObservationCard(),
-                  const SizedBox(height: 14),
-                  _buildObservationCard(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Progress Highlights', 'Weekly report'),
+                  _buildSectionTitle(
+                    'Progress Highlights',
+                    'Weekly report',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WeeklyReportScreen(),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _buildProgressCard(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Reminders', 'View all'),
+                  _buildSectionTitle(
+                    'Reminders',
+                    'View all',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RemindersScreen(),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _buildReminders(),
                 ]),
@@ -431,10 +567,8 @@ _buildObservationCard(),
       : selectedNavIndex == 1
           ? const ParentTasksScreen()
           : selectedNavIndex == 2
-              ? const ProgressScreen()
-              : const Center(
-                  child: Text('Parent Profile'),
-                ),
+              ? const ProgressScreen(showBack: false)
+              : ParentProfileScreen(activities: activities),
 ),
 floatingActionButton: selectedNavIndex == 0
     ? FloatingActionButton.extended(
@@ -518,14 +652,52 @@ errorBuilder: (_, _, _) => const Icon(
             ],
           ),
         ),
-        _circleButton(
-          icon: Icons.notifications_none_rounded,
-          onTap: () => _showMessage('Notifications'),
+        AnimatedBuilder(
+          animation: Listenable.merge([_store, ChildAppState.instance]),
+          builder: (context, _) {
+            final unread = unreadParentNotifications(
+              activities: activities,
+            );
+
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _circleButton(
+                  icon: Icons.notifications_none_rounded,
+                  onTap: _openNotifications,
+                ),
+                if (unread > 0)
+                  Positioned(
+                    right: -3,
+                    top: -3,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ParentUi.red,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: Text(
+                        unread > 9 ? '9+' : '$unread',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         const SizedBox(width: 10),
         _circleButton(
           icon: Icons.person_outline_rounded,
-          onTap: () => _showMessage('Parent profile'),
+          onTap: () => _openTab(3),
         ),
       ],
     );
@@ -564,41 +736,94 @@ errorBuilder: (_, _, _) => const Icon(
   }
 
   Widget _buildChildSelector() {
-    return Row(
+    final children = _store.children;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Your children',
-          style: TextStyle(
-            color: darkPurple,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: () => _showMessage('Add child'),
-          child: const Row(
-            children: [
-              Icon(Icons.add_circle_outline, color: primaryPurple, size: 19),
-              SizedBox(width: 5),
-              Text(
-                'Add child',
-                style: TextStyle(
-                  color: primaryPurple,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
+        Row(
+          children: [
+            const Text(
+              'Your children',
+              style: TextStyle(
+                color: darkPurple,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
               ),
-            ],
-          ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: _addChild,
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    color: primaryPurple,
+                    size: 19,
+                  ),
+                  SizedBox(width: 5),
+                  Text(
+                    'Add child',
+                    style: TextStyle(
+                      color: primaryPurple,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+        if (children.length > 1) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: children.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final selected = index == _store.selectedChildIndex;
+
+                return ChoiceChip(
+                  label: Text(children[index].name),
+                  selected: selected,
+                  showCheckmark: false,
+                  selectedColor: primaryPurple,
+                  backgroundColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: selected ? Colors.white : darkPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  onSelected: (_) => _store.selectChild(index),
+                );
+              },
+            ),
+          ),
+        ],
       ],
     );
   }
 //بيانات الطفل ال موجوده في ال parent
   Widget _buildChildProfile() {
     final child = selectedChild;
-final childData = ChildAppState.instance;
+    final childData = ChildAppState.instance;
+
+    if (child == null) {
+      return _whiteCard(
+        child: ParentEmptyState(
+          icon: Icons.child_care_rounded,
+          title: 'Add your first child',
+          message:
+              'Add your child’s name, age and grade to personalise '
+              'the dashboard.',
+          actionLabel: 'Add child',
+          onAction: _addChild,
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -704,10 +929,14 @@ final childData = ChildAppState.instance;
                   ],
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: primaryPurple,
+              IconButton(
+                tooltip: 'Edit child',
+                onPressed: () => _editChild(child),
+                icon: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: primaryPurple,
+                ),
               ),
             ],
           ),
@@ -740,8 +969,10 @@ AnimatedBuilder(
         Expanded(
           child: _miniStat(
             icon: Icons.bolt_rounded,
-            label: 'Focus time',
-            value: 'Not tracked',
+            label: 'Focus today',
+            value: ParentInsights(childData).todayFocusMinutes == 0
+                ? 'No sessions'
+                : '${ParentInsights(childData).todayFocusMinutes} min',
           ),
         ),
       ],
@@ -864,6 +1095,9 @@ Widget _buildOverviewCards() {
           ? 0.0
           : (completedTasks / totalTasks).clamp(0.0, 1.0);
 
+      // دقائق التركيز اليوم
+      final focusMinutes = ParentInsights(childData).todayFocusMinutes;
+
       // نسبة إنجاز الروتين
       final routineProgress = totalRoutine == 0
           ? 0.0
@@ -895,9 +1129,9 @@ Widget _buildOverviewCards() {
             child: _overviewCard(
               icon: Icons.psychology_alt_rounded,
               title: 'Focus',
-              value: '--',
-              subtitle: 'No sessions',
-              progress: 0.0,
+              value: focusMinutes == 0 ? '--' : '$focusMinutes min',
+              subtitle: focusMinutes == 0 ? 'No sessions' : 'Today',
+              progress: (focusMinutes / 30).clamp(0.0, 1.0),
             ),
           ),
         ],
@@ -965,18 +1199,7 @@ Widget _buildOverviewCards() {
   }
 
 Widget _buildQuickActions() {
-  final actions = [
-    (
-      'Track Behavior',
-      Icons.track_changes_rounded,
-      const Color(0xFFECE8FF),
-    ),
-    (
-      'Ask AI',
-      Icons.psychology_alt_rounded,
-      const Color(0xFFE4F7EB),
-    ),
-  ];
+  final actions = _parentActions().take(4).toList();
 
   return GridView.builder(
     shrinkWrap: true,
@@ -993,27 +1216,7 @@ Widget _buildQuickActions() {
 
       return InkWell(
         borderRadius: BorderRadius.circular(17),
-        onTap: () {
-          switch (action.$1) {
-            case 'Track Behavior':
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const TrackBehaviorScreen(),
-                ),
-              );
-              break;
-
-            case 'Ask AI':
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AskAIScreen(),
-                ),
-              );
-              break;
-          }
-        },
+        onTap: action.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
@@ -1024,14 +1227,14 @@ Widget _buildQuickActions() {
           child: Row(
             children: [
               Icon(
-                action.$2,
+                action.icon,
                 color: primaryPurple,
                 size: 25,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  action.$1,
+                  action.title,
                   style: const TextStyle(
                     color: darkPurple,
                     fontWeight: FontWeight.w700,
@@ -1046,9 +1249,6 @@ Widget _buildQuickActions() {
     },
   );
 }
-
-
-
 
 Widget _buildRoutineCard() {
   return _whiteCard(
@@ -1067,27 +1267,7 @@ Widget _buildRoutineCard() {
               ),
             ),
             IconButton(
-              onPressed: () async {
-                final result =
-                    await Navigator.push<Map<String, dynamic>>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddRoutineScreen(),
-                  ),
-                );
-
-                if (result == null || !mounted) return;
-
-                setState(() {
-                  routine.insert(0, {
-                    ...result,
-                    'createdAt': DateTime.now().toIso8601String(),
-                  });
-                  _sortRoutines();
-                });
-
-                await _saveRoutines();
-              },
+              onPressed: _addRoutine,
               icon: const Icon(
                 Icons.add_circle_rounded,
                 color: primaryPurple,
@@ -1196,6 +1376,7 @@ Widget _buildRoutineCard() {
                     onSelected: (value) async {
                       if (value == 'edit') {
                         _showRoutineDialog(
+                          index: i,
                           title: routine[i]['title']?.toString(),
                           time: routine[i]['time']?.toString(),
                         );
@@ -1205,13 +1386,9 @@ Widget _buildRoutineCard() {
                         });
                         await _saveRoutines();
                       } else if (value == 'reminder') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Reminder selected for '
-                              '${routine[i]['title']}',
-                            ),
-                          ),
+                        await showAddReminderDialog(
+                          context,
+                          title: routine[i]['title']?.toString(),
                         );
                       }
                     },
@@ -1259,6 +1436,7 @@ Widget _buildRoutineCard() {
 
 
 Future<void> _showRoutineDialog({
+  int? index,
   String? title,
   String? time,
 }) async {
@@ -1381,16 +1559,17 @@ setState(() {
     });
   } else {
     // Update the existing routine
-    final index = routine.indexWhere(
-      (item) => item['title'] == title,
-    );
+    final target = index ??
+        routine.indexWhere((item) => item['title'] == title);
 
-    if (index != -1) {
-      routine[index]['title'] = routineTitle;
-      routine[index]['time'] = formattedTime;
+    if (target != -1 && target < routine.length) {
+      routine[target]['title'] = routineTitle;
+      routine[target]['time'] = formattedTime;
     }
   }
 });
+
+_saveRoutines();
 
 Navigator.pop(dialogContext);
                 },
@@ -1725,56 +1904,69 @@ String _formatObservationTime(DateTime timestamp) {
 
 
   Widget _buildProgressCard() {
-    return _whiteCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
+    final childData = ChildAppState.instance;
+
+    return AnimatedBuilder(
+      animation: childData,
+      builder: (context, _) {
+        final insights = ParentInsights(childData);
+        final days = insights.lastDays();
+        final ratios = insights.dailyRatios;
+        final change = insights.weekChangePercent;
+
+        return _whiteCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'Weekly consistency',
-                  style: TextStyle(
-                    color: darkPurple,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Weekly consistency',
+                      style: TextStyle(
+                        color: darkPurple,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
-                ),
+                  Text(
+                    insights.weekChangeLabel,
+                    style: TextStyle(
+                      color: (change ?? 0) >= 0
+                          ? const Color(0xFF39A879)
+                          : ParentUi.red,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
               Text(
-                '+12%',
-                style: TextStyle(
-                  color: Color(0xFF39A879),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+                '${insights.thisWeekCompletions} tasks completed in the '
+                'last 7 days',
+                style: const TextStyle(
+                  color: Color(0xFF89849F),
+                  fontSize: 11,
                 ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (var i = 0; i < days.length; i++)
+                    _progressBar(
+                      ParentInsights.weekdayLabels[days[i].weekday - 1],
+                      ratios[i],
+                    ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Routine completion compared with last week',
-            style: TextStyle(
-              color: Color(0xFF89849F),
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _progressBar('Mon', 0.55),
-              _progressBar('Tue', 0.75),
-              _progressBar('Wed', 0.45),
-              _progressBar('Thu', 0.85),
-              _progressBar('Fri', 0.65),
-              _progressBar('Sat', 0.9),
-              _progressBar('Sun', 0.6),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1812,39 +2004,73 @@ String _formatObservationTime(DateTime timestamp) {
   }
 
   Widget _buildReminders() {
-    return Column(
-      children: [
-        _reminderTile(
-          icon: Icons.medication_outlined,
-          title: 'Medication reminder',
-          subtitle: 'Today • 7:00 PM',
-        ),
-        const SizedBox(height: 10),
-        _reminderTile(
-          icon: Icons.event_note_rounded,
-          title: 'Prepare for tomorrow',
-          subtitle: 'Today • 8:00 PM',
-        ),
-      ],
+    return AnimatedBuilder(
+      animation: _store,
+      builder: (context, _) {
+        final upcoming =
+            _store.reminders.where((r) => !r.done).take(3).toList();
+
+        if (upcoming.isEmpty) {
+          return _whiteCard(
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.notifications_none_rounded,
+                  color: primaryPurple,
+                  size: 23,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'No reminders yet',
+                    style: TextStyle(
+                      color: darkPurple,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => showAddReminderDialog(context),
+                  child: const Text('Add reminder'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            for (var i = 0; i < upcoming.length; i++) ...[
+              if (i > 0) const SizedBox(height: 10),
+              _reminderTile(upcoming[i]),
+            ],
+          ],
+        );
+      },
     );
   }
 
-  Widget _reminderTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _reminderTile(ParentReminder reminder) {
+    final isMedication = reminder.title.toLowerCase().contains('medic');
+
     return _whiteCard(
       child: Row(
         children: [
-          Icon(icon, color: primaryPurple, size: 23),
+          Icon(
+            isMedication
+                ? Icons.medication_outlined
+                : Icons.event_note_rounded,
+            color: primaryPurple,
+            size: 23,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  reminder.title,
                   style: const TextStyle(
                     color: darkPurple,
                     fontSize: 12,
@@ -1853,19 +2079,25 @@ String _formatObservationTime(DateTime timestamp) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF89849F),
+                  parentDateTimeLabel(context, reminder.dueAt),
+                  style: TextStyle(
+                    color: reminder.dueAt.isBefore(DateTime.now())
+                        ? ParentUi.red
+                        : const Color(0xFF89849F),
                     fontSize: 10,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
-            Icons.notifications_active_outlined,
-            color: primaryPurple,
-            size: 20,
+          IconButton(
+            tooltip: 'Mark as done',
+            onPressed: () => _store.toggleReminder(reminder.id),
+            icon: const Icon(
+              Icons.radio_button_unchecked_rounded,
+              color: Color(0xFFB8B2CC),
+              size: 22,
+            ),
           ),
         ],
       ),
@@ -1908,16 +2140,7 @@ String _formatObservationTime(DateTime timestamp) {
 Widget _buildBottomNavigation() {
   return NavigationBar(
     selectedIndex: selectedNavIndex,
-    onDestinationSelected: (index) {
-      if (index == 3) {
-        _showMessage('Parent profile');
-        return;
-      }
-
-      setState(() {
-        selectedNavIndex = index;
-      });
-    },
+    onDestinationSelected: _openTab,
     destinations: const [
       NavigationDestination(
         icon: Icon(Icons.home_outlined),

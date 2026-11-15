@@ -8,6 +8,7 @@ import 'child.dart';
 import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
+import 'parent/parent_store.dart';
 
 
 
@@ -15,6 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ChildAppState.instance.loadData();
+  await ParentStore.instance.load();
 
   runApp(const ADHDCompanionApp());
 }
@@ -199,6 +201,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       );
       return;
     }
+
+    // Keep the parent's details so the Profile page can show them.
+    ParentStore.instance.updateProfile(
+      ParentProfile(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: phoneController.text.trim(),
+      ),
+    );
 
     if (!AppFeatures.smsVerification) {
       Navigator.push(

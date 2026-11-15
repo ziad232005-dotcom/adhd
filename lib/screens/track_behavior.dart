@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../child.dart';
+
 class TrackBehaviorScreen extends StatefulWidget {
   const TrackBehaviorScreen({super.key});
 
@@ -17,6 +19,44 @@ class _TrackBehaviorScreenState extends State<TrackBehaviorScreen> {
   ];
 
   final Set<String> selectedBehaviors = {};
+  final TextEditingController _noteController = TextEditingController();
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  // Saves the behaviors as an observation shown on the dashboard.
+  void _save() {
+    final note = _noteController.text.trim();
+
+    if (selectedBehaviors.isEmpty && note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a behavior or write a note first.'),
+        ),
+      );
+      return;
+    }
+
+    final lines = <String>[
+      ...selectedBehaviors,
+      if (note.isNotEmpty) 'Note: $note',
+    ];
+
+    ChildAppState.instance.addObservation(
+      title: 'Behavior recorded',
+      description: lines.join(' • '),
+      type: 'behavior',
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Observation saved')),
+    );
+
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +168,26 @@ class _TrackBehaviorScreenState extends State<TrackBehaviorScreen> {
               ),
             );
           }),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _noteController,
+            minLines: 2,
+            maxLines: 4,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: 'Add a note (optional)',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEFEAFB)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEFEAFB)),
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -137,15 +197,7 @@ class _TrackBehaviorScreenState extends State<TrackBehaviorScreen> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Selected ${selectedBehaviors.length} observations.',
-                  ),
-                ),
-              );
-            },
+            onPressed: _save,
             child: const Text('Save Observations'),
           ),
         ],
