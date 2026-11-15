@@ -431,8 +431,8 @@ class VerificationChoiceScreen extends StatelessWidget {
           ],
           const SizedBox(height: 24),
           const Text(
-            'Email verification is connected. '
-            'SMS verification is not available yet.',
+            'We will send you a 6-digit code.\n'
+            'It expires in 5 minutes.',
             textAlign: TextAlign.center,
             style: TextStyle(color: BloomColors.textMuted, fontSize: 12),
           ),
@@ -467,6 +467,17 @@ class _OTPVerificationScreenState
   // the ASP.NET Core backend.
   static const String baseUrl = 'http://10.0.2.2:5187';
 
+  bool get _isEmail => widget.method == 'Email';
+
+  // The backend has separate endpoints for email and SMS codes.
+  String get _sendPath =>
+      _isEmail ? '/api/auth/send-otp' : '/api/auth/send-sms-otp';
+
+  String get _verifyPath =>
+      _isEmail ? '/api/auth/verify-otp' : '/api/auth/verify-sms-otp';
+
+  String get _destinationKey => _isEmail ? 'email' : 'phone';
+
 bool isSending = false;
 bool isVerifying = false;
 bool codeSent = false;
@@ -479,9 +490,7 @@ void initState() {
   super.initState();
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (widget.method == 'Email') {
-      sendOtp();
-    }
+    sendOtp();
   });
 }
 
@@ -555,13 +564,6 @@ void startResendCountdown() {
   // ---------------- SEND OTP ----------------
 
   Future<void> sendOtp() async {
-    if (widget.method != 'Email') {
-      showMessage(
-        'SMS verification is not connected yet.',
-      );
-      return;
-    }
-
     if (isSending || isVerifying) return;
 
     setState(() {
@@ -571,12 +573,12 @@ void startResendCountdown() {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/api/auth/send-otp'),
+            Uri.parse('$baseUrl$_sendPath'),
             headers: {
               'Content-Type': 'application/json',
             },
             body: jsonEncode({
-              'email': widget.destination.trim(),
+              _destinationKey: widget.destination.trim(),
             }),
           )
           .timeout(const Duration(seconds: 20));
@@ -615,13 +617,6 @@ if (response.statusCode >= 200 &&
   // ---------------- VERIFY OTP ----------------
 
   Future<void> verifyOtp() async {
-    if (widget.method != 'Email') {
-      showMessage(
-        'SMS verification is not connected yet.',
-      );
-      return;
-    }
-
     final code = codeController.text.trim();
 
     if (code.length != 6 ||
@@ -639,12 +634,12 @@ if (response.statusCode >= 200 &&
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/api/auth/verify-otp'),
+            Uri.parse('$baseUrl$_verifyPath'),
             headers: {
               'Content-Type': 'application/json',
             },
             body: jsonEncode({
-              'email': widget.destination.trim(),
+              _destinationKey: widget.destination.trim(),
               'code': code,
             }),
           )
@@ -667,9 +662,11 @@ if (response.statusCode >= 200 &&
                 color: Colors.green,
                 size: 56,
               ),
-              title: const Text('Email Verified'),
-              content: const Text(
-                'Your email address has been verified successfully.',
+              title: Text(_isEmail ? 'Email Verified' : 'Phone Verified'),
+              content: Text(
+                _isEmail
+                    ? 'Your email address has been verified successfully.'
+                    : 'Your phone number has been verified successfully.',
               ),
               actions: [
                 TextButton(
@@ -731,7 +728,7 @@ if (response.statusCode >= 200 &&
 
   @override
   Widget build(BuildContext context) {
-    final isEmail = widget.method == 'Email';
+    final isEmail = _isEmail;
     final basePin = _basePinTheme;
 
     return BloomAuthScaffold(
@@ -741,7 +738,7 @@ if (response.statusCode >= 200 &&
           BloomAuthHeader(
             icon: isEmail ? Icons.mail_outline_rounded : Icons.sms_outlined,
             title: isEmail ? 'Verify Your Email' : 'Verify Your Number',
-            subtitle: "We've sent a 6-digit code to\n${widget.destination}",
+            subtitle: 'Enter the 6-digit code for\n${widget.destination}',
           ),
           const SizedBox(height: 28),
           Center(
@@ -761,15 +758,12 @@ if (response.statusCode >= 200 &&
           ),
           const SizedBox(height: 12),
           Text(
-            isEmail
-                ? (codeSent
-                    ? 'Enter the code sent to your email. '
-                        'It expires in 5 minutes.'
-                    : 'A verification code will be sent to your email.')
-                : 'SMS verification is not connected yet.',
+            codeSent
+                ? 'Enter the code we sent you. It expires in 5 minutes.'
+                : 'We will send a verification code to ${widget.destination}.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isEmail ? BloomColors.textMuted : BloomColors.error,
+            style: const TextStyle(
+              color: BloomColors.textMuted,
               fontSize: 12,
             ),
           ),
