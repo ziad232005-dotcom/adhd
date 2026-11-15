@@ -492,6 +492,81 @@ class BloomErrorBanner extends StatelessWidget {
   }
 }
 
+/// Rules a password must follow to be accepted.
+class BloomPasswordPolicy {
+  const BloomPasswordPolicy._();
+
+  static const int minLength = 8;
+
+  static final RegExp _capital = RegExp(r'^[A-Z]');
+  static final RegExp _special = RegExp(r'[^A-Za-z0-9\s]');
+
+  static bool hasMinLength(String value) => value.length >= minLength;
+
+  static bool startsWithCapital(String value) => _capital.hasMatch(value);
+
+  static bool hasSpecialCharacter(String value) => _special.hasMatch(value);
+
+  static bool isStrong(String value) =>
+      hasMinLength(value) &&
+      startsWithCapital(value) &&
+      hasSpecialCharacter(value);
+}
+
+/// Live checklist that shows which password rules are already satisfied.
+class BloomPasswordChecklist extends StatelessWidget {
+  const BloomPasswordChecklist({super.key, required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final text = value.text;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _rule(
+              'At least ${BloomPasswordPolicy.minLength} characters',
+              BloomPasswordPolicy.hasMinLength(text),
+            ),
+            _rule(
+              'Starts with a capital letter',
+              BloomPasswordPolicy.startsWithCapital(text),
+            ),
+            _rule(
+              'Has a special character (. # @ !)',
+              BloomPasswordPolicy.hasSpecialCharacter(text),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _rule(String label, bool satisfied) {
+    final color = satisfied ? BloomColors.success : BloomColors.textMuted;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Icon(
+            satisfied ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: TextStyle(fontSize: 12, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
 /// Shared form validators, so the same rules are not copied into every screen.
 class BloomValidators {
   const BloomValidators._();
@@ -511,8 +586,16 @@ class BloomValidators {
   }
 
   static String? password(String? value) {
-    if (value == null || value.length < 8) {
-      return 'Use at least 8 characters.';
+    final text = value ?? '';
+
+    if (!BloomPasswordPolicy.hasMinLength(text)) {
+      return 'Use at least ${BloomPasswordPolicy.minLength} characters.';
+    }
+    if (!BloomPasswordPolicy.startsWithCapital(text)) {
+      return 'The first letter must be a capital letter.';
+    }
+    if (!BloomPasswordPolicy.hasSpecialCharacter(text)) {
+      return 'Add a special character such as . # @ or !';
     }
     return null;
   }

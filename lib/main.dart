@@ -294,6 +294,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               hint: 'At least 8 characters',
               validator: BloomValidators.password,
             ),
+            const SizedBox(height: 4),
+            BloomPasswordChecklist(controller: passwordController),
             const SizedBox(height: 16),
             BloomPasswordField(
               controller: confirmPasswordController,
