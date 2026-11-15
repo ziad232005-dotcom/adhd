@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'add_task.dart';
 import 'child.dart';
 import 'manage_rewards.dart';
 
