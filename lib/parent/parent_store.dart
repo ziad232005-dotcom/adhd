@@ -128,7 +128,9 @@ class ParentProfile {
   final String name;
   final String email;
   final String phone;
-  final int? age;
+
+  /// Date of birth. The age is calculated from it.
+  final DateTime? birthDate;
   final String gender;
   final String relationship;
   final String city;
@@ -140,7 +142,7 @@ class ParentProfile {
     this.name = '',
     this.email = '',
     this.phone = '',
-    this.age,
+    this.birthDate,
     this.gender = '',
     this.relationship = '',
     this.city = '',
@@ -149,12 +151,19 @@ class ParentProfile {
     this.emergencyPhone = '',
   });
 
+  /// Current age in years, or null when no date of birth is set.
+  int? get age {
+    final birth = birthDate;
+    if (birth == null) return null;
+    return ParentChild.ageOn(birth, DateTime.now());
+  }
+
   ParentProfile copyWith({
     String? name,
     String? email,
     String? phone,
-    int? age,
-    bool clearAge = false,
+    DateTime? birthDate,
+    bool clearBirthDate = false,
     String? gender,
     String? relationship,
     String? city,
@@ -166,7 +175,7 @@ class ParentProfile {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
-      age: clearAge ? null : age ?? this.age,
+      birthDate: clearBirthDate ? null : birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       relationship: relationship ?? this.relationship,
       city: city ?? this.city,
@@ -180,7 +189,7 @@ class ParentProfile {
         'name': name,
         'email': email,
         'phone': phone,
-        'age': age,
+        'birthDate': birthDate?.toIso8601String(),
         'gender': gender,
         'relationship': relationship,
         'city': city,
@@ -194,7 +203,7 @@ class ParentProfile {
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      age: json['age'] as int?,
+      birthDate: DateTime.tryParse(json['birthDate'] as String? ?? ''),
       gender: json['gender'] as String? ?? '',
       relationship: json['relationship'] as String? ?? '',
       city: json['city'] as String? ?? '',

@@ -29,7 +29,7 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
 
   late final TextEditingController _name;
   late final TextEditingController _phone;
-  late final TextEditingController _age;
+  DateTime? _birthDate;
   late final TextEditingController _city;
   late final TextEditingController _address;
   late final TextEditingController _emergencyName;
@@ -44,7 +44,7 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
 
     _name = TextEditingController(text: p.name);
     _phone = TextEditingController(text: p.phone);
-    _age = TextEditingController(text: p.age == null ? '' : '${p.age}');
+    _birthDate = p.birthDate;
     _city = TextEditingController(text: p.city);
     _address = TextEditingController(text: p.address);
     _emergencyName = TextEditingController(text: p.emergencyName);
@@ -58,7 +58,6 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
-    _age.dispose();
     _city.dispose();
     _address.dispose();
     _emergencyName.dispose();
@@ -66,17 +65,39 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _birthDate ?? DateTime(now.year - 30, now.month, now.day),
+      firstDate: DateTime(now.year - 100, 1, 1),
+      lastDate: now,
+      helpText: 'Date of birth',
+    );
+
+    if (picked != null && mounted) setState(() => _birthDate = picked);
+  }
+
+  String? _validateBirthDate() {
+    final birth = _birthDate;
+    if (birth == null) return null;
+
+    final age = ParentChild.ageOn(birth, DateTime.now());
+    if (age < 18 || age > 99) return 'Age must be between 18 and 99.';
+    return null;
+  }
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-
-    final ageText = _age.text.trim();
 
     _store.updateProfile(
       ParentProfile(
         name: _name.text.trim(),
         email: _store.profile.email,
         phone: _phone.text.trim(),
-        age: ageText.isEmpty ? null : int.parse(ageText),
+        birthDate: _birthDate,
         gender: _gender == kGenderOptions.first ? '' : _gender,
         relationship:
             _relationship == kRelationshipOptions.first ? '' : _relationship,
@@ -151,22 +172,38 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
                 validator: MazidValidators.optionalPhone,
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _age,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  prefixIcon: Icon(Icons.cake_outlined),
-                ),
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return null;
-                  final age = int.tryParse(text);
-                  if (age == null || age < 18 || age > 99) {
-                    return 'Age must be between 18 and 99.';
-                  }
-                  return null;
+              FormField<DateTime>(
+                validator: (_) => _validateBirthDate(),
+                builder: (field) {
+                  final birth = _birthDate;
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () async {
+                      await _pickBirthDate();
+                      field.didChange(_birthDate);
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Date of birth',
+                        prefixIcon: const Icon(Icons.cake_outlined),
+                        suffixIcon: const Icon(Icons.calendar_today_rounded),
+                        errorText: field.errorText,
+                      ),
+                      child: Text(
+                        birth == null
+                            ? 'Select date'
+                            : '${birth.day}/${birth.month}/${birth.year}'
+                                '  •  ${ParentChild.ageOn(birth, DateTime.now())}'
+                                ' years old',
+                        style: TextStyle(
+                          color: birth == null
+                              ? ParentUi.muted
+                              : ParentUi.dark,
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 12),

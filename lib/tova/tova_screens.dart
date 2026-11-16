@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../core/widgets/mazid_widgets.dart';
+import '../parent/parent_store.dart';
+
 /// A mobile-friendly TOVA-style attention activity.
 ///
 /// IMPORTANT: This is an educational/prototype implementation, not the licensed
@@ -122,23 +125,54 @@ class TovaWelcomeScreen extends StatefulWidget {
 
 class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
   final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
+  DateTime? _birthDate;
   TovaMode _mode = TovaMode.practice;
   bool _acknowledged = false;
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Start from the selected child's details.
+    final child = ParentStore.instance.selectedChild;
+    if (child != null) {
+      _nameController.text = child.name;
+      _birthDate = child.birthDate;
+    }
+  }
+
+  int? get _age {
+    final birth = _birthDate;
+    if (birth == null) return null;
+    return ParentChild.ageOn(birth, DateTime.now());
+  }
+
   bool get _canStart {
-    final age = int.tryParse(_ageController.text.trim());
-    return _nameController.text.trim().isNotEmpty &&
+    final age = _age;
+    return MazidValidators.personName(_nameController.text, '') == null &&
         age != null &&
         age >= 4 &&
         age <= 18 &&
         _acknowledged;
   }
 
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime(now.year - 8, now.month, now.day),
+      firstDate: DateTime(now.year - 19, now.month, now.day),
+      lastDate: now,
+      helpText: 'Date of birth',
+    );
+
+    if (picked != null && mounted) setState(() => _birthDate = picked);
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
-    _ageController.dispose();
     super.dispose();
   }
 
@@ -205,16 +239,38 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                           onChanged: (_) => setState(() {}),
                           style: const TextStyle(color: _tovaInk),
                           textCapitalization: TextCapitalization.words,
+                          inputFormatters: MazidInputFormatters.name,
                           decoration: _inputDecoration('Child name'),
                         ),
                         const SizedBox(height: 12),
-                        TextField(
-                          controller: _ageController,
-                          onChanged: (_) => setState(() {}),
-                          style: const TextStyle(color: _tovaInk),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          decoration: _inputDecoration('Age (4–18 years)'),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: _pickBirthDate,
+                          child: InputDecorator(
+                            decoration:
+                                _inputDecoration('Date of birth (age 4–18)')
+                                    .copyWith(
+                              suffixIcon: const Icon(
+                                Icons.calendar_today_rounded,
+                                color: _tovaMuted,
+                              ),
+                              errorText: _birthDate != null &&
+                                      (_age! < 4 || _age! > 18)
+                                  ? 'Age must be between 4 and 18.'
+                                  : null,
+                            ),
+                            child: Text(
+                              _birthDate == null
+                                  ? 'Select date'
+                                  : '${_birthDate!.day}/${_birthDate!.month}/'
+                                      '${_birthDate!.year}  •  $_age years old',
+                              style: TextStyle(
+                                color: _birthDate == null
+                                    ? _tovaMuted
+                                    : _tovaInk,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -309,7 +365,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                               builder: (_) => TovaTestScreen(
                                 mode: _mode,
                                 childName: _nameController.text.trim(),
-                                childAge: int.parse(_ageController.text.trim()),
+                                childAge: _age!,
                               ),
                             ));
                           }

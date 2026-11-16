@@ -246,8 +246,13 @@ class ParentProfileScreen extends StatelessWidget {
                     children: [
                       _infoRow(
                         Icons.cake_outlined,
-                        'Age',
-                        profile.age == null ? '' : '${profile.age} years',
+                        'Birth date',
+                        profile.birthDate == null
+                            ? ''
+                            : '${profile.birthDate!.day}/'
+                                '${profile.birthDate!.month}/'
+                                '${profile.birthDate!.year}'
+                                '  •  ${profile.age} years',
                       ),
                       _infoRow(Icons.wc_rounded, 'Gender', profile.gender),
                       _infoRow(
