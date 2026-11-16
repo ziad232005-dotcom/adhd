@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../core/mazid_theme.dart';
-import '../core/widgets/mazid_widgets.dart';
 import '../main.dart' show WelcomeScreen;
 import 'add_child_screen.dart';
+import 'edit_parent_profile_screen.dart';
 import 'notifications_screen.dart';
 import 'parent_store.dart';
 import 'parent_ui.dart';
@@ -18,94 +18,48 @@ class ParentProfileScreen extends StatelessWidget {
   const ParentProfileScreen({super.key, this.activities = const []});
 
   Future<void> _editProfile(BuildContext context) async {
-    final store = ParentStore.instance;
-    final nameController = TextEditingController(text: store.profile.name);
-    final phoneController = TextEditingController(text: store.profile.phone);
-    final formKey = GlobalKey<FormState>();
-
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const EditParentProfileScreen(),
       ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            22,
-            20,
-            MediaQuery.of(sheetContext).viewInsets.bottom + 22,
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Edit profile',
-                  style: TextStyle(
-                    color: ParentUi.dark,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Full name',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
-                  ),
-                  validator: (value) => MazidValidators.requiredText(
-                    value,
-                    'Please enter your name.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (optional)',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  validator: MazidValidators.optionalPhone,
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ParentUi.purple,
-                    ),
-                    onPressed: () {
-                      if (!formKey.currentState!.validate()) return;
-                      Navigator.pop(sheetContext, true);
-                    },
-                    child: const Text('Save'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
 
-    // The controllers are not disposed here: the sheet is still animating
-    // out when this line runs, and disposing them now would throw.
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
+    if (saved == true && context.mounted) {
+      showParentSnack(context, 'Profile updated');
+    }
+  }
 
-    if (saved != true) return;
+  Widget _infoRow(IconData icon, String label, String value) {
+    final empty = value.isEmpty;
 
-    store.updateProfile(store.profile.copyWith(name: name, phone: phone));
-    if (context.mounted) showParentSnack(context, 'Profile updated');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: ParentUi.purple, size: 20),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: const TextStyle(color: ParentUi.muted, fontSize: 12),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              empty ? 'Not added' : value,
+              style: TextStyle(
+                color: empty ? ParentUi.muted : ParentUi.dark,
+                fontWeight: empty ? FontWeight.w400 : FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -281,6 +235,41 @@ class ParentProfileScreen extends StatelessWidget {
                           Icons.edit_outlined,
                           color: ParentUi.purple,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ParentCard(
+                  child: Column(
+                    children: [
+                      _infoRow(
+                        Icons.cake_outlined,
+                        'Age',
+                        profile.age == null ? '' : '${profile.age} years',
+                      ),
+                      _infoRow(Icons.wc_rounded, 'Gender', profile.gender),
+                      _infoRow(
+                        Icons.family_restroom_rounded,
+                        'Relationship',
+                        profile.relationship,
+                      ),
+                      _infoRow(
+                        Icons.location_city_rounded,
+                        'City',
+                        profile.city,
+                      ),
+                      _infoRow(
+                        Icons.home_outlined,
+                        'Address',
+                        profile.address,
+                      ),
+                      _infoRow(
+                        Icons.contact_emergency_outlined,
+                        'Emergency',
+                        [profile.emergencyName, profile.emergencyPhone]
+                            .where((e) => e.isNotEmpty)
+                            .join(' • '),
                       ),
                     ],
                   ),

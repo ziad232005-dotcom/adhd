@@ -96,18 +96,51 @@ class ParentProfile {
   final String name;
   final String email;
   final String phone;
+  final int? age;
+  final String gender;
+  final String relationship;
+  final String city;
+  final String address;
+  final String emergencyName;
+  final String emergencyPhone;
 
   const ParentProfile({
     this.name = '',
     this.email = '',
     this.phone = '',
+    this.age,
+    this.gender = '',
+    this.relationship = '',
+    this.city = '',
+    this.address = '',
+    this.emergencyName = '',
+    this.emergencyPhone = '',
   });
 
-  ParentProfile copyWith({String? name, String? email, String? phone}) {
+  ParentProfile copyWith({
+    String? name,
+    String? email,
+    String? phone,
+    int? age,
+    bool clearAge = false,
+    String? gender,
+    String? relationship,
+    String? city,
+    String? address,
+    String? emergencyName,
+    String? emergencyPhone,
+  }) {
     return ParentProfile(
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      age: clearAge ? null : age ?? this.age,
+      gender: gender ?? this.gender,
+      relationship: relationship ?? this.relationship,
+      city: city ?? this.city,
+      address: address ?? this.address,
+      emergencyName: emergencyName ?? this.emergencyName,
+      emergencyPhone: emergencyPhone ?? this.emergencyPhone,
     );
   }
 
@@ -115,6 +148,13 @@ class ParentProfile {
         'name': name,
         'email': email,
         'phone': phone,
+        'age': age,
+        'gender': gender,
+        'relationship': relationship,
+        'city': city,
+        'address': address,
+        'emergencyName': emergencyName,
+        'emergencyPhone': emergencyPhone,
       };
 
   factory ParentProfile.fromJson(Map<String, dynamic> json) {
@@ -122,6 +162,13 @@ class ParentProfile {
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
+      age: json['age'] as int?,
+      gender: json['gender'] as String? ?? '',
+      relationship: json['relationship'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      address: json['address'] as String? ?? '',
+      emergencyName: json['emergencyName'] as String? ?? '',
+      emergencyPhone: json['emergencyPhone'] as String? ?? '',
     );
   }
 }
