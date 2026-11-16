@@ -222,8 +222,8 @@ class _ViewRoutineScreenState extends State<ViewRoutineScreen> {
       },
     );
 
-    titleController.dispose();
-    timeController.dispose();
+    // Not disposed here: the dialog is still animating out and its text
+    // fields would throw. The controller is garbage collected instead.
 
     if (result == null || !mounted) return;
 

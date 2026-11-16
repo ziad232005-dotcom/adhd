@@ -145,7 +145,8 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       },
     );
 
-    titleController.dispose();
+    // Not disposed here: the dialog is still animating out and its text
+    // fields would throw. The controller is garbage collected instead.
 
     if (!mounted || result == null) return;
 
