@@ -248,6 +248,14 @@ class ParentStore extends ChangeNotifier {
   }
 
   Future<void> _save() async {
+    try {
+      await _write();
+    } catch (e) {
+      debugPrint('Could not save parent data: $e');
+    }
+  }
+
+  Future<void> _write() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString(

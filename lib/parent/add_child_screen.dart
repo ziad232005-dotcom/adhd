@@ -83,8 +83,14 @@ class _AddChildScreenState extends State<AddChildScreen> {
     }
   }
 
+  bool _saving = false;
+
   void _save() {
+    if (_saving) return;
     if (!_formKey.currentState!.validate()) return;
+
+    _saving = true;
+    FocusScope.of(context).unfocus();
 
     final name = _nameController.text.trim();
     final age = int.parse(_ageController.text.trim());
