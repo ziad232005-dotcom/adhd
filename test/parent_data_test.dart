@@ -21,8 +21,8 @@ void main() {
 
       expect(store.selectedChild, isNull);
 
-      store.addChild(name: 'Alex', age: 9, grade: 'Grade 4');
-      store.addChild(name: 'Maya', age: 7, grade: 'Grade 2');
+      store.addChild(name: 'Alex', birthDate: DateTime(2017, 3, 12), grade: 'Grade 4');
+      store.addChild(name: 'Maya', birthDate: DateTime(2019, 6, 20), grade: 'Grade 2');
       expect(store.selectedChild?.name, 'Maya');
 
       store.deleteChild(store.children.last.id);
@@ -41,13 +41,13 @@ void main() {
       store.children.clear();
       store.selectedChildIndex = 0;
 
-      store.addChild(name: 'Alex', age: 9, grade: 'Grade 4');
+      store.addChild(name: 'Alex', birthDate: DateTime(2017, 3, 12), grade: 'Grade 4');
       await data.switchChild(store.selectedChild!.id);
       data.completeTask(data.tasks.first);
       final alexPoints = data.points;
       expect(alexPoints, greaterThan(0));
 
-      store.addChild(name: 'Maya', age: 7, grade: 'Grade 2');
+      store.addChild(name: 'Maya', birthDate: DateTime(2019, 6, 20), grade: 'Grade 2');
       await data.switchChild(store.selectedChild!.id);
       expect(data.points, 0);
       expect(data.completionHistory, isEmpty);
@@ -75,6 +75,29 @@ void main() {
 
       store.toggleReminder(store.reminders.first.id);
       expect(store.reminders.first.done, isTrue);
+    });
+  });
+
+  group('ParentChild', () {
+    test('calculates the age from the date of birth', () {
+      final birth = DateTime(2016, 5, 10);
+
+      expect(ParentChild.ageOn(birth, DateTime(2026, 5, 9)), 9);
+      expect(ParentChild.ageOn(birth, DateTime(2026, 5, 10)), 10);
+      expect(ParentChild.ageOn(birth, DateTime(2026, 12, 31)), 10);
+    });
+
+    test('keeps the saved age until a date of birth is added', () {
+      const legacy = ParentChild(
+        id: 1,
+        name: 'Alex',
+        savedAge: 8,
+        grade: 'Grade 3',
+      );
+
+      expect(legacy.age, 8);
+      expect(legacy.copyWith(birthDate: DateTime(2000, 1, 1)).age,
+          greaterThan(20));
     });
   });
 

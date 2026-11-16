@@ -9,21 +9,45 @@ import '../child.dart';
 class ParentChild {
   final int id;
   final String name;
-  final int age;
+
+  /// Date of birth. The age is always calculated from it.
+  final DateTime? birthDate;
+
+  /// Age saved before date of birth was collected (used until the parent
+  /// adds the date of birth).
+  final int? _savedAge;
+
   final String grade;
   final String? imagePath;
 
   const ParentChild({
     required this.id,
     required this.name,
-    required this.age,
+    this.birthDate,
+    int? savedAge,
     required this.grade,
     this.imagePath,
-  });
+  }) : _savedAge = savedAge;
+
+  /// Full years between [birth] and [now].
+  static int ageOn(DateTime birth, DateTime now) {
+    var years = now.year - birth.year;
+    final hadBirthday = now.month > birth.month ||
+        (now.month == birth.month && now.day >= birth.day);
+    if (!hadBirthday) years--;
+    return years < 0 ? 0 : years;
+  }
+
+  /// Current age in years.
+  int get age {
+    final birth = birthDate;
+    if (birth == null) return _savedAge ?? 0;
+    return ageOn(birth, DateTime.now());
+  }
 
   ParentChild copyWith({
     String? name,
-    int? age,
+    DateTime? birthDate,
     String? grade,
     String? imagePath,
     bool clearImage = false,
@@ -31,7 +55,8 @@ class ParentChild {
     return ParentChild(
       id: id,
       name: name ?? this.name,
-      age: age ?? this.age,
+      birthDate: birthDate ?? this.birthDate,
+      savedAge: _savedAge,
       grade: grade ?? this.grade,
       imagePath: clearImage ? null : imagePath ?? this.imagePath,
     );
@@ -40,16 +65,20 @@ class ParentChild {
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
-        'age': age,
+        'birthDate': birthDate?.toIso8601String(),
+        'age': _savedAge,
         'grade': grade,
         'imagePath': imagePath,
       };
 
   factory ParentChild.fromJson(Map<String, dynamic> json) {
+    final birth = json['birthDate'] as String?;
+
     return ParentChild(
       id: json['id'] as int,
       name: json['name'] as String,
-      age: json['age'] as int,
+      birthDate: birth == null ? null : DateTime.tryParse(birth),
+      savedAge: json['age'] as int?,
       grade: json['grade'] as String? ?? '',
       imagePath: json['imagePath'] as String?,
     );
@@ -293,7 +322,7 @@ class ParentStore extends ChangeNotifier {
 
   void addChild({
     required String name,
-    required int age,
+    required DateTime birthDate,
     required String grade,
     String? imagePath,
   }) {
@@ -301,7 +330,7 @@ class ParentStore extends ChangeNotifier {
       ParentChild(
         id: _nextChildId++,
         name: name.trim(),
-        age: age,
+        birthDate: birthDate,
         grade: grade,
         imagePath: imagePath,
       ),

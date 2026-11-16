@@ -41,7 +41,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
   final _picker = ImagePicker();
 
   late final TextEditingController _nameController;
-  late final TextEditingController _ageController;
+  DateTime? _birthDate;
   late String _grade;
   String? _imagePath;
 
@@ -52,9 +52,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
     super.initState();
     final child = widget.child;
     _nameController = TextEditingController(text: child?.name ?? '');
-    _ageController = TextEditingController(
-      text: child == null ? '' : '${child.age}',
-    );
+    _birthDate = child?.birthDate;
     _grade = kChildGrades.contains(child?.grade)
         ? child!.grade
         : kChildGrades[4];
@@ -64,7 +62,6 @@ class _AddChildScreenState extends State<AddChildScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _ageController.dispose();
     super.dispose();
   }
 
@@ -85,6 +82,29 @@ class _AddChildScreenState extends State<AddChildScreen> {
 
   bool _saving = false;
 
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime(now.year - 8, now.month, now.day),
+      firstDate: DateTime(now.year - 19, now.month, now.day),
+      lastDate: now,
+      helpText: 'Date of birth',
+    );
+
+    if (picked != null && mounted) setState(() => _birthDate = picked);
+  }
+
+  String? _validateBirthDate() {
+    final birth = _birthDate;
+    if (birth == null) return 'Please choose the date of birth.';
+
+    final age = ParentChild.ageOn(birth, DateTime.now());
+    if (age < 1 || age > 18) return 'Age must be between 1 and 18.';
+    return null;
+  }
+
   void _save() {
     if (_saving) return;
     if (!_formKey.currentState!.validate()) return;
@@ -93,13 +113,13 @@ class _AddChildScreenState extends State<AddChildScreen> {
     FocusScope.of(context).unfocus();
 
     final name = _nameController.text.trim();
-    final age = int.parse(_ageController.text.trim());
+    final birthDate = _birthDate!;
 
     if (_isEditing) {
       _store.updateChild(
         widget.child!.copyWith(
           name: name,
-          age: age,
+          birthDate: birthDate,
           grade: _grade,
           imagePath: _imagePath,
           clearImage: _imagePath == null,
@@ -108,7 +128,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
     } else {
       _store.addChild(
         name: name,
-        age: age,
+        birthDate: birthDate,
         grade: _grade,
         imagePath: _imagePath,
       );
@@ -234,20 +254,38 @@ class _AddChildScreenState extends State<AddChildScreen> {
                 },
               ),
               const SizedBox(height: 14),
-              TextFormField(
-                controller: _ageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  prefixIcon: Icon(Icons.cake_outlined),
-                ),
-                validator: (value) {
-                  final age = int.tryParse(value?.trim() ?? '');
-                  if (age == null) return 'Please enter the age.';
-                  if (age < 1 || age > 18) {
-                    return 'Age must be between 1 and 18.';
-                  }
-                  return null;
+              FormField<DateTime>(
+                validator: (_) => _validateBirthDate(),
+                builder: (field) {
+                  final birth = _birthDate;
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () async {
+                      await _pickBirthDate();
+                      field.didChange(_birthDate);
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Date of birth',
+                        prefixIcon: const Icon(Icons.cake_outlined),
+                        suffixIcon: const Icon(Icons.calendar_today_rounded),
+                        errorText: field.errorText,
+                      ),
+                      child: Text(
+                        birth == null
+                            ? 'Select date'
+                            : '${birth.day}/${birth.month}/${birth.year}'
+                                '  •  ${ParentChild.ageOn(birth, DateTime.now())}'
+                                ' years old',
+                        style: TextStyle(
+                          color: birth == null
+                              ? ParentUi.muted
+                              : ParentUi.dark,
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 14),
