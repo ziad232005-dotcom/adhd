@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/mazid_theme.dart';
 import '../main.dart' show WelcomeScreen;
 import 'add_child_screen.dart';
+import 'child_detail_screen.dart';
 import 'edit_parent_profile_screen.dart';
 import 'notifications_screen.dart';
 import 'parent_store.dart';
@@ -315,7 +316,8 @@ class ParentProfileScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AddChildScreen(child: child),
+                            builder: (_) =>
+                                ChildDetailScreen(childId: child.id),
                           ),
                         ),
                         padding: const EdgeInsets.symmetric(
@@ -349,10 +351,19 @@ class ParentProfileScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const Icon(
-                              Icons.edit_outlined,
-                              size: 18,
-                              color: ParentUi.purple,
+                            IconButton(
+                              tooltip: 'Edit child',
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AddChildScreen(child: child),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: ParentUi.purple,
+                              ),
                             ),
                           ],
                         ),

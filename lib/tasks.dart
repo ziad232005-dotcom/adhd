@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'child.dart';
 import 'manage_rewards.dart';
+import 'parent/parent_store.dart';
 
 const Color tasksPurple = Color(0xFF7566D9);
 const Color tasksDarkPurple = Color(0xFF30285E);
@@ -285,7 +286,10 @@ const SizedBox(height: 28),
         ),
         const SizedBox(height: 8),
         Text(
-          'Organize your child’s tasks and celebrate every small win.',
+          ParentStore.instance.selectedChild == null
+              ? 'Organize your child’s tasks and celebrate every small win.'
+              : 'Tasks for ${ParentStore.instance.selectedChild!.name}. '
+                  'Celebrate every small win.',
           style: TextStyle(
             color: tasksDarkPurple.withValues(alpha: 0.65),
             fontSize: 13,

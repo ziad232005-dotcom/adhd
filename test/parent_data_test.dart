@@ -14,7 +14,7 @@ void main() {
 
   group('ParentStore', () {
     test('keeps a valid selected child when children are added and removed',
-        () {
+        () async {
       final store = ParentStore.instance;
       store.children.clear();
       store.selectedChildIndex = 0;
@@ -30,6 +30,35 @@ void main() {
 
       store.deleteChild(store.children.first.id);
       expect(store.selectedChild, isNull);
+
+      // Let the child-data switches finish before the next test.
+      await ChildAppState.instance.switchChild(null);
+    });
+
+    test('each child keeps separate tasks and points', () async {
+      final store = ParentStore.instance;
+      final data = ChildAppState.instance;
+      store.children.clear();
+      store.selectedChildIndex = 0;
+
+      store.addChild(name: 'Alex', age: 9, grade: 'Grade 4');
+      await data.switchChild(store.selectedChild!.id);
+      data.completeTask(data.tasks.first);
+      final alexPoints = data.points;
+      expect(alexPoints, greaterThan(0));
+
+      store.addChild(name: 'Maya', age: 7, grade: 'Grade 2');
+      await data.switchChild(store.selectedChild!.id);
+      expect(data.points, 0);
+      expect(data.completionHistory, isEmpty);
+
+      store.selectChild(0);
+      await data.switchChild(store.selectedChild!.id);
+      expect(data.points, alexPoints);
+
+      store.deleteChild(store.children.last.id);
+      store.deleteChild(store.children.first.id);
+      await data.switchChild(null);
     });
 
     test('sorts reminders by due time and toggles done', () {

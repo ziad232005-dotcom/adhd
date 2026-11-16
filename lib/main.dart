@@ -15,8 +15,10 @@ import 'parent/parent_store.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await ChildAppState.instance.loadData();
   await ParentStore.instance.load();
+  await ChildAppState.instance.loadData(
+    childId: ParentStore.instance.selectedChild?.id,
+  );
 
   runApp(const ADHDCompanionApp());
 }

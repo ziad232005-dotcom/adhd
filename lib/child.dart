@@ -271,7 +271,9 @@ void addObservation({
   _saveData();
   notifyListeners();
 }
-  final List<ChildTask> tasks = [
+  final List<ChildTask> tasks = _defaultTasks();
+
+  static List<ChildTask> _defaultTasks() => [
     const ChildTask(
       1, 'Brush your teeth', 'A fresh start!',
       Icons.cleaning_services_rounded, 10,
@@ -290,11 +292,78 @@ void addObservation({
     ),
   ];
 
-  Future<void> loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_storageKey);
+  // ---- Per-child data ----
+  //
+  // Every child has their own tasks, points, rewards, observations, moods
+  // and focus sessions. Only the selected child is kept in memory; the
+  // rest stays in storage under a key that contains the child's id.
 
-    if (raw == null) return;
+  static const _legacyAdoptedKey = 'mazid_child_task_state_legacy_adopted';
+
+  int? _activeChildId;
+
+  /// The child whose data is currently loaded (null before any child).
+  int? get activeChildId => _activeChildId;
+
+  String get _activeKey => _activeChildId == null
+      ? _storageKey
+      : '${_storageKey}_child_$_activeChildId';
+
+  Future<void> _switchChain = Future<void>.value();
+
+  /// Saves the current child's data and loads [childId]'s data.
+  Future<void> switchChild(int? childId) {
+    _switchChain = _switchChain.then((_) async {
+      if (childId == _activeChildId) return;
+      await _saveData();
+      await loadData(childId: childId);
+    });
+    return _switchChain;
+  }
+
+  /// Removes the stored data of a deleted child.
+  Future<void> forgetChild(int childId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('${_storageKey}_child_$childId');
+  }
+
+  void _resetToDefaults() {
+    points = 0;
+    _nextRewardId = 1;
+    _nextTaskId = 5;
+    _mood = null;
+    rewards.clear();
+    _achievedRewardIds.clear();
+    moodHistory.clear();
+    _lastCompletedAt.clear();
+    completionHistory.clear();
+    observations.clear();
+    focusSessions.clear();
+    tasks
+      ..clear()
+      ..addAll(_defaultTasks());
+  }
+
+  Future<void> loadData({int? childId}) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    _activeChildId = childId;
+    _resetToDefaults();
+
+    // Data saved before children existed belongs to the first child.
+    final adopted = prefs.getBool(_legacyAdoptedKey) ?? false;
+    var adoptingLegacy = false;
+    var raw = (childId == null && adopted) ? null : prefs.getString(_activeKey);
+
+    if (raw == null && childId != null && !adopted) {
+      raw = prefs.getString(_storageKey);
+      adoptingLegacy = raw != null;
+    }
+
+    if (raw == null) {
+      notifyListeners();
+      return;
+    }
 
     try {
       final json = jsonDecode(raw) as Map<String, dynamic>;
@@ -393,8 +462,14 @@ observations
   );
 
 notifyListeners();
+
+      if (adoptingLegacy) {
+        await prefs.setBool(_legacyAdoptedKey, true);
+        await _saveData();
+      }
     } catch (e) {
       debugPrint('Could not load saved task data: $e');
+      notifyListeners();
     }
   }
   
@@ -438,7 +513,7 @@ Future<void> _saveData() async {
 
  };
 
-  await prefs.setString(_storageKey, jsonEncode(json));
+  await prefs.setString(_activeKey, jsonEncode(json));
 }
 
 void addFocusSession(int durationMinutes) {

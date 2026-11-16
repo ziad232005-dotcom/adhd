@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../child.dart';
 
 class ParentChild {
   final int id;
@@ -272,6 +275,11 @@ class ParentStore extends ChangeNotifier {
     );
   }
 
+  /// Makes the tasks, rewards, points... follow the selected child.
+  void _syncChildData() {
+    unawaited(ChildAppState.instance.switchChild(selectedChild?.id));
+  }
+
   void _changed() {
     _save();
     notifyListeners();
@@ -300,6 +308,7 @@ class ParentStore extends ChangeNotifier {
     );
     selectedChildIndex = children.length - 1;
     _changed();
+    _syncChildData();
   }
 
   void updateChild(ParentChild updated) {
@@ -310,17 +319,32 @@ class ParentStore extends ChangeNotifier {
   }
 
   void deleteChild(int id) {
+    final keepId = selectedChild?.id;
+
     children.removeWhere((c) => c.id == id);
-    if (selectedChildIndex >= children.length) {
+
+    final keptIndex = children.indexWhere((c) => c.id == keepId);
+    if (keptIndex != -1) {
+      selectedChildIndex = keptIndex;
+    } else if (selectedChildIndex >= children.length) {
       selectedChildIndex = children.isEmpty ? 0 : children.length - 1;
     }
+
     _changed();
+
+    unawaited(
+      ChildAppState.instance
+          .switchChild(selectedChild?.id)
+          .then((_) => ChildAppState.instance.forgetChild(id)),
+    );
   }
 
   void selectChild(int index) {
     if (index < 0 || index >= children.length) return;
+    if (index == selectedChildIndex) return;
     selectedChildIndex = index;
     _changed();
+    _syncChildData();
   }
 
   // ---- Reminders ----

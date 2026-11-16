@@ -15,6 +15,7 @@ import 'activity_calendar_page.dart';
 import 'view_routine.dart';
 import 'manage_rewards.dart';
 import 'parent/add_child_screen.dart';
+import 'parent/child_detail_screen.dart';
 import 'parent/notifications_screen.dart';
 import 'parent/overview_details_screen.dart';
 import 'parent/parent_insights.dart';
@@ -59,6 +60,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     super.initState();
 
     _store.addListener(_onStoreChanged);
+    _loadedChildId = _store.selectedChild?.id;
     _loadActivities();
     _loadRoutines();
   }
@@ -69,8 +71,51 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     super.dispose();
   }
 
+  // The child whose routine and activities are on screen.
+  int? _loadedChildId;
+
   void _onStoreChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+
+    final childId = _store.selectedChild?.id;
+
+    // A different child was selected: show that child's routine and
+    // activities.
+    if (childId != _loadedChildId) {
+      _loadedChildId = childId;
+      _loadRoutines();
+      _loadActivities();
+    }
+
+    setState(() {});
+  }
+
+  // Storage key for the selected child's data.
+  String _childKey(String base) {
+    final id = _store.selectedChild?.id;
+    return id == null ? base : '${base}_child_$id';
+  }
+
+  // Reads the selected child's data. Data saved before children existed is
+  // handed to the first child only.
+  Future<String?> _readChildData(
+    SharedPreferences prefs,
+    String base,
+  ) async {
+    final key = _childKey(base);
+    final own = prefs.getString(key);
+
+    if (own != null || key == base) return own;
+
+    final adoptedFlag = '${base}_adopted';
+    if (prefs.getBool(adoptedFlag) ?? false) return null;
+
+    final legacy = prefs.getString(base);
+    if (legacy != null) {
+      await prefs.setString(key, legacy);
+      await prefs.setBool(adoptedFlag, true);
+    }
+    return legacy;
   }
 
   // =========================
@@ -79,7 +124,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _loadRoutines() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedRoutines = prefs.getString('parent_routines');
+    final savedRoutines = await _readChildData(prefs, 'parent_routines');
 
     if (!mounted) return;
 
@@ -158,7 +203,7 @@ IconData _iconFromCodePoint(dynamic codePoint) {
   // =========================
 
 Future<void> _saveRoutines() async {
-  final prefs = await SharedPreferences.getInstance();
+  final key = _childKey('parent_routines');
 
   final serializableRoutines = routine.map((item) {
     final map = Map<String, dynamic>.from(item);
@@ -177,10 +222,10 @@ Future<void> _saveRoutines() async {
     return map;
   }).toList();
 
-  await prefs.setString(
-    'parent_routines',
-    jsonEncode(serializableRoutines),
-  );
+  final encoded = jsonEncode(serializableRoutines);
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.setString(key, encoded);
 }
 
   // =========================
@@ -190,7 +235,8 @@ Future<void> _saveRoutines() async {
   Future<void> _loadActivities() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final savedActivities = prefs.getString(
+    final savedActivities = await _readChildData(
+      prefs,
       'parent_upcoming_activities',
     );
 
@@ -224,12 +270,11 @@ Future<void> _saveRoutines() async {
   }
 
 Future<void> _saveActivities() async {
+  final key = _childKey('parent_upcoming_activities');
+  final encoded = jsonEncode(activities);
   final prefs = await SharedPreferences.getInstance();
 
-  await prefs.setString(
-    'parent_upcoming_activities',
-    jsonEncode(activities),
-  );
+  await prefs.setString(key, encoded);
 }
 
 
@@ -244,10 +289,12 @@ Future<void> _saveActivities() async {
     );
   }
 
-  Future<void> _editChild(ParentChild child) async {
+  Future<void> _openChildDetails(ParentChild child) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => AddChildScreen(child: child)),
+      MaterialPageRoute(
+        builder: (_) => ChildDetailScreen(childId: child.id),
+      ),
     );
   }
 
@@ -931,8 +978,8 @@ errorBuilder: (_, _, _) => const Icon(
                 ),
               ),
               IconButton(
-                tooltip: 'Edit child',
-                onPressed: () => _editChild(child),
+                tooltip: 'Open ${child.name}',
+                onPressed: () => _openChildDetails(child),
                 icon: const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
