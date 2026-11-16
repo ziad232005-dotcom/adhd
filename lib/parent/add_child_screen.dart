@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../core/widgets/mazid_widgets.dart';
 import 'parent_store.dart';
 import 'parent_ui.dart';
 
@@ -242,16 +243,15 @@ class _AddChildScreenState extends State<AddChildScreen> {
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
+                inputFormatters: MazidInputFormatters.name,
                 decoration: const InputDecoration(
                   labelText: 'Child name',
                   prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter the child name.';
-                  }
-                  return null;
-                },
+                validator: (value) => MazidValidators.personName(
+                  value,
+                  'Please enter the child name.',
+                ),
               ),
               const SizedBox(height: 14),
               FormField<DateTime>(

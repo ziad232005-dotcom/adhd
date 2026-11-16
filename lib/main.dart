@@ -269,7 +269,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               hint: 'Your full name',
               icon: Icons.person_outline,
               textCapitalization: TextCapitalization.words,
-              validator: (value) => MazidValidators.requiredText(
+              inputFormatters: MazidInputFormatters.name,
+              validator: (value) => MazidValidators.personName(
                 value,
                 'Please enter your full name.',
               ),

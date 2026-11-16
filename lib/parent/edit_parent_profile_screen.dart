@@ -120,11 +120,12 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
                 controller: _name,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
+                inputFormatters: MazidInputFormatters.name,
                 decoration: const InputDecoration(
                   labelText: 'Full name',
                   prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
-                validator: (value) => MazidValidators.requiredText(
+                validator: (value) => MazidValidators.personName(
                   value,
                   'Please enter your name.',
                 ),
@@ -224,10 +225,12 @@ class _EditParentProfileScreenState extends State<EditParentProfileScreen> {
                 controller: _emergencyName,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
+                inputFormatters: MazidInputFormatters.name,
                 decoration: const InputDecoration(
                   labelText: 'Contact name',
                   prefixIcon: Icon(Icons.contact_emergency_outlined),
                 ),
+                validator: MazidValidators.optionalPersonName,
               ),
               const SizedBox(height: 12),
               TextFormField(

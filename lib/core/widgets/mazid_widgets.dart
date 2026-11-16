@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../mazid_theme.dart';
 
@@ -341,12 +342,14 @@ class MazidTextField extends StatelessWidget {
     this.textInputAction = TextInputAction.next,
     this.textCapitalization = TextCapitalization.none,
     this.autocorrect = true,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
   final String label;
   final String hint;
   final IconData icon;
+  final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
   final TextInputAction textInputAction;
@@ -365,6 +368,7 @@ class MazidTextField extends StatelessWidget {
           textInputAction: textInputAction,
           textCapitalization: textCapitalization,
           autocorrect: autocorrect,
+          inputFormatters: inputFormatters,
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
@@ -580,6 +584,29 @@ class MazidValidators {
     return null;
   }
 
+  static final RegExp _personName =
+      RegExp(r'^[\p{L}\p{M}]+( [\p{L}\p{M}]+)*$', unicode: true);
+
+  /// A name made of letters (any language) and single spaces only.
+  static String? personName(String? value, String emptyMessage) {
+    final text = value?.trim() ?? '';
+
+    if (text.isEmpty) return emptyMessage;
+    if (!_personName.hasMatch(text)) {
+      return 'The name can only contain letters.';
+    }
+    if (text.replaceAll(' ', '').length < 2) {
+      return 'The name is too short.';
+    }
+    return null;
+  }
+
+  /// Same rule as [personName], but an empty value is allowed.
+  static String? optionalPersonName(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    return personName(value, '');
+  }
+
   static String? requiredText(String? value, String message) {
     if (value == null || value.trim().isEmpty) return message;
     return null;
@@ -608,5 +635,42 @@ class MazidValidators {
       return 'Please enter a valid mobile number.';
     }
     return null;
+  }
+}
+
+/// Input formatters shared by the forms.
+class MazidInputFormatters {
+  const MazidInputFormatters._();
+
+  /// Letters (any language) and single spaces only. Digits, symbols and
+  /// emojis are removed as the user types or pastes.
+  static final List<TextInputFormatter> name = [_NameFormatter()];
+}
+
+class _NameFormatter extends TextInputFormatter {
+  static final RegExp _notAllowed = RegExp(r'[^\p{L}\p{M} ]', unicode: true);
+  static final RegExp _manySpaces = RegExp(r' {2,}');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final cleaned = newValue.text
+        .replaceAll(_notAllowed, '')
+        .replaceAll(_manySpaces, ' ')
+        .trimLeft();
+
+    if (cleaned == newValue.text) return newValue;
+
+    final removed = newValue.text.length - cleaned.length;
+    final offset = (newValue.selection.baseOffset - removed)
+        .clamp(0, cleaned.length)
+        .toInt();
+
+    return TextEditingValue(
+      text: cleaned,
+      selection: TextSelection.collapsed(offset: offset),
+    );
   }
 }
