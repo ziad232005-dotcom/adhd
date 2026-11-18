@@ -77,7 +77,7 @@ class _TeamMemberDetailScreenState extends State<TeamMemberDetailScreen> {
         if (c == null || c.status != ConnectionStatus.active) {
           return ShadowScaffold(
             title: 'Team member',
-            children: const [
+            body: const [
               SizedBox(height: 40),
               Center(child: Text('This person is no longer on the team.')),
             ],
@@ -93,7 +93,7 @@ class _TeamMemberDetailScreenState extends State<TeamMemberDetailScreen> {
 
         return ShadowScaffold(
           title: name,
-          children: [
+          body: [
             ShadowCard(
               child: Row(
                 children: [

@@ -58,7 +58,7 @@ class _TeacherDirectoryScreenState extends State<TeacherDirectoryScreen> {
 
     return ShadowScaffold(
       title: 'Verified Shadow Teachers',
-      children: [
+      body: [
         TextField(
           controller: _search,
           onChanged: (_) => setState(() {}),

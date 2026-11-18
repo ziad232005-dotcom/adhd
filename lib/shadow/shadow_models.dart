@@ -1,5 +1,5 @@
-/// Data types for the Shadow Teacher verification and the connection
-/// between a parent's child and a verified Shadow Teacher.
+// Data types for the Shadow Teacher verification and the connection
+// between a parent's child and a verified Shadow Teacher.
 
 /// Which side of MAZID the signed-in person uses.
 enum ShadowRole { parent, shadowTeacher }

@@ -72,7 +72,7 @@ class ShadowScaffold extends StatelessWidget {
   const ShadowScaffold({
     super.key,
     required this.title,
-    required this.children,
+    required this.body,
     this.bottom,
     this.showBack = true,
     this.actions,
@@ -80,7 +80,7 @@ class ShadowScaffold extends StatelessWidget {
   });
 
   final String title;
-  final List<Widget> children;
+  final List<Widget> body;
   final Widget? bottom;
   final bool showBack;
   final List<Widget>? actions;
@@ -127,7 +127,7 @@ class ShadowScaffold extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(padding: padding, children: children),
+            child: ListView(padding: padding, children: body),
           ),
         ),
       ),

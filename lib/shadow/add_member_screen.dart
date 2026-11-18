@@ -17,7 +17,7 @@ class AddMemberScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShadowScaffold(
       title: 'Add Support Team Member',
-      children: [
+      body: [
         const Text(
           'How would you like to add?',
           style: TextStyle(

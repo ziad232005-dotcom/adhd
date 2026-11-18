@@ -23,7 +23,7 @@ class TeacherProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShadowScaffold(
       title: 'Profile',
-      children: [
+      body: [
         Center(child: ShadowAvatar(initials: teacher.initials, size: 76)),
         const SizedBox(height: 12),
         Text(

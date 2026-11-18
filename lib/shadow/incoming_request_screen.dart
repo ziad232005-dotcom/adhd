@@ -26,7 +26,7 @@ class IncomingRequestScreen extends StatelessWidget {
         if (c == null || c.status != ConnectionStatus.awaitingTeacher) {
           return ShadowScaffold(
             title: 'Connection request',
-            children: const [
+            body: const [
               SizedBox(height: 40),
               Center(child: Text('This request is no longer open.')),
             ],
@@ -35,7 +35,7 @@ class IncomingRequestScreen extends StatelessWidget {
 
         return ShadowScaffold(
           title: 'Connection request',
-          children: [
+          body: [
             ShadowCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

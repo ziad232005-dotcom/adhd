@@ -57,7 +57,7 @@ class ShadowIntroScreen extends StatelessWidget {
     return ShadowScaffold(
       title: 'Shadow Teacher',
       showBack: false,
-      children: [
+      body: [
         const SizedBox(height: 4),
         const Center(
           child: MazidMascot(

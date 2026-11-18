@@ -28,7 +28,7 @@ class RequestSentScreen extends StatelessWidget {
         if (c == null) {
           return ShadowScaffold(
             title: 'Request',
-            children: const [
+            body: const [
               SizedBox(height: 40),
               Center(child: Text('This request was not found.')),
             ],
@@ -68,7 +68,7 @@ class RequestSentScreen extends StatelessWidget {
 
         return ShadowScaffold(
           title: 'Request status',
-          children: [
+          body: [
             const SizedBox(height: 4),
             const Center(
               child: MazidMascot(

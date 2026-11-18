@@ -26,7 +26,7 @@ class ShadowHomeScreen extends StatelessWidget {
     return ShadowScaffold(
       title: 'Shadow Teacher',
       showBack: false,
-      children: [
+      body: [
         Row(
           children: [
             ShadowAvatar(

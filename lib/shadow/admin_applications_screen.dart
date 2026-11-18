@@ -48,7 +48,7 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
 
         return ShadowScaffold(
           title: 'Applications',
-          children: [
+          body: [
             const Text(
               'Shadow Teacher applications',
               style: TextStyle(

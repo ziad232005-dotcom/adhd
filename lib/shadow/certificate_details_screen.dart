@@ -66,7 +66,7 @@ class _CertificateDetailsScreenState extends State<CertificateDetailsScreen> {
 
     return ShadowScaffold(
       title: 'Certificate details',
-      children: [
+      body: [
         Text(
           DocumentKind.titleOf(doc.kind),
           style: const TextStyle(

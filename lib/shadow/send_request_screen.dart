@@ -62,7 +62,7 @@ class _SendRequestScreenState extends State<SendRequestScreen> {
 
     return ShadowScaffold(
       title: 'Connection request',
-      children: [
+      body: [
         ShadowCard(
           child: Row(
             children: [

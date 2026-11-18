@@ -28,7 +28,7 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
   Widget build(BuildContext context) {
     return ShadowScaffold(
       title: '',
-      children: [
+      body: [
         const SizedBox(height: 8),
         const Center(child: MazidMascot(size: 110)),
         const SizedBox(height: 14),

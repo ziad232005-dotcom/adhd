@@ -132,7 +132,7 @@ class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
   Widget build(BuildContext context) {
     return ShadowScaffold(
       title: 'Invite my Shadow Teacher',
-      children: [
+      body: [
         SegmentedButton<bool>(
           segments: const [
             ButtonSegment(value: true, label: Text('Email')),

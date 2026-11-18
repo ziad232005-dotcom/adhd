@@ -275,7 +275,7 @@ class _VerificationFormScreenState extends State<VerificationFormScreen> {
         builder: (context, _) {
           return ShadowScaffold(
             title: 'Shadow Teacher',
-            children: [
+            body: [
               _stepper(),
               const SizedBox(height: 18),
               Form(

@@ -65,7 +65,7 @@ class VerificationStatusScreen extends StatelessWidget {
     return ShadowScaffold(
       title: 'Verification status',
       showBack: false,
-      children: [
+      body: [
         _header(
           MazidAssets.octopusGlasses,
           'We’re reviewing your application',
@@ -141,7 +141,7 @@ class VerificationStatusScreen extends StatelessWidget {
     return ShadowScaffold(
       title: 'Verification result',
       showBack: false,
-      children: [
+      body: [
         _header(
           MazidAssets.octopusIdea,
           'We need a bit more information',
@@ -231,7 +231,7 @@ class VerificationStatusScreen extends StatelessWidget {
     return ShadowScaffold(
       title: 'Verification result',
       showBack: false,
-      children: [
+      body: [
         _header(
           MazidAssets.octopus,
           'We couldn’t verify your account',

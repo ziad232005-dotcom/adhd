@@ -94,7 +94,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
         if (app == null) {
           return ShadowScaffold(
             title: 'Review',
-            children: const [
+            body: const [
               SizedBox(height: 40),
               Center(child: Text('Application not found.')),
             ],
@@ -105,7 +105,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
 
         return ShadowScaffold(
           title: app.id,
-          children: [
+          body: [
             Row(
               children: [
                 ShadowAvatar(

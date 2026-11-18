@@ -39,7 +39,7 @@ class _ConfirmAccessScreenState extends State<ConfirmAccessScreen> {
     if (c == null || c.status != ConnectionStatus.awaitingParent) {
       return ShadowScaffold(
         title: 'Confirm access',
-        children: const [
+        body: const [
           SizedBox(height: 40),
           Center(child: Text('There is nothing to confirm here.')),
         ],
@@ -52,7 +52,7 @@ class _ConfirmAccessScreenState extends State<ConfirmAccessScreen> {
 
     return ShadowScaffold(
       title: 'Confirm access',
-      children: [
+      body: [
         ShadowCard(
           color: MazidColors.successSoft,
           borderColor: MazidColors.successSoft,

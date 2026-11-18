@@ -36,7 +36,7 @@ class ApplicationSummaryScreen extends StatelessWidget {
 
     return ShadowScaffold(
       title: 'My application',
-      children: [
+      body: [
         Row(
           children: [
             Expanded(
