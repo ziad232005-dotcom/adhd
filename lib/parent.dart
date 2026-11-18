@@ -293,6 +293,7 @@ Future<void> _saveActivities() async {
     await Navigator.push(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: '/child-detail'),
         builder: (_) => ChildDetailScreen(childId: child.id),
       ),
     );

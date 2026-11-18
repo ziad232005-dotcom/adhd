@@ -6,6 +6,7 @@ import '../add_task.dart';
 import '../child.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
+import '../shadow/support_team_section.dart';
 import 'add_child_screen.dart';
 import 'parent_insights.dart';
 import 'parent_store.dart';
@@ -497,6 +498,8 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       _observations(),
                       _title('Mood'),
                       _moods(),
+                      _title('Support Team'),
+                      SupportTeamSection(child: child),
                       const SizedBox(height: 22),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(

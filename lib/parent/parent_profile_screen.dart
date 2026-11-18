@@ -321,6 +321,8 @@ class ParentProfileScreen extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
+                            settings:
+                                const RouteSettings(name: '/child-detail'),
                             builder: (_) =>
                                 ChildDetailScreen(childId: child.id),
                           ),

@@ -9,6 +9,10 @@ import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
 import 'parent/parent_store.dart';
+import 'shadow/role_choice_screen.dart';
+import 'shadow/shadow_gate.dart';
+import 'shadow/shadow_models.dart';
+import 'shadow/shadow_store.dart';
 
 
 
@@ -16,6 +20,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ParentStore.instance.load();
+  await ShadowStore.instance.load();
   await ChildAppState.instance.loadData(
     childId: ParentStore.instance.selectedChild?.id,
   );
@@ -213,6 +218,23 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       ),
     );
 
+    // Ask whether this person is a parent or a Shadow Teacher, then
+    // continue with the normal verification.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoleChoiceScreen(
+          onContinue: (chosen) {
+            ShadowStore.instance.setRole(chosen);
+            _continueAfterRole();
+          },
+        ),
+      ),
+    );
+  }
+
+  // Moves on to email (or SMS) verification.
+  void _continueAfterRole() {
     if (!AppFeatures.smsVerification) {
       Navigator.push(
         context,
@@ -702,7 +724,10 @@ if (response.statusCode >= 200 &&
 
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(
-      builder: (_) => const ParentDashboardScreen(),
+      builder: (_) =>
+          ShadowStore.instance.role == ShadowRole.shadowTeacher
+              ? const ShadowTeacherGate()
+              : const ParentDashboardScreen(),
     ),
     (route) => false,
   );
