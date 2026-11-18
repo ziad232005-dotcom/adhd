@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 /// A PDF the person chose.
 class PickedPdf {
@@ -26,6 +27,11 @@ class ShadowFiles {
     if (result == null || result.files.isEmpty) return null;
 
     final file = result.files.first;
-    return PickedPdf(name: file.name, sizeBytes: file.size, path: file.path);
+    // On the web a file has no path, and reading it throws.
+    return PickedPdf(
+      name: file.name,
+      sizeBytes: file.size,
+      path: kIsWeb ? null : file.path,
+    );
   }
 }

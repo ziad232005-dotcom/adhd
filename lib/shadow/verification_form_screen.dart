@@ -748,7 +748,7 @@ class _VerificationFormScreenState extends State<VerificationFormScreen> {
       picked = await ShadowFiles.pickPdf();
     } catch (_) {
       if (mounted) {
-        ShadowUi.snack(context, 'Could not open the file picker.');
+        ShadowUi.snack(context, 'Could not open the file picker ($error).');
       }
       return;
     }
