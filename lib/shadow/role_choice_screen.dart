@@ -4,7 +4,9 @@ import '../core/app_features.dart';
 import '../core/mazid_theme.dart';
 import '../core/widgets/mazid_widgets.dart';
 import 'admin_applications_screen.dart';
+import 'shadow_gate.dart';
 import 'shadow_models.dart';
+import 'shadow_store.dart';
 import 'shadow_ui.dart';
 
 /// Shown right after "Create Account": is this person a parent or a
@@ -78,6 +80,24 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
         ),
         if (AppFeatures.demoMode) ...[
           const SizedBox(height: 18),
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                // Skips the email code so the Shadow Teacher flow can be
+                // tried without the backend.
+                ShadowStore.instance.setRole(ShadowRole.shadowTeacher);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ShadowTeacherGate(),
+                  ),
+                  (route) => false,
+                );
+              },
+              icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+              label: const Text('Open Shadow Teacher (demo, no code)'),
+            ),
+          ),
           Center(
             child: TextButton.icon(
               onPressed: () => Navigator.push(
