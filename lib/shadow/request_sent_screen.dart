@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../core/app_features.dart';
 import '../core/mazid_theme.dart';
 import '../core/widgets/mazid_widgets.dart';
+import '../parent/parent_store.dart';
 import 'confirm_access_screen.dart';
 import 'shadow_models.dart';
 import 'shadow_store.dart';
 import 'shadow_ui.dart';
+import 'teacher_directory_screen.dart';
 import 'team_member_detail_screen.dart';
 
 /// Where a connection request stands. It follows the request through
@@ -139,6 +141,21 @@ class RequestSentScreen extends StatelessWidget {
                 'The teacher answers from their own MAZID app, under '
                 'Parent requests.',
               ),
+              if (store.isOverdue(c)) ...[
+                const SizedBox(height: 10),
+                ShadowNote.warning(
+                  '$first hasn’t answered yet. You can look for another '
+                  'teacher. This request stays open if you change your mind.',
+                ),
+              ],
+              if (AppFeatures.demoMode && !store.isOverdue(c)) ...[
+                const SizedBox(height: 10),
+                MazidOutlineButton(
+                  label: 'Demo: pretend 3 days passed',
+                  borderColor: MazidColors.textMuted,
+                  onPressed: () => store.simulateDelay(c.id),
+                ),
+              ],
               if (AppFeatures.demoMode && isSample) ...[
                 const SizedBox(height: 10),
                 MazidOutlineButton(
@@ -155,6 +172,19 @@ class RequestSentScreen extends StatelessWidget {
     );
   }
 
+  void _findAnother(BuildContext context, TeacherConnection c) {
+    final children = ParentStore.instance.children;
+    final index = children.indexWhere((e) => e.id == c.childId);
+    if (index == -1) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TeacherDirectoryScreen(child: children[index]),
+      ),
+    );
+  }
+
   Widget _bottom(
     BuildContext context,
     ShadowStore store,
@@ -162,6 +192,26 @@ class RequestSentScreen extends StatelessWidget {
   ) {
     switch (c.status) {
       case ConnectionStatus.awaitingTeacher:
+        if (store.isOverdue(c)) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MazidPrimaryButton(
+                label: 'Find another teacher',
+                onPressed: () => _findAnother(context, c),
+              ),
+              const SizedBox(height: 10),
+              MazidOutlineButton(
+                label: 'Cancel request',
+                borderColor: MazidColors.error,
+                onPressed: () {
+                  store.cancelRequest(c.id);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        }
         return MazidOutlineButton(
           label: 'Cancel request',
           borderColor: MazidColors.error,

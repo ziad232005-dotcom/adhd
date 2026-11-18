@@ -277,6 +277,42 @@ void main() {
     });
   });
 
+  group('Availability', () {
+    test('a teacher marked unavailable shows as unavailable', () {
+      final nada = store.directory.firstWhere((t) => t.id == 'SH-1002');
+      expect(nada.available, isFalse);
+
+      final sarah = store.directory.firstWhere((t) => t.id == 'SH-1001');
+      expect(sarah.available, isTrue);
+    });
+
+    test('a request becomes overdue after the response window', () {
+      final child = ParentStore.instance.children.first;
+      final teacher = store.findVerified('sarah.ahmed@example.com')!;
+      final c = store.requestConnection(teacher, child);
+
+      expect(store.isOverdue(c), isFalse);
+
+      store.simulateDelay(c.id);
+      expect(store.isOverdue(c), isTrue);
+
+      // Another request for the same child can run alongside it.
+      final other = store.directory.firstWhere((t) => t.id == 'SH-1003');
+      final second = store.requestConnection(other, child);
+      expect(second.id, isNot(c.id));
+      expect(store.connectionsForChild(child.id), hasLength(2));
+
+      // Once accepted, a request is no longer overdue.
+      store.teacherAccept(c.id);
+      expect(store.isOverdue(c), isFalse);
+    });
+
+    test('availability only changes for a verified teacher', () {
+      store.setMyAvailability(false);
+      expect(store.myApplication, isNull);
+    });
+  });
+
   group('Models', () {
     test('document size label', () {
       const small = ShadowDocument(kind: 'a', fileName: 'a.pdf', sizeBytes: 860 * 1024);

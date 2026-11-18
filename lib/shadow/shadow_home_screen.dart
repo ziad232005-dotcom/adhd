@@ -102,6 +102,39 @@ class ShadowHomeScreen extends StatelessWidget {
             ],
           ),
         ),
+        ShadowCard(
+          child: Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'I’m available for new children',
+                      style: TextStyle(
+                        color: MazidColors.textDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Parents see this in the verified directory.',
+                      style: TextStyle(
+                        color: MazidColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: app.available,
+                onChanged: ShadowStore.instance.setMyAvailability,
+              ),
+            ],
+          ),
+        ),
         const ShadowSectionTitle('Parent requests'),
         if (incoming.isEmpty)
           const ShadowCard(

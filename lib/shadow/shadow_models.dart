@@ -160,6 +160,7 @@ class ShadowApplication {
     List<String>? requestedItems,
     Set<String>? checklist,
     this.mobileVerified = false,
+    this.available = true,
   })  : skills = skills ?? <String>[],
         documents = documents ?? <String, ShadowDocument>{},
         requestedItems = requestedItems ?? <String>[],
@@ -171,6 +172,10 @@ class ShadowApplication {
   DateTime? birthDate;
   String mobile;
   bool mobileVerified;
+
+  /// A verified teacher can switch this off when they cannot take new
+  /// children. Parents see it in the directory.
+  bool available;
   String email;
   String governorate;
   String? photoPath;
@@ -218,6 +223,7 @@ class ShadowApplication {
         'birthDate': birthDate?.toIso8601String(),
         'mobile': mobile,
         'mobileVerified': mobileVerified,
+        'available': available,
         'email': email,
         'governorate': governorate,
         'photoPath': photoPath,
@@ -264,6 +270,7 @@ class ShadowApplication {
       birthDate: DateTime.tryParse(json['birthDate'] as String? ?? ''),
       mobile: json['mobile'] as String? ?? '',
       mobileVerified: json['mobileVerified'] as bool? ?? false,
+      available: json['available'] as bool? ?? true,
       email: json['email'] as String? ?? '',
       governorate: json['governorate'] as String? ?? '',
       photoPath: json['photoPath'] as String?,
@@ -306,6 +313,7 @@ class TeacherListing {
     required this.verifiedCertificates,
     this.email = '',
     this.inviteCode = '',
+    this.available = true,
   });
 
   final String id;
@@ -323,6 +331,9 @@ class TeacherListing {
   /// Used only to match an invitation; never shown to parents.
   final String email;
   final String inviteCode;
+
+  /// Whether the teacher can take a new child right now.
+  final bool available;
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -352,6 +363,7 @@ class TeacherListing {
       verifiedCertificates: kinds,
       email: app.email,
       inviteCode: app.inviteCode,
+      available: app.available,
     );
   }
 }
@@ -441,7 +453,7 @@ class TeacherConnection {
   final int childAge;
   ConnectionStatus status;
   Map<String, bool> permissions;
-  final DateTime createdAt;
+  DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
         'id': id,

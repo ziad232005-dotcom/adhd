@@ -166,6 +166,14 @@ class ShadowStore extends ChangeNotifier {
     _changed();
   }
 
+  /// A verified teacher says whether they can take new children.
+  void setMyAvailability(bool value) {
+    final app = myApplication;
+    if (app == null || app.status != ApplicationStatus.verified) return;
+    app.available = value;
+    _changed();
+  }
+
   /// Opens a rejected application again so it can be corrected and
   /// sent again.
   void reopenMyApplication() {
@@ -390,6 +398,23 @@ class ShadowStore extends ChangeNotifier {
     return connection;
   }
 
+  /// A request the teacher has not answered for this long counts as
+  /// late, and the parent is offered to look for another teacher.
+  static const Duration responseWindow = Duration(hours: 48);
+
+  bool isOverdue(TeacherConnection c) {
+    return c.status == ConnectionStatus.awaitingTeacher &&
+        DateTime.now().difference(c.createdAt) >= responseWindow;
+  }
+
+  /// Demo only: pretend the request was sent days ago.
+  void simulateDelay(String id) {
+    final c = connectionById(id);
+    if (c == null) return;
+    c.createdAt = DateTime.now().subtract(responseWindow + const Duration(hours: 1));
+    _changed();
+  }
+
   void cancelRequest(String id) => _setStatus(id, ConnectionStatus.cancelled);
 
   void teacherAccept(String id) {
@@ -490,6 +515,7 @@ class ShadowStore extends ChangeNotifier {
       ],
       email: 'nada.hossam@example.com',
       inviteCode: 'MZD-1002-TCH',
+      available: false,
     ),
     TeacherListing(
       id: 'SH-1003',

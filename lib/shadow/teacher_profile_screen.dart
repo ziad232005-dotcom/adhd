@@ -37,6 +37,8 @@ class TeacherProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Center(child: ShadowBadge.verified(label: 'Verified Shadow Teacher')),
+        const SizedBox(height: 8),
+        Center(child: ShadowAvailability(available: teacher.available)),
         const SizedBox(height: 18),
         Row(
           children: [
@@ -131,8 +133,16 @@ class TeacherProfileScreen extends StatelessWidget {
         ),
       ],
       bottom: MazidPrimaryButton(
-        label: 'Send Connection Request',
-        onPressed: () => Navigator.push(
+        label: !teacher.available
+            ? 'Not available right now'
+            : ShadowStore.instance.liveConnection(teacher.id, child.id) != null
+                ? 'Request already sent'
+                : 'Send Connection Request',
+        onPressed: !teacher.available ||
+                ShadowStore.instance.liveConnection(teacher.id, child.id) !=
+                    null
+            ? null
+            : () => Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => SendRequestScreen(

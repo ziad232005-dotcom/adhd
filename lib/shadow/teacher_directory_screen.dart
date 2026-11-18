@@ -31,7 +31,7 @@ class _TeacherDirectoryScreenState extends State<TeacherDirectoryScreen> {
 
   List<String> _filters(List<TeacherListing> all) {
     final places = all.map((e) => e.governorate).where((e) => e.isNotEmpty);
-    return ['All', 'ADHD Training', ...{...places}];
+    return ['All', 'Available now', 'ADHD Training', ...{...places}];
   }
 
   List<TeacherListing> _visible(List<TeacherListing> all) {
@@ -39,9 +39,11 @@ class _TeacherDirectoryScreenState extends State<TeacherDirectoryScreen> {
 
     return all.where((t) {
       final matchesFilter = _filter == 'All' ||
-          (_filter == 'ADHD Training'
-              ? t.verifiedCertificates.contains('ADHD Training')
-              : t.governorate == _filter);
+          (_filter == 'Available now'
+              ? t.available
+              : _filter == 'ADHD Training'
+                  ? t.verifiedCertificates.contains('ADHD Training')
+                  : t.governorate == _filter);
 
       final matchesText = text.isEmpty ||
           t.name.toLowerCase().contains(text) ||
@@ -170,6 +172,8 @@ class _TeacherCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 ShadowBadge.verified(label: 'Verified Shadow Teacher'),
+                const SizedBox(height: 6),
+                ShadowAvailability(available: teacher.available),
                 const SizedBox(height: 8),
                 Text(
                   '${teacher.specialty} • ${teacher.experienceLabel}',

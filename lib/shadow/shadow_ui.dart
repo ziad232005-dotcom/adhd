@@ -759,3 +759,35 @@ class _FieldLabel extends StatelessWidget {
     );
   }
 }
+
+/// Small dot and label showing whether a teacher can take a new child.
+class ShadowAvailability extends StatelessWidget {
+  const ShadowAvailability({super.key, required this.available});
+
+  final bool available;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = available ? MazidColors.success : MazidColors.textMuted;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          available ? 'Available for new children' : 'Not available right now',
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
