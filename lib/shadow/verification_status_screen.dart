@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_features.dart';
 import '../core/mazid_theme.dart';
 import '../core/widgets/mazid_widgets.dart';
+import 'admin_applications_screen.dart';
 import 'application_summary_screen.dart';
 import 'shadow_models.dart';
 import 'shadow_store.dart';
@@ -131,6 +133,19 @@ class VerificationStatusScreen extends StatelessWidget {
             ),
           ),
         ),
+        if (AppFeatures.demoMode)
+          Center(
+            child: TextButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminApplicationsScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.admin_panel_settings_outlined, size: 18),
+              label: const Text('Admin review (demo)'),
+            ),
+          ),
       ],
     );
   }
