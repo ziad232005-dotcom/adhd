@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../add_task.dart';
 import '../child.dart';
@@ -84,6 +85,58 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               size: 42,
               color: ParentUi.purple,
             ),
+    );
+  }
+
+  Future<void> _changePin(ParentChild child) async {
+    final pin = await showDialog<String>(
+      context: context,
+      builder: (_) => _PinDialog(current: child.pin),
+    );
+
+    if (pin == null || !mounted) return;
+    _store.updateChild(child.copyWith(pin: pin));
+  }
+
+  /// Where the parent hands the phone to the child: shows the child's
+  /// PIN and opens the child's own screen.
+  Widget _childMode(ParentChild child) {
+    return ParentCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${child.name}’s PIN: ${child.pin}',
+                  style: const TextStyle(
+                    color: ParentUi.dark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => _changePin(child),
+                child: const Text('Change'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: ParentUi.purple,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () => _open(ChildLoginScreen(child: child)),
+            icon: const Icon(Icons.child_care_rounded),
+            label: Text('Open ${child.name}’s screen'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -478,6 +531,8 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                           ),
                         ],
                       ),
+                      _title('Child mode'),
+                      _childMode(child),
                       _title(
                         'Tasks',
                         action: 'Add task',
@@ -519,6 +574,64 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Asks for a new 4-digit PIN. Owns its controller so it is disposed
+/// together with the dialog.
+class _PinDialog extends StatefulWidget {
+  const _PinDialog({required this.current});
+
+  final String current;
+
+  @override
+  State<_PinDialog> createState() => _PinDialogState();
+}
+
+class _PinDialogState extends State<_PinDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.current);
+
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final value = _controller.text.trim();
+
+    if (!ParentChild.isValidPin(value)) {
+      setState(() => _error = 'Enter exactly 4 digits.');
+      return;
+    }
+    Navigator.pop(context, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Child PIN'),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        maxLength: 4,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          labelText: '4-digit PIN',
+          errorText: _error,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(onPressed: _save, child: const Text('Save')),
+      ],
     );
   }
 }

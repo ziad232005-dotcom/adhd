@@ -20,6 +20,9 @@ class ParentChild {
   final String grade;
   final String? imagePath;
 
+  /// 4-digit PIN the child types to open their own screen.
+  final String pin;
+
   const ParentChild({
     required this.id,
     required this.name,
@@ -27,7 +30,14 @@ class ParentChild {
     int? savedAge,
     required this.grade,
     this.imagePath,
-  }) : _savedAge = savedAge;
+    String? pin,
+  })  : _savedAge = savedAge,
+        pin = pin ?? _defaultPin;
+
+  static const _defaultPin = '1234';
+
+  /// True for exactly four digits.
+  static bool isValidPin(String value) => RegExp(r'^\d{4}$').hasMatch(value);
 
   /// Full years between [birth] and [now].
   static int ageOn(DateTime birth, DateTime now) {
@@ -50,6 +60,7 @@ class ParentChild {
     DateTime? birthDate,
     String? grade,
     String? imagePath,
+    String? pin,
     bool clearImage = false,
   }) {
     return ParentChild(
@@ -59,6 +70,7 @@ class ParentChild {
       savedAge: _savedAge,
       grade: grade ?? this.grade,
       imagePath: clearImage ? null : imagePath ?? this.imagePath,
+      pin: pin ?? this.pin,
     );
   }
 
@@ -69,6 +81,7 @@ class ParentChild {
         'age': _savedAge,
         'grade': grade,
         'imagePath': imagePath,
+        'pin': pin,
       };
 
   factory ParentChild.fromJson(Map<String, dynamic> json) {
@@ -81,6 +94,7 @@ class ParentChild {
       savedAge: json['age'] as int?,
       grade: json['grade'] as String? ?? '',
       imagePath: json['imagePath'] as String?,
+      pin: json['pin'] as String?,
     );
   }
 }

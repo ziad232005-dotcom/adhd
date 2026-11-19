@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'tova/tova_screens.dart';
+import 'parent/parent_store.dart';
 
 const Color childPrimary = Color(0xFF7566D9);
 const Color childBackground = Color(0xFFF8F7FF);
@@ -778,8 +779,12 @@ void deleteReward(int id) {
 
 
 
+/// The child types the PIN their parent set. Opens that child's own
+/// dashboard.
 class ChildLoginScreen extends StatefulWidget {
-  const ChildLoginScreen({super.key});
+  const ChildLoginScreen({super.key, required this.child});
+
+  final ParentChild child;
   @override
   State<ChildLoginScreen> createState() => _ChildLoginScreenState();
 }
@@ -794,14 +799,27 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
   }
 
   void login() {
-    if (pinController.text.length != 4) {
+    final text = pinController.text;
+    final message = text.length != 4
+        ? 'Please enter your 4-digit PIN'
+        : text != widget.child.pin
+            ? 'That PIN is not right. Try again.'
+            : null;
+
+    if (message != null) {
+      pinController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your 4-digit PIN')),
+        SnackBar(content: Text(message)),
       );
       return;
     }
-    Navigator.pushReplacement(context,
-        MaterialPageRoute(builder: (_) => const ChildDashboardScreen()));
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChildDashboardScreen(child: widget.child),
+      ),
+    );
   }
 
   @override
@@ -822,7 +840,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                 child: Column(children: [
                   _circleIcon(Icons.child_care_rounded, 112),
                   const SizedBox(height: 24),
-                  const Text('Hello, Super Star!',
+                  Text('Hello, ${widget.child.name}!',
                       style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold, color: childText)),
                   const SizedBox(height: 10),
                   const Text('Enter your 4-digit PIN to continue',
@@ -847,7 +865,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                   const SizedBox(height: 18),
                   _primaryButton('Let’s Go!', Icons.rocket_launch_rounded, login),
                   const SizedBox(height: 12),
-                  const Text('Demo: any 4 digits will work.',
+                  const Text('Ask your parent if you forgot your PIN.',
                       style: TextStyle(fontSize: 12, color: Colors.black45)),
                 ]),
               ),
@@ -858,7 +876,9 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
 }
 
 class ChildDashboardScreen extends StatefulWidget {
-  const ChildDashboardScreen({super.key});
+  const ChildDashboardScreen({super.key, required this.child});
+
+  final ParentChild child;
   @override
   State<ChildDashboardScreen> createState() => _ChildDashboardScreenState();
 }
@@ -884,6 +904,11 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            tooltip: 'Back to parent',
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.logout_rounded, color: childPrimary),
+          ),
+          IconButton(
             tooltip: 'My rewards',
             onPressed: () => open(const ChildRewardsScreen()),
             icon: const Icon(Icons.card_giftcard_rounded, color: childPrimary),
@@ -900,13 +925,13 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
               gradient: const LinearGradient(colors: [childPrimary, Color(0xFF9B8FF0)]),
               borderRadius: BorderRadius.circular(26),
             ),
-            child: const Row(children: [
+            child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Hi, Super Star! ✨', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Text('Small steps make big progress.', style: TextStyle(color: Colors.white, height: 1.4)),
+                Text('Hi, ${widget.child.name}! ✨', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Small steps make big progress.', style: TextStyle(color: Colors.white, height: 1.4)),
               ])),
-              Icon(Icons.emoji_events_rounded, size: 58, color: Colors.white),
+              const Icon(Icons.emoji_events_rounded, size: 58, color: Colors.white),
             ]),
           ),
           const SizedBox(height: 16),
