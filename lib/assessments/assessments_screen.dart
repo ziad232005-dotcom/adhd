@@ -6,6 +6,7 @@ import '../tova/tova_screens.dart';
 import 'cars_models.dart';
 import 'cars_screen.dart';
 import 'cars_store.dart';
+import 'tova_record.dart';
 
 /// The assessments of one child. CARS and TOVA are separate tests that
 /// live here, side by side. A parent starts them; TOVA is done by the
@@ -20,12 +21,11 @@ class AssessmentsScreen extends StatefulWidget {
 }
 
 class _AssessmentsScreenState extends State<AssessmentsScreen> {
-  final _cars = CarsStore.instance;
-
   @override
   void initState() {
     super.initState();
-    _cars.load(widget.child.id);
+    carsStore.load(widget.child.id);
+    tovaStore.load(widget.child.id);
   }
 
   void _open(Widget screen) {
@@ -49,9 +49,10 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
       appBar: parentAppBar(context, 'Assessments'),
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: _cars,
+          animation: Listenable.merge([carsStore, tovaStore]),
           builder: (context, _) {
-            final history = _cars.resultsFor(child.id);
+            final history = carsStore.of(child.id);
+            final tovaHistory = tovaStore.of(child.id);
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
@@ -76,7 +77,7 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                   subtitle: '${child.name} does this one on the screen, with '
                       'you next to them. Needs a quiet place.',
                   action: 'Start',
-                  onTap: () => _open(const TovaWelcomeScreen()),
+                  onTap: () => _open(TovaWelcomeScreen(childId: child.id)),
                 ),
                 if (history.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -117,6 +118,53 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                           ),
                           Text(
                             '${result.total}/${CarsQuestionnaire.maxScore}',
+                            style: const TextStyle(
+                              color: ParentUi.purple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+                if (tovaHistory.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'TOVA history',
+                    style: TextStyle(
+                      color: ParentUi.dark,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final record in tovaHistory)
+                    ParentCard(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _date(record.takenAt),
+                                  style: const TextStyle(
+                                    color: ParentUi.dark,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${record.modeTitle} • ${record.trials} trials',
+                                  style: const TextStyle(
+                                    color: ParentUi.muted,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${record.accuracyPct.round()}%',
                             style: const TextStyle(
                               color: ParentUi.purple,
                               fontWeight: FontWeight.bold,

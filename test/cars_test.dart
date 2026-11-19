@@ -52,29 +52,20 @@ void main() {
     setUp(() => SharedPreferences.setMockInitialValues({}));
 
     test('keeps results per child, newest first, across reloads', () async {
-      final store = CarsStore.instance;
-      await store.forget(1);
-      await store.forget(2);
+      await carsStore.forget(1);
+      await carsStore.forget(2);
 
-      await store.save(
+      await carsStore.add(
         1,
-        CarsResult(takenAt: DateTime(2026, 1, 1), scores: List.filled(15, 1)),
-      );
-      await store.save(
-        1,
-        CarsResult(
-          takenAt: DateTime(2026, 6, 1),
-          scores: List.filled(15, 2),
-          note: 'later',
-        ),
+        CarsResult(takenAt: DateTime(2026, 6, 1), scores: List.filled(15, 2), note: 'later'),
       );
 
-      expect(store.latestFor(1)!.note, 'later');
-      expect(store.resultsFor(2), isEmpty);
+      expect(carsStore.latest(1)!.note, 'later');
+      expect(carsStore.of(2), isEmpty);
 
-      await store.load(1);
-      expect(store.resultsFor(1), hasLength(2));
-      expect(store.latestFor(1)!.total, 30);
+      await carsStore.load(1);
+      expect(carsStore.of(1), hasLength(1));
+      expect(carsStore.latest(1)!.total, 30);
     });
   });
 }

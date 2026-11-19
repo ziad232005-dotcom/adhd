@@ -47,7 +47,7 @@ class _CarsScreenState extends State<CarsScreen> {
       note: _noteController.text.trim(),
     );
 
-    await CarsStore.instance.save(widget.child.id, result);
+    await carsStore.add(widget.child.id, result);
     if (mounted) setState(() => _result = result);
   }
 

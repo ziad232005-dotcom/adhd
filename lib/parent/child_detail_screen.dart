@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../add_task.dart';
 import '../assessments/assessments_screen.dart';
+import '../care/care_section.dart';
 import '../child.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
@@ -577,6 +578,8 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       _observations(),
                       _title('Mood'),
                       _moods(),
+                      _title('Care'),
+                      CareSection(child: child),
                       _title('Support Team'),
                       SupportTeamSection(child: child),
                       const SizedBox(height: 22),

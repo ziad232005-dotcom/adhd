@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../assessments/cars_store.dart';
+import '../care/care_stores.dart';
 import '../child.dart';
 
 class ParentChild {
@@ -389,7 +389,7 @@ class ParentStore extends ChangeNotifier {
       ChildAppState.instance
           .switchChild(selectedChild?.id)
           .then((_) => ChildAppState.instance.forgetChild(id))
-          .then((_) => CarsStore.instance.forget(id)),
+          .then((_) => forgetChildRecords(id)),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../core/mazid_theme.dart';
 import 'incoming_request_screen.dart';
+import 'school_note_screen.dart';
 import 'shadow_models.dart';
 import 'shadow_store.dart';
 import 'shadow_ui.dart';
@@ -212,6 +213,14 @@ class ShadowHomeScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: ShadowCard(
+                onTap: c.status == ConnectionStatus.active
+                    ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SchoolNoteScreen(connection: c),
+                          ),
+                        )
+                    : null,
                 child: Row(
                   children: [
                     ShadowAvatar(

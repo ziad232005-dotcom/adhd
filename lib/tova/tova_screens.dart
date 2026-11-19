@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import '../core/widgets/mazid_widgets.dart';
+import '../assessments/tova_record.dart';
 import '../parent/parent_store.dart';
 
 /// A mobile-friendly TOVA-style attention activity.
@@ -117,7 +118,10 @@ Widget _withTovaTheme(BuildContext context, Widget child) =>
 /// Add this route from the child's area with:
 /// Navigator.push(context, MaterialPageRoute(builder: (_) => const TovaWelcomeScreen()));
 class TovaWelcomeScreen extends StatefulWidget {
-  const TovaWelcomeScreen({super.key});
+  const TovaWelcomeScreen({super.key, this.childId});
+
+  /// The child this activity is for. Its result is saved to that child.
+  final int? childId;
 
   @override
   State<TovaWelcomeScreen> createState() => _TovaWelcomeScreenState();
@@ -133,8 +137,12 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
   void initState() {
     super.initState();
 
-    // Start from the selected child's details.
-    final child = ParentStore.instance.selectedChild;
+    // Start from the child's details.
+    final store = ParentStore.instance;
+    final id = widget.childId;
+    final child = id == null
+        ? store.selectedChild
+        : store.children.where((c) => c.id == id).firstOrNull;
     if (child != null) {
       _nameController.text = child.name;
       _birthDate = child.birthDate;
@@ -366,6 +374,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                                 mode: _mode,
                                 childName: _nameController.text.trim(),
                                 childAge: _age!,
+                                childId: widget.childId,
                               ),
                             ));
                           }
@@ -399,11 +408,13 @@ class TovaTestScreen extends StatefulWidget {
     required this.mode,
     required this.childName,
     required this.childAge,
+    this.childId,
   });
 
   final TovaMode mode;
   final String childName;
   final int childAge;
+  final int? childId;
 
   @override
   State<TovaTestScreen> createState() => _TovaTestScreenState();
@@ -600,6 +611,29 @@ void _respond() {
     _focusNode.requestFocus();
   }
 
+  /// Keeps a short summary of the activity with the child it was for.
+  void _saveRecord(List<TovaTrialResult> shown, bool completed) {
+    final childId = widget.childId;
+    if (childId == null || shown.isEmpty) return;
+
+    final summary = _TovaSummary.fromResults(shown);
+    tovaStore.add(
+      childId,
+      TovaRecord(
+        takenAt: DateTime.now(),
+        modeTitle: widget.mode.title,
+        trials: shown.length,
+        completed: completed,
+        hits: summary.hits,
+        omissions: summary.omissions,
+        commissions: summary.commissions,
+        anticipatory: summary.anticipatory,
+        accuracyPct: summary.accuracyPct,
+        meanRtMs: summary.meanRtMs,
+      ),
+    );
+  }
+
   void _finishRun({required bool completed, bool partial = false}) {
     _countdownTimer?.cancel();
     _ticker.stop();
@@ -613,6 +647,7 @@ void _respond() {
     final shownResults = _results
         .where((r) => r.onsetMs != null && r.finalized && !r.interrupted)
         .toList(growable: false);
+    _saveRecord(shownResults, completed);
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => TovaResultsScreen(
         mode: widget.mode,
