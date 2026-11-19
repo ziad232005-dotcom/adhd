@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import 'add_trigger_screen.dart';
 import 'care_models.dart';
 import 'care_stores.dart';
-import 'fields_dialog.dart';
 import 'medications_screen.dart';
 
 /// Hard moments: what came before, what the child did, what helped.
@@ -27,30 +27,10 @@ class _TriggersScreenState extends State<TriggersScreen> {
     triggerStore.load(_id);
   }
 
-  Future<void> _add() async {
-    final answers = await showFieldsDialog(
+  void _add() {
+    Navigator.push(
       context,
-      title: 'Log a hard moment',
-      fields: const [
-        DialogField(
-          'What happened just before?',
-          hint: 'e.g. screen time ended',
-          required: true,
-        ),
-        DialogField('What did your child do?', hint: 'e.g. screamed, cried'),
-        DialogField('What helped?', hint: 'e.g. a hug, quiet room'),
-      ],
-    );
-    if (answers == null) return;
-
-    await triggerStore.add(
-      _id,
-      TriggerEntry(
-        when: DateTime.now(),
-        trigger: answers[0],
-        behavior: answers[1],
-        helped: answers[2],
-      ),
+      MaterialPageRoute(builder: (_) => AddTriggerScreen(child: widget.child)),
     );
   }
 

@@ -6,7 +6,7 @@ import 'care_stores.dart';
 import 'daily_log_screen.dart';
 import 'doctor_report_screen.dart';
 import 'medications_screen.dart';
-import 'school_notes_section.dart';
+import 'school_notes_screen.dart';
 import 'triggers_screen.dart';
 
 /// "Care" block of a child's page: everyday logs and the doctor report.
@@ -57,7 +57,11 @@ class _CareSectionState extends State<CareSection> {
           title: 'Doctor report',
           onTap: () => _open(DoctorReportScreen(child: child)),
         ),
-        SchoolNotesSection(child: child),
+        _Tile(
+          icon: Icons.school_rounded,
+          title: 'From school',
+          onTap: () => _open(SchoolNotesScreen(child: child)),
+        ),
       ],
     );
   }

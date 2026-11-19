@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import 'add_appointment_screen.dart';
+import 'add_medication_screen.dart';
 import 'care_models.dart';
 import 'care_stores.dart';
-import 'fields_dialog.dart';
 
 String formatDate(DateTime d) {
   const months = [
@@ -40,81 +41,8 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     appointmentStore.load(_id);
   }
 
-  Future<void> _addMedication() async {
-    final answers = await showFieldsDialog(
-      context,
-      title: 'Add medicine',
-      fields: const [
-        DialogField('Medicine name', required: true),
-        DialogField('Dose', hint: 'e.g. 10 mg'),
-        DialogField('Times', hint: 'e.g. 08:00, 20:00'),
-      ],
-    );
-    if (answers == null) return;
-
-    await medicationStore.add(
-      _id,
-      Medication(name: answers[0], dose: answers[1], times: answers[2]),
-    );
-  }
-
-  Future<void> _addAppointment() async {
-    final answers = await showFieldsDialog(
-      context,
-      title: 'Add appointment',
-      fields: const [
-        DialogField('Title', hint: 'e.g. Dr. Hana follow-up', required: true),
-      ],
-      saveLabel: 'Next',
-    );
-    if (answers == null || !mounted) return;
-
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 730)),
-    );
-    if (date == null || !mounted) return;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 10, minute: 0),
-    );
-    if (time == null || !mounted) return;
-
-    final kind = await showModalBottomSheet<AppointmentKind>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final k in AppointmentKind.values)
-              ListTile(
-                title: Text(k.label),
-                onTap: () => Navigator.pop(sheetContext, k),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (kind == null) return;
-
-    await appointmentStore.add(
-      _id,
-      Appointment(
-        title: answers[0],
-        kind: kind,
-        when: DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        ),
-      ),
-    );
+  void _open(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   Widget _heading(String text, String action, VoidCallback onTap) {
@@ -154,7 +82,11 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
               children: [
-                _heading('Medicines', 'Add', _addMedication),
+                _heading(
+                  'Medicines',
+                  'Add',
+                  () => _open(AddMedicationScreen(child: widget.child)),
+                ),
                 if (medicines.isEmpty)
                   const ParentCard(
                     child: Text(
@@ -211,7 +143,11 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                       ],
                     ),
                   ),
-                _heading('Appointments', 'Add', _addAppointment),
+                _heading(
+                  'Appointments',
+                  'Add',
+                  () => _open(AddAppointmentScreen(child: widget.child)),
+                ),
                 if (appointments.isEmpty)
                   const ParentCard(
                     child: Text(
