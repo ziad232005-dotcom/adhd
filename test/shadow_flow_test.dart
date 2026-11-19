@@ -315,12 +315,12 @@ void main() {
   });
 
   group('Invitations', () {
-    ParentChild _child() => ParentStore.instance.children.first;
+    ParentChild firstChild() => ParentStore.instance.children.first;
 
     test('a verified teacher gets a request straight away', () {
       final connection = store.inviteByEmail(
         'sarah.ahmed@example.com',
-        _child(),
+        firstChild(),
       );
 
       expect(connection, isNotNull);
@@ -331,7 +331,7 @@ void main() {
     test('an unknown email waits as an invitation', () {
       final connection = store.inviteByEmail(
         'Teacher@School.com',
-        _child(),
+        firstChild(),
         schoolName: 'Future School',
       );
 
@@ -343,15 +343,15 @@ void main() {
     });
 
     test('the same email is not invited twice for one child', () {
-      store.inviteByEmail('teacher@school.com', _child());
-      store.inviteByEmail('teacher@school.com', _child());
+      store.inviteByEmail('teacher@school.com', firstChild());
+      store.inviteByEmail('teacher@school.com', firstChild());
 
       expect(store.invitations, hasLength(1));
-      expect(store.invitationsForChild(_child().id), hasLength(1));
+      expect(store.invitationsForChild(firstChild().id), hasLength(1));
     });
 
     test('verification turns the invitation into a request', () {
-      store.inviteByEmail('mona.hassan@example.com', _child());
+      store.inviteByEmail('mona.hassan@example.com', firstChild());
 
       final app = _fillValidApplication(store);
       expect(store.invitationsForMe, hasLength(1));
@@ -368,7 +368,7 @@ void main() {
     });
 
     test('a rejected teacher keeps the invitation waiting', () {
-      store.inviteByEmail('mona.hassan@example.com', _child());
+      store.inviteByEmail('mona.hassan@example.com', firstChild());
 
       final app = _fillValidApplication(store);
       store.submitMyApplication();
@@ -379,7 +379,7 @@ void main() {
     });
 
     test('a cancelled invitation is not delivered', () {
-      store.inviteByEmail('mona.hassan@example.com', _child());
+      store.inviteByEmail('mona.hassan@example.com', firstChild());
       store.cancelInvitation(store.invitations.first.id);
 
       final app = _fillValidApplication(store);
