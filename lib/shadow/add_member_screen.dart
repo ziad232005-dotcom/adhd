@@ -6,8 +6,9 @@ import 'invite_teacher_screen.dart';
 import 'shadow_ui.dart';
 import 'teacher_directory_screen.dart';
 
-/// Two ways to add a Shadow Teacher: browse verified teachers, or invite
-/// someone the parent already knows.
+/// Two doors, one gate: browse verified teachers, or invite someone the
+/// parent already knows (including a teacher from the child's school).
+/// Either way the teacher must be verified by MAZID before any request.
 class AddMemberScreen extends StatelessWidget {
   const AddMemberScreen({super.key, required this.child});
 
@@ -47,8 +48,10 @@ class AddMemberScreen extends StatelessWidget {
         const SizedBox(height: 14),
         _Option(
           icon: Icons.person_add_alt_1_rounded,
-          title: 'Invite My Shadow Teacher',
-          description: 'Already have someone? Invite them by email or invite code.',
+          title: 'Invite Someone I Know',
+          description:
+              'Your child’s school teacher or a teacher you already trust. '
+              'Invite them by email or invite code.',
           tag: 'Email or code',
           onTap: () => Navigator.push(
             context,

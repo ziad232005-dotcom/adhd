@@ -40,6 +40,21 @@ class VerificationStatusScreen extends StatelessWidget {
     }
   }
 
+  String _invitedText(List<ShadowInvitation> list) {
+    final count = list.length;
+    final schools = {
+      for (final i in list)
+        if (i.schoolName.isNotEmpty) i.schoolName,
+    };
+    final where = schools.isEmpty ? '' : ' (${schools.join(', ')})';
+
+    return count == 1
+        ? 'A parent$where invited you to support their child. Once you are '
+            'verified, their request appears on your home screen.'
+        : '$count parents$where invited you. Once you are verified, their '
+            'requests appear on your home screen.';
+  }
+
   Widget _header(String asset, String title, ApplicationStatus status) {
     return Column(
       children: [
@@ -122,6 +137,15 @@ class VerificationStatusScreen extends StatelessWidget {
           'Your account is restricted until you’re verified. You can’t see '
           'any child before then.',
         ),
+        if (ShadowStore.instance.invitationsForMe.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          ShadowNote(
+            _invitedText(ShadowStore.instance.invitationsForMe),
+            icon: Icons.mail_outline_rounded,
+            color: MazidColors.success,
+            background: MazidColors.successSoft,
+          ),
+        ],
         const SizedBox(height: 14),
         MazidOutlineButton(
           label: 'View my application',

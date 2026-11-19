@@ -32,6 +32,34 @@ class SupportTeamSection extends StatelessWidget {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
+  Future<void> _cancelInvitation(
+    BuildContext context,
+    ShadowInvitation invitation,
+  ) async {
+    final cancel = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Invitation waiting'),
+        content: Text(
+          '${invitation.email} has not been verified yet. The invitation '
+          'is delivered once the MAZID team verifies them.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep waiting'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Cancel invitation'),
+          ),
+        ],
+      ),
+    );
+
+    if (cancel == true) ShadowStore.instance.cancelInvitation(invitation.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = ShadowStore.instance;
@@ -40,6 +68,7 @@ class SupportTeamSection extends StatelessWidget {
       animation: store,
       builder: (context, _) {
         final team = store.connectionsForChild(child.id);
+        final waiting = store.invitationsForChild(child.id);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,10 +98,26 @@ class SupportTeamSection extends StatelessWidget {
                       onTap: () => _open(context, c),
                     ),
                   ],
+                  for (final i in waiting) ...[
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    _MemberRow(
+                      initials: i.email.substring(0, 1).toUpperCase(),
+                      name: i.email,
+                      role: i.schoolName.isEmpty
+                          ? 'Invited'
+                          : 'Invited • ${i.schoolName}',
+                      badge: const ShadowBadge(
+                        'Waiting',
+                        color: Color(0xFFB7791F),
+                        background: Color(0xFFFFF4DB),
+                      ),
+                      onTap: () => _cancelInvitation(context, i),
+                    ),
+                  ],
                 ],
               ),
             ),
-            if (team.isEmpty) ...[
+            if (team.isEmpty && waiting.isEmpty) ...[
               const SizedBox(height: 10),
               const ShadowNote.privacy(
                 'Add a verified Shadow Teacher to support your child at '

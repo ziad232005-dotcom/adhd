@@ -26,9 +26,11 @@ class ShadowStore extends ChangeNotifier {
 
   final List<ShadowApplication> applications = [];
   final List<TeacherConnection> connections = [];
+  final List<ShadowInvitation> invitations = [];
 
   int _nextApplicationNumber = 2100;
   int _nextConnectionNumber = 1;
+  int _nextInvitationNumber = 1;
 
   // ---------------------------------------------------------------- load
 
@@ -48,6 +50,7 @@ class ShadowStore extends ChangeNotifier {
         ownApplicationId = json['ownApplicationId'] as String?;
         _nextApplicationNumber = json['nextApplicationNumber'] as int? ?? 2100;
         _nextConnectionNumber = json['nextConnectionNumber'] as int? ?? 1;
+        _nextInvitationNumber = json['nextInvitationNumber'] as int? ?? 1;
 
         applications
           ..clear()
@@ -68,11 +71,22 @@ class ShadowStore extends ChangeNotifier {
               ),
             ),
           );
+
+        invitations
+          ..clear()
+          ..addAll(
+            (json['invitations'] as List? ?? const []).map(
+              (e) => ShadowInvitation.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            ),
+          );
       }
     } catch (_) {
       // Damaged data: start clean rather than crash.
       applications.clear();
       connections.clear();
+      invitations.clear();
     }
 
     // Example applications so the admin screens are not empty.
@@ -93,8 +107,10 @@ class ShadowStore extends ChangeNotifier {
           'ownApplicationId': ownApplicationId,
           'nextApplicationNumber': _nextApplicationNumber,
           'nextConnectionNumber': _nextConnectionNumber,
+          'nextInvitationNumber': _nextInvitationNumber,
           'applications': applications.map((a) => a.toJson()).toList(),
           'connections': connections.map((c) => c.toJson()).toList(),
+          'invitations': invitations.map((i) => i.toJson()).toList(),
         }),
       );
     } catch (_) {
@@ -292,6 +308,7 @@ class ShadowStore extends ChangeNotifier {
     app.status = status;
     app.adminNote = note.trim();
     app.requestedItems = List<String>.of(requestedItems);
+    if (status == ApplicationStatus.verified) _deliverInvitations(app);
     _changed();
     return null;
   }
@@ -343,6 +360,88 @@ class ShadowStore extends ChangeNotifier {
       }
     }
     return false;
+  }
+
+  // -------------------------------------------------------- invitations
+
+  /// The parent invites someone by email.
+  ///
+  /// A verified teacher gets a normal connection request straight away.
+  /// Anyone else (not registered yet, or still being verified) gets a
+  /// waiting invitation that is delivered once they are verified.
+  /// Returns the connection when one was created, otherwise null.
+  TeacherConnection? inviteByEmail(
+    String email,
+    ParentChild child, {
+    String schoolName = '',
+  }) {
+    final verified = findVerified(email);
+    if (verified != null) return requestConnection(verified, child);
+
+    final text = email.trim().toLowerCase();
+    for (final i in invitations) {
+      if (i.isWaiting && i.email == text && i.childId == child.id) return null;
+    }
+
+    final parent = ParentStore.instance.profile.name;
+    invitations.add(
+      ShadowInvitation(
+        id: 'I-${_nextInvitationNumber++}',
+        email: text,
+        childId: child.id,
+        childName: child.name,
+        childAge: child.age,
+        parentName: parent.isEmpty ? 'Parent' : parent,
+        schoolName: schoolName.trim(),
+      ),
+    );
+    _changed();
+    return null;
+  }
+
+  List<ShadowInvitation> invitationsForChild(int childId) => invitations
+      .where((i) => i.isWaiting && i.childId == childId)
+      .toList();
+
+  void cancelInvitation(String id) {
+    for (final i in invitations) {
+      if (i.id == id && i.isWaiting) i.status = InvitationStatus.cancelled;
+    }
+    _changed();
+  }
+
+  /// Invitations addressed to the signed-in person's email.
+  List<ShadowInvitation> get invitationsForMe {
+    final app = myApplication;
+    final email = (app?.email ?? ParentStore.instance.profile.email)
+        .trim()
+        .toLowerCase();
+    if (email.isEmpty) return const [];
+    return invitations.where((i) => i.isWaiting && i.email == email).toList();
+  }
+
+  /// Turns waiting invitations for a newly verified teacher into requests.
+  void _deliverInvitations(ShadowApplication app) {
+    final email = app.email.trim().toLowerCase();
+    final listing = TeacherListing.fromApplication(app);
+
+    for (final i in invitations) {
+      if (!i.isWaiting || i.email != email) continue;
+
+      if (liveConnection(listing.id, i.childId) == null) {
+        connections.add(
+          TeacherConnection(
+            id: 'C-${_nextConnectionNumber++}',
+            teacherId: listing.id,
+            childId: i.childId,
+            parentName: i.parentName,
+            childName: i.childName,
+            childAge: i.childAge,
+          ),
+        );
+      }
+      i.status = InvitationStatus.converted;
+    }
   }
 
   // -------------------------------------------------------- connections

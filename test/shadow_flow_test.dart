@@ -44,6 +44,7 @@ void main() {
     store = ShadowStore.instance;
     store.applications.clear();
     store.connections.clear();
+    store.invitations.clear();
     store.ownApplicationId = null;
     store.role = null;
     await store.load();
@@ -310,6 +311,100 @@ void main() {
     test('availability only changes for a verified teacher', () {
       store.setMyAvailability(false);
       expect(store.myApplication, isNull);
+    });
+  });
+
+  group('Invitations', () {
+    ParentChild _child() => ParentStore.instance.children.first;
+
+    test('a verified teacher gets a request straight away', () {
+      final connection = store.inviteByEmail(
+        'sarah.ahmed@example.com',
+        _child(),
+      );
+
+      expect(connection, isNotNull);
+      expect(connection!.teacherId, 'SH-1001');
+      expect(store.invitations, isEmpty);
+    });
+
+    test('an unknown email waits as an invitation', () {
+      final connection = store.inviteByEmail(
+        'Teacher@School.com',
+        _child(),
+        schoolName: 'Future School',
+      );
+
+      expect(connection, isNull);
+      expect(store.invitations, hasLength(1));
+      expect(store.invitations.first.email, 'teacher@school.com');
+      expect(store.invitations.first.schoolName, 'Future School');
+      expect(store.connections, isEmpty);
+    });
+
+    test('the same email is not invited twice for one child', () {
+      store.inviteByEmail('teacher@school.com', _child());
+      store.inviteByEmail('teacher@school.com', _child());
+
+      expect(store.invitations, hasLength(1));
+      expect(store.invitationsForChild(_child().id), hasLength(1));
+    });
+
+    test('verification turns the invitation into a request', () {
+      store.inviteByEmail('mona.hassan@example.com', _child());
+
+      final app = _fillValidApplication(store);
+      expect(store.invitationsForMe, hasLength(1));
+      expect(store.submitMyApplication(), isNull);
+      expect(store.connections, isEmpty);
+
+      expect(store.decide(app.id, ApplicationStatus.verified), isNull);
+
+      expect(store.invitations.first.status, InvitationStatus.converted);
+      expect(store.connections, hasLength(1));
+      expect(store.connections.first.teacherId, app.id);
+      expect(store.incomingRequests, hasLength(1));
+      expect(store.invitationsForMe, isEmpty);
+    });
+
+    test('a rejected teacher keeps the invitation waiting', () {
+      store.inviteByEmail('mona.hassan@example.com', _child());
+
+      final app = _fillValidApplication(store);
+      store.submitMyApplication();
+      store.decide(app.id, ApplicationStatus.rejected, note: 'No');
+
+      expect(store.invitations.first.isWaiting, isTrue);
+      expect(store.connections, isEmpty);
+    });
+
+    test('a cancelled invitation is not delivered', () {
+      store.inviteByEmail('mona.hassan@example.com', _child());
+      store.cancelInvitation(store.invitations.first.id);
+
+      final app = _fillValidApplication(store);
+      store.submitMyApplication();
+      store.decide(app.id, ApplicationStatus.verified);
+
+      expect(store.connections, isEmpty);
+    });
+
+    test('invitations survive being saved and loaded', () {
+      final invitation = ShadowInvitation(
+        id: 'I-1',
+        email: 'a@b.com',
+        childId: 1,
+        childName: 'Omar',
+        childAge: 8,
+        parentName: 'Mona',
+        schoolName: 'School',
+      );
+
+      final copy = ShadowInvitation.fromJson(invitation.toJson());
+
+      expect(copy.email, 'a@b.com');
+      expect(copy.schoolName, 'School');
+      expect(copy.isWaiting, isTrue);
     });
   });
 

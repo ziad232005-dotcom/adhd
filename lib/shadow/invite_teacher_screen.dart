@@ -8,9 +8,13 @@ import 'shadow_models.dart';
 import 'shadow_store.dart';
 import 'shadow_ui.dart';
 
-/// Invite a Shadow Teacher the parent already knows, by email or by the
-/// invite code the teacher shows on their home screen. Only verified
-/// accounts can be invited.
+/// Invite someone the parent already knows (a teacher from the child's
+/// school, a private teacher), by email or by invite code.
+///
+/// A verified teacher gets a request right away. Anyone else can still
+/// be invited by email: the invitation waits and is delivered once the
+/// MAZID team verifies them. The child's data is never shared before
+/// the teacher is verified and the parent confirms access.
 class InviteTeacherScreen extends StatefulWidget {
   const InviteTeacherScreen({super.key, required this.child});
 
@@ -22,6 +26,7 @@ class InviteTeacherScreen extends StatefulWidget {
 
 class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
   final _controller = TextEditingController();
+  final _schoolController = TextEditingController();
 
   bool _byEmail = true;
   bool _checked = false;
@@ -31,6 +36,7 @@ class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _schoolController.dispose();
     super.dispose();
   }
 
@@ -53,7 +59,37 @@ class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
     });
   }
 
+  bool get _looksLikeEmail =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_controller.text.trim());
+
+  /// A waiting invitation is possible for any valid email that is not a
+  /// verified teacher yet.
+  bool get _canInviteUnverified =>
+      _byEmail && _checked && _found == null && _looksLikeEmail;
+
+  void _sendWaitingInvitation() {
+    ShadowStore.instance.inviteByEmail(
+      _controller.text,
+      widget.child,
+      schoolName: _schoolController.text,
+    );
+
+    Navigator.popUntil(
+      context,
+      (route) => route.settings.name == '/child-detail' || route.isFirst,
+    );
+    ShadowUi.snack(
+      context,
+      'Invitation saved. It reaches the teacher once they are verified.',
+    );
+  }
+
   void _send() {
+    if (_canInviteUnverified) {
+      _sendWaitingInvitation();
+      return;
+    }
+
     final teacher = _found;
     if (teacher == null) return;
 
@@ -115,23 +151,28 @@ class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
       );
     }
 
-    if (_unverified) {
-      return const ShadowNote.warning(
-        'This teacher has an account but is not verified yet. You can invite '
-        'them once the MAZID team verifies their documents.',
+    if (_canInviteUnverified) {
+      return ShadowNote.warning(
+        _unverified
+            ? 'This teacher is registered but not verified yet. Your '
+                'invitation will wait and be delivered as soon as the MAZID '
+                'team verifies them.'
+            : 'No MAZID account with this email yet. You can still invite '
+                'them: ask them to register as a Shadow Teacher and get '
+                'verified, and your invitation will reach them then.',
       );
     }
 
     return const ShadowNote.warning(
-      'No verified Shadow Teacher found. Check the spelling, or ask them to '
-      'register and get verified in MAZID first.',
+      'No verified Shadow Teacher found with this code. Check the spelling, '
+      'or invite them by email instead.',
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return ShadowScaffold(
-      title: 'Invite my Shadow Teacher',
+      title: 'Invite someone I know',
       body: [
         SegmentedButton<bool>(
           segments: const [
@@ -161,15 +202,24 @@ class _InviteTeacherScreenState extends State<InviteTeacherScreen> {
         ),
         const SizedBox(height: 14),
         if (_checked) _result(),
+        if (_canInviteUnverified) ...[
+          const SizedBox(height: 14),
+          ShadowTextField(
+            controller: _schoolController,
+            label: 'School name (optional)',
+            hint: 'If they are your child’s school teacher',
+            required: false,
+          ),
+        ],
         const SizedBox(height: 18),
         const ShadowNote(
-          'Only verified accounts can be invited. Teachers find their invite '
-          'code on their MAZID home screen after they are verified.',
+          'Nobody sees your child’s data until the teacher is verified by '
+          'MAZID and you approve access.',
         ),
       ],
       bottom: MazidPrimaryButton(
-        label: 'Send invitation',
-        onPressed: _found == null ? null : _send,
+        label: _found != null ? 'Send request' : 'Send invitation',
+        onPressed: (_found != null || _canInviteUnverified) ? _send : null,
       ),
     );
   }

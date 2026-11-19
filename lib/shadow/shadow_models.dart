@@ -487,3 +487,68 @@ class TeacherConnection {
     );
   }
 }
+
+enum InvitationStatus { waiting, converted, cancelled }
+
+/// A parent invited someone by email who is not a verified Shadow Teacher
+/// yet (a school teacher who has not registered, or is still being
+/// verified). When that email becomes verified, the invitation turns into
+/// a normal connection request automatically.
+class ShadowInvitation {
+  ShadowInvitation({
+    required this.id,
+    required this.email,
+    required this.childId,
+    required this.childName,
+    required this.childAge,
+    required this.parentName,
+    this.schoolName = '',
+    this.status = InvitationStatus.waiting,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  final String id;
+  final String email;
+  final int childId;
+  final String childName;
+  final int childAge;
+  final String parentName;
+
+  /// Optional: the child's school, when the teacher works there.
+  final String schoolName;
+  InvitationStatus status;
+  final DateTime createdAt;
+
+  bool get isWaiting => status == InvitationStatus.waiting;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'email': email,
+        'childId': childId,
+        'childName': childName,
+        'childAge': childAge,
+        'parentName': parentName,
+        'schoolName': schoolName,
+        'status': status.name,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory ShadowInvitation.fromJson(Map<String, dynamic> json) {
+    var status = InvitationStatus.waiting;
+    for (final value in InvitationStatus.values) {
+      if (value.name == json['status']) status = value;
+    }
+
+    return ShadowInvitation(
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      childId: json['childId'] as int? ?? 0,
+      childName: json['childName'] as String? ?? '',
+      childAge: json['childAge'] as int? ?? 0,
+      parentName: json['parentName'] as String? ?? '',
+      schoolName: json['schoolName'] as String? ?? '',
+      status: status,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    );
+  }
+}
