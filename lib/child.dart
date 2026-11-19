@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'tova/tova_screens.dart';
 import 'parent/parent_store.dart';
 
 const Color childPrimary = Color(0xFF7566D9);
@@ -962,13 +961,6 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
   () => open(const FocusTimerScreen()),
 ),
 
-_navCard(
-  'TOVA Attention Assessment',
-  'Explore a supervised attention activity.',
-  Icons.center_focus_strong_rounded,
-  const Color(0xFF5C9FE8),
-  () => open(const TovaWelcomeScreen()),
-),
           _navCard('How Do I Feel?', data.mood == null ? 'Choose the feeling that fits you.' : 'Today I feel ${data.mood}.', Icons.mood_rounded, const Color(0xFFFFA45B), () => open(const ChildCheckInScreen())),
           _navCard('My Progress', 'See what you have achieved.', Icons.insights_rounded, const Color(0xFF5C9FE8), () => open(const ChildProgressScreen())),
           _navCard('My Rewards', 'Your points are worth celebrating!', Icons.card_giftcard_rounded, const Color(0xFFE88EB3), () => open(const ChildRewardsScreen())),

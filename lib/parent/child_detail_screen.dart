@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../add_task.dart';
+import '../assessments/assessments_screen.dart';
 import '../child.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
@@ -533,6 +534,29 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       ),
                       _title('Child mode'),
                       _childMode(child),
+                      _title('Assessments'),
+                      ParentCard(
+                        onTap: () =>
+                            _open(AssessmentsScreen(child: child)),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.fact_check_rounded,
+                                color: ParentUi.purple),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'CARS questionnaire and TOVA attention test',
+                                style: TextStyle(
+                                  color: ParentUi.dark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded,
+                                color: ParentUi.muted),
+                          ],
+                        ),
+                      ),
                       _title(
                         'Tasks',
                         action: 'Add task',
