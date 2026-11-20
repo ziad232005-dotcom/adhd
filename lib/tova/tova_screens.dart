@@ -1010,7 +1010,7 @@ class TovaResultsScreen extends StatelessWidget {
 
   /// Set when the result belongs to a saved child, so the PDF report can
   /// compare it with earlier runs.
-  final String? childId;
+  final int? childId;
   final TovaRecord? record;
   final TovaMode mode;
   final String childName;
