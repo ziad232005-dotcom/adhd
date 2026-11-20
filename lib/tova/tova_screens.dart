@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../core/widgets/mazid_widgets.dart';
 import '../assessments/tova_record.dart';
+import '../assessments/tova_report_screen.dart';
 import '../parent/parent_store.dart';
 
 /// A mobile-friendly TOVA-style attention activity.
@@ -612,26 +613,30 @@ void _respond() {
   }
 
   /// Keeps a short summary of the activity with the child it was for.
-  void _saveRecord(List<TovaTrialResult> shown, bool completed) {
+  /// Returns the saved record, or null when nothing was saved.
+  TovaRecord? _saveRecord(List<TovaTrialResult> shown, bool completed) {
     final childId = widget.childId;
-    if (childId == null || shown.isEmpty) return;
+    if (childId == null || shown.isEmpty) return null;
 
     final summary = _TovaSummary.fromResults(shown);
-    tovaStore.add(
-      childId,
-      TovaRecord(
-        takenAt: DateTime.now(),
-        modeTitle: widget.mode.title,
-        trials: shown.length,
-        completed: completed,
-        hits: summary.hits,
-        omissions: summary.omissions,
-        commissions: summary.commissions,
-        anticipatory: summary.anticipatory,
-        accuracyPct: summary.accuracyPct,
-        meanRtMs: summary.meanRtMs,
-      ),
+    final record = TovaRecord(
+      takenAt: DateTime.now(),
+      modeTitle: widget.mode.title,
+      trials: shown.length,
+      completed: completed,
+      hits: summary.hits,
+      omissions: summary.omissions,
+      commissions: summary.commissions,
+      anticipatory: summary.anticipatory,
+      accuracyPct: summary.accuracyPct,
+      meanRtMs: summary.meanRtMs,
+      sdRtMs: summary.sdRtMs,
+      correctRejections: summary.correctRejections,
+      omissionPct: summary.omissionPct,
+      commissionPct: summary.commissionPct,
     );
+    tovaStore.add(childId, record);
+    return record;
   }
 
   void _finishRun({required bool completed, bool partial = false}) {
@@ -647,7 +652,7 @@ void _respond() {
     final shownResults = _results
         .where((r) => r.onsetMs != null && r.finalized && !r.interrupted)
         .toList(growable: false);
-    _saveRecord(shownResults, completed);
+    final saved = _saveRecord(shownResults, completed);
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => TovaResultsScreen(
         mode: widget.mode,
@@ -656,6 +661,8 @@ void _respond() {
         results: shownResults,
         completed: completed,
         partial: partial,
+        childId: widget.childId,
+        record: saved,
       ),
     ));
   }
@@ -997,8 +1004,14 @@ class TovaResultsScreen extends StatelessWidget {
     required this.results,
     required this.completed,
     required this.partial,
+    this.childId,
+    this.record,
   });
 
+  /// Set when the result belongs to a saved child, so the PDF report can
+  /// compare it with earlier runs.
+  final String? childId;
+  final TovaRecord? record;
   final TovaMode mode;
   final String childName;
   final int childAge;
@@ -1100,6 +1113,27 @@ class TovaResultsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (record != null && childId != null) ...[
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TovaReportScreen(
+                            childName: childName,
+                            childAge: childAge,
+                            record: record!,
+                            history: tovaStore.of(childId!),
+                          ),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _tovaBrand,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      icon: const Icon(Icons.picture_as_pdf_rounded),
+                      label: const Text('Full report (PDF)'),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     style: FilledButton.styleFrom(

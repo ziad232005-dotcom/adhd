@@ -13,6 +13,10 @@ class TovaRecord {
     required this.anticipatory,
     required this.accuracyPct,
     this.meanRtMs,
+    this.sdRtMs,
+    this.correctRejections = 0,
+    this.omissionPct = 0,
+    this.commissionPct = 0,
   });
 
   final DateTime takenAt;
@@ -25,6 +29,10 @@ class TovaRecord {
   final int anticipatory;
   final double accuracyPct;
   final double? meanRtMs;
+  final double? sdRtMs;
+  final int correctRejections;
+  final double omissionPct;
+  final double commissionPct;
 
   Map<String, dynamic> toJson() => {
         'takenAt': takenAt.toIso8601String(),
@@ -37,6 +45,10 @@ class TovaRecord {
         'anticipatory': anticipatory,
         'accuracyPct': accuracyPct,
         'meanRtMs': meanRtMs,
+        'sdRtMs': sdRtMs,
+        'correctRejections': correctRejections,
+        'omissionPct': omissionPct,
+        'commissionPct': commissionPct,
       };
 
   static TovaRecord? fromJson(Map<String, dynamic> json) {
@@ -54,6 +66,10 @@ class TovaRecord {
       anticipatory: json['anticipatory'] as int? ?? 0,
       accuracyPct: (json['accuracyPct'] as num?)?.toDouble() ?? 0,
       meanRtMs: (json['meanRtMs'] as num?)?.toDouble(),
+      sdRtMs: (json['sdRtMs'] as num?)?.toDouble(),
+      correctRejections: json['correctRejections'] as int? ?? 0,
+      omissionPct: (json['omissionPct'] as num?)?.toDouble() ?? 0,
+      commissionPct: (json['commissionPct'] as num?)?.toDouble() ?? 0,
     );
   }
 }

@@ -8,6 +8,7 @@ import 'cars_report_screen.dart';
 import 'cars_screen.dart';
 import 'cars_store.dart';
 import 'tova_record.dart';
+import 'tova_report_screen.dart';
 
 /// The assessments of one child. CARS and TOVA are separate tests that
 /// live here, side by side. A parent starts them; TOVA is done by the
@@ -142,6 +143,14 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                   const SizedBox(height: 10),
                   for (final record in tovaHistory)
                     ParentCard(
+                      onTap: () => _open(
+                        TovaReportScreen(
+                          childName: child.name,
+                          childAge: child.age,
+                          record: record,
+                          history: tovaHistory,
+                        ),
+                      ),
                       child: Row(
                         children: [
                           Expanded(
