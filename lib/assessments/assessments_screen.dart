@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
-import '../tova/tova_screens.dart';
 import 'cars_models.dart';
 import 'cars_report_screen.dart';
 import 'cars_screen.dart';
 import 'cars_store.dart';
-import 'tova_record.dart';
-import 'tova_report_screen.dart';
 
-/// The assessments of one child. CARS and TOVA are separate tests that
-/// live here, side by side. A parent starts them; TOVA is done by the
-/// child with the parent next to them.
+/// The assessments of one child. For now this is the CARS questionnaire,
+/// which the parent answers. The TOVA attention test has its own page.
 class AssessmentsScreen extends StatefulWidget {
   const AssessmentsScreen({super.key, required this.child});
 
@@ -27,7 +23,6 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
   void initState() {
     super.initState();
     carsStore.load(widget.child.id);
-    tovaStore.load(widget.child.id);
   }
 
   void _open(Widget screen) {
@@ -51,10 +46,9 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
       appBar: parentAppBar(context, 'Assessments'),
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: Listenable.merge([carsStore, tovaStore]),
+          animation: carsStore,
           builder: (context, _) {
             final history = carsStore.of(child.id);
-            final tovaHistory = tovaStore.of(child.id);
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
@@ -72,14 +66,6 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                       'your doctor.',
                   action: history.isEmpty ? 'Start' : 'Take again',
                   onTap: () => _open(CarsScreen(child: child)),
-                ),
-                _TestCard(
-                  icon: Icons.center_focus_strong_rounded,
-                  title: 'TOVA attention test',
-                  subtitle: '${child.name} does this one on the screen, with '
-                      'you next to them. Needs a quiet place.',
-                  action: 'Start',
-                  onTap: () => _open(TovaWelcomeScreen(childId: child.id)),
                 ),
                 if (history.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -130,64 +116,9 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                       ),
                     ),
                 ],
-                if (tovaHistory.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  const Text(
-                    'TOVA history',
-                    style: TextStyle(
-                      color: ParentUi.dark,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  for (final record in tovaHistory)
-                    ParentCard(
-                      onTap: () => _open(
-                        TovaReportScreen(
-                          childName: child.name,
-                          childAge: child.age,
-                          record: record,
-                          history: tovaHistory,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _date(record.takenAt),
-                                  style: const TextStyle(
-                                    color: ParentUi.dark,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '${record.modeTitle} • ${record.trials} trials',
-                                  style: const TextStyle(
-                                    color: ParentUi.muted,
-                                    fontSize: 12.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '${record.accuracyPct.round()}%',
-                            style: const TextStyle(
-                              color: ParentUi.purple,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
                 const SizedBox(height: 12),
                 const Text(
-                  'These tests are not a diagnosis. Share the results with '
+                  'This questionnaire is not a diagnosis. Share the results with '
                   'a clinician.',
                   style: TextStyle(color: ParentUi.muted, fontSize: 12.5),
                 ),

@@ -10,6 +10,7 @@ import '../child.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
 import '../shadow/support_team_section.dart';
+import '../tova/tova_hub_screen.dart';
 import 'add_child_screen.dart';
 import 'parent_insights.dart';
 import 'parent_store.dart';
@@ -546,7 +547,29 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'CARS questionnaire and TOVA attention test',
+                                'CARS questionnaire',
+                                style: TextStyle(
+                                  color: ParentUi.dark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded,
+                                color: ParentUi.muted),
+                          ],
+                        ),
+                      ),
+                      _title('TOVA attention test'),
+                      ParentCard(
+                        onTap: () => _open(TovaHubScreen(child: child)),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.center_focus_strong_rounded,
+                                color: ParentUi.purple),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Start the test and see its reports',
                                 style: TextStyle(
                                   color: ParentUi.dark,
                                   fontWeight: FontWeight.bold,
