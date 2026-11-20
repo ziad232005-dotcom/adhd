@@ -4,6 +4,7 @@ import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
 import '../tova/tova_screens.dart';
 import 'cars_models.dart';
+import 'cars_report_screen.dart';
 import 'cars_screen.dart';
 import 'cars_store.dart';
 import 'tova_record.dart';
@@ -82,7 +83,7 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                 if (history.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   const Text(
-                    'CARS history',
+                    'CARS history (tap for PDF report)',
                     style: TextStyle(
                       color: ParentUi.dark,
                       fontSize: 17,
@@ -92,7 +93,8 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                   const SizedBox(height: 10),
                   for (final result in history)
                     ParentCard(
-                      onTap: () => _open(_CarsReport(result: result)),
+                      onTap: () =>
+                          _open(CarsReportScreen(child: child, result: result)),
                       child: Row(
                         children: [
                           Expanded(
@@ -247,35 +249,6 @@ class _TestCard extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: Text(action),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A saved CARS result opened from the history.
-class _CarsReport extends StatelessWidget {
-  const _CarsReport({required this.result});
-
-  final CarsResult result;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ParentUi.background,
-      appBar: parentAppBar(context, 'CARS report'),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-          children: [
-            CarsSummaryCard(result: result),
-            const SizedBox(height: 12),
-            const Text(
-              'This is not a diagnosis. Share this report with your '
-              'clinician.',
-              style: TextStyle(color: ParentUi.muted, fontSize: 12.5),
             ),
           ],
         ),

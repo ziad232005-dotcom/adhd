@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import 'cars_comparison.dart';
 import 'cars_models.dart';
+import 'cars_report_screen.dart';
 import 'cars_store.dart';
 
 /// The CARS questionnaire: one area at a time, then a summary the parent
@@ -48,7 +50,20 @@ class _CarsScreenState extends State<CarsScreen> {
     );
 
     await carsStore.add(widget.child.id, result);
-    if (mounted) setState(() => _result = result);
+    if (!mounted) return;
+
+    setState(() => _result = result);
+    _openReport(result);
+  }
+
+  /// Opens the PDF report. It compares with the assessment before this one.
+  void _openReport(CarsResult result) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CarsReportScreen(child: widget.child, result: result),
+      ),
+    );
   }
 
   void _retake() {
@@ -197,12 +212,29 @@ class _CarsScreenState extends State<CarsScreen> {
 
   Widget _summary(CarsResult result) {
     final band = result.band;
+    final history = carsStore.of(widget.child.id);
+    final index = history.indexOf(result);
+    final comparison = CarsComparison.compare(
+      result,
+      (index != -1 && index + 1 < history.length) ? history[index + 1] : null,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       children: [
         CarsSummaryCard(result: result),
         const SizedBox(height: 16),
+        ParentCard(
+          child: Text(
+            comparison.headline,
+            style: const TextStyle(
+              color: ParentUi.dark,
+              fontWeight: FontWeight.bold,
+              height: 1.4,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         ParentCard(
           child: Text(
             band.description,
@@ -218,6 +250,17 @@ class _CarsScreenState extends State<CarsScreen> {
           ),
         ),
         const SizedBox(height: 18),
+        OutlinedButton.icon(
+          onPressed: () => _openReport(result),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            foregroundColor: ParentUi.purple,
+            shape: const StadiumBorder(),
+          ),
+          icon: const Icon(Icons.picture_as_pdf_rounded),
+          label: const Text('Open PDF report'),
+        ),
+        const SizedBox(height: 10),
         FilledButton(
           onPressed: () => Navigator.pop(context),
           style: FilledButton.styleFrom(
