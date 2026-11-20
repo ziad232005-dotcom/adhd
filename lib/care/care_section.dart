@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import '../reports/weekly_report_screen.dart';
 import 'care_stores.dart';
 import 'daily_log_screen.dart';
 import 'doctor_report_screen.dart';
@@ -51,6 +52,11 @@ class _CareSectionState extends State<CareSection> {
           icon: Icons.bolt_rounded,
           title: 'Triggers',
           onTap: () => _open(TriggersScreen(child: child)),
+        ),
+        _Tile(
+          icon: Icons.insights_rounded,
+          title: 'Weekly report (PDF)',
+          onTap: () => _open(WeeklyReportScreen(child: child)),
         ),
         _Tile(
           icon: Icons.description_rounded,

@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../care/medications_screen.dart' show formatDate;
+import '../reports/pdf_style.dart';
 import 'cars_comparison.dart';
 import 'cars_models.dart';
 
@@ -12,14 +13,6 @@ import 'cars_models.dart';
 /// assessment, every area in detail and the history.
 class CarsPdf {
   const CarsPdf._();
-
-  static const _purple = PdfColor.fromInt(0xFF6C4BD6);
-  static const _dark = PdfColor.fromInt(0xFF30285E);
-  static const _muted = PdfColor.fromInt(0xFF6F6A87);
-  static const _soft = PdfColor.fromInt(0xFFF0EDFF);
-  static const _green = PdfColor.fromInt(0xFF2E9E6B);
-  static const _red = PdfColor.fromInt(0xFFD64545);
-  static const _amber = PdfColor.fromInt(0xFFB7791F);
 
   /// [history] is every saved result of the child, newest first, and
   /// must contain [current].
@@ -54,7 +47,7 @@ class CarsPdf {
         footer: (context) => pw.Text(
           'MAZID  |  Page ${context.pageNumber} of ${context.pagesCount}  |  '
           'Parent-reported observations. Not a diagnosis.',
-          style: const pw.TextStyle(fontSize: 8, color: _muted),
+          style: const pw.TextStyle(fontSize: 8, color: PdfStyle.muted),
         ),
         build: (context) => [
           _header(childName, childAge, current),
@@ -67,13 +60,13 @@ class CarsPdf {
             _historyChart(shown),
           ],
           pw.SizedBox(height: 16),
-          _title('Every area in detail'),
+          PdfStyle.title('Every area in detail'),
           _areasTable(current, comparison),
           pw.SizedBox(height: 14),
           _attention(current),
           if (current.note.isNotEmpty) ...[
             pw.SizedBox(height: 14),
-            _title('Parent note'),
+            PdfStyle.title('Parent note'),
             pw.Text(current.note, style: const pw.TextStyle(fontSize: 10.5)),
           ],
           pw.SizedBox(height: 16),
@@ -89,14 +82,6 @@ class CarsPdf {
 
   // -------------------------------------------------------------- pieces
 
-  static pw.Widget _title(String text) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 6),
-        child: pw.Text(
-          text,
-          style: const pw.TextStyle(fontSize: 13, color: _purple),
-        ),
-      );
-
   static pw.Widget _header(String name, int age, CarsResult current) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -107,12 +92,12 @@ class CarsPdf {
           children: [
             pw.Text(
               'CARS observation report',
-              style: const pw.TextStyle(fontSize: 20, color: _dark),
+              style: const pw.TextStyle(fontSize: 20, color: PdfStyle.dark),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               '$name, age $age',
-              style: const pw.TextStyle(fontSize: 12, color: _muted),
+              style: const pw.TextStyle(fontSize: 12, color: PdfStyle.muted),
             ),
           ],
         ),
@@ -121,11 +106,11 @@ class CarsPdf {
           children: [
             pw.Text(
               'MAZID',
-              style: const pw.TextStyle(fontSize: 16, color: _purple),
+              style: const pw.TextStyle(fontSize: 16, color: PdfStyle.purple),
             ),
             pw.Text(
               formatDate(current.takenAt),
-              style: const pw.TextStyle(fontSize: 10, color: _muted),
+              style: const pw.TextStyle(fontSize: 10, color: PdfStyle.muted),
             ),
           ],
         ),
@@ -137,14 +122,14 @@ class CarsPdf {
     return pw.Container(
       padding: const pw.EdgeInsets.all(14),
       decoration: pw.BoxDecoration(
-        color: _soft,
+        color: PdfStyle.soft,
         borderRadius: pw.BorderRadius.circular(10),
       ),
       child: pw.Row(
         children: [
           pw.Text(
             '${current.total} / ${CarsQuestionnaire.maxScore}',
-            style: const pw.TextStyle(fontSize: 30, color: _purple),
+            style: const pw.TextStyle(fontSize: 30, color: PdfStyle.purple),
           ),
           pw.SizedBox(width: 18),
           pw.Expanded(
@@ -153,12 +138,12 @@ class CarsPdf {
               children: [
                 pw.Text(
                   current.band.label,
-                  style: const pw.TextStyle(fontSize: 13, color: _dark),
+                  style: const pw.TextStyle(fontSize: 13, color: PdfStyle.dark),
                 ),
                 pw.SizedBox(height: 3),
                 pw.Text(
                   current.band.description,
-                  style: const pw.TextStyle(fontSize: 10, color: _muted),
+                  style: const pw.TextStyle(fontSize: 10, color: PdfStyle.muted),
                 ),
               ],
             ),
@@ -169,9 +154,9 @@ class CarsPdf {
   }
 
   static PdfColor _trendColor(CarsTrend trend) => switch (trend) {
-        CarsTrend.improved => _green,
-        CarsTrend.worse => _red,
-        _ => _amber,
+        CarsTrend.improved => PdfStyle.green,
+        CarsTrend.worse => PdfStyle.red,
+        _ => PdfStyle.amber,
       };
 
   static pw.Widget _comparisonBox(CarsComparison c) {
@@ -189,7 +174,7 @@ class CarsPdf {
         children: [
           pw.Text(
             'Compared with the previous assessment',
-            style: const pw.TextStyle(fontSize: 11, color: _muted),
+            style: const pw.TextStyle(fontSize: 11, color: PdfStyle.muted),
           ),
           pw.SizedBox(height: 4),
           pw.Text(
@@ -218,7 +203,7 @@ class CarsPdf {
               'A lower score means fewer difficulties. Changes of '
               '${CarsComparison.stableMargin} points or less are treated as '
               'normal variation between two days.',
-              style: const pw.TextStyle(fontSize: 9, color: _muted),
+              style: const pw.TextStyle(fontSize: 9, color: PdfStyle.muted),
             ),
           ],
         ],
@@ -232,7 +217,7 @@ class CarsPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _title('Progress over time (total score, lower is better)'),
+        PdfStyle.title('Progress over time (total score, lower is better)'),
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
@@ -242,18 +227,18 @@ class CarsPdf {
                   children: [
                     pw.Text(
                       '${r.total}',
-                      style: const pw.TextStyle(fontSize: 10, color: _dark),
+                      style: const pw.TextStyle(fontSize: 10, color: PdfStyle.dark),
                     ),
                     pw.SizedBox(height: 2),
                     pw.Container(
                       width: 22,
                       height: chartHeight * r.total / CarsQuestionnaire.maxScore,
-                      color: _purple,
+                      color: PdfStyle.purple,
                     ),
                     pw.SizedBox(height: 3),
                     pw.Text(
                       formatDate(r.takenAt),
-                      style: const pw.TextStyle(fontSize: 7.5, color: _muted),
+                      style: const pw.TextStyle(fontSize: 7.5, color: PdfStyle.muted),
                     ),
                   ],
                 ),
@@ -264,46 +249,33 @@ class CarsPdf {
     );
   }
 
-  static pw.Widget _cell(
-    String text, {
-    PdfColor color = _dark,
-    double size = 9.5,
-    pw.Alignment align = pw.Alignment.centerLeft,
-  }) {
-    return pw.Container(
-      alignment: align,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-      child: pw.Text(text, style: pw.TextStyle(fontSize: size, color: color)),
-    );
-  }
-
   static pw.Widget _areasTable(CarsResult current, CarsComparison c) {
     final hasBefore = c.previous != null;
 
     final rows = <pw.TableRow>[
       pw.TableRow(
-        decoration: const pw.BoxDecoration(color: _soft),
+        decoration: const pw.BoxDecoration(color: PdfStyle.soft),
         children: [
-          _cell('Area', color: _purple),
+          PdfStyle.cell('Area', color: PdfStyle.purple),
           if (hasBefore)
-            _cell('Before', color: _purple, align: pw.Alignment.center),
-          _cell('Now', color: _purple, align: pw.Alignment.center),
+            PdfStyle.cell('Before', color: PdfStyle.purple, align: pw.Alignment.center),
+          PdfStyle.cell('Now', color: PdfStyle.purple, align: pw.Alignment.center),
           if (hasBefore)
-            _cell('Change', color: _purple, align: pw.Alignment.center),
-          _cell('Level now', color: _purple),
+            PdfStyle.cell('Change', color: PdfStyle.purple, align: pw.Alignment.center),
+          PdfStyle.cell('Level now', color: PdfStyle.purple),
         ],
       ),
       for (var i = 0; i < CarsQuestionnaire.itemCount; i++)
         pw.TableRow(
           children: [
-            _cell(CarsQuestionnaire.items[i].title),
+            PdfStyle.cell(CarsQuestionnaire.items[i].title),
             if (hasBefore)
-              _cell('${c.areas[i].before}', align: pw.Alignment.center),
-            _cell('${current.scores[i]}', align: pw.Alignment.center),
+              PdfStyle.cell('${c.areas[i].before}', align: pw.Alignment.center),
+            PdfStyle.cell('${current.scores[i]}', align: pw.Alignment.center),
             if (hasBefore) _changeCell(c.areas[i].change),
-            _cell(
+            PdfStyle.cell(
               CarsQuestionnaire.levels[current.scores[i] - 1].label,
-              color: current.scores[i] >= 3 ? _red : _dark,
+              color: current.scores[i] >= 3 ? PdfStyle.red : PdfStyle.dark,
             ),
           ],
         ),
@@ -316,8 +288,8 @@ class CarsPdf {
 
     return pw.Table(
       border: const pw.TableBorder(
-        horizontalInside: pw.BorderSide(color: _soft, width: 0.8),
-        bottom: pw.BorderSide(color: _soft, width: 0.8),
+        horizontalInside: pw.BorderSide(color: PdfStyle.soft, width: 0.8),
+        bottom: pw.BorderSide(color: PdfStyle.soft, width: 0.8),
       ),
       columnWidths: {
         for (final entry in widths.asMap().entries)
@@ -329,8 +301,8 @@ class CarsPdf {
 
   static pw.Widget _changeCell(int change) {
     final text = change == 0 ? '0' : CarsComparison.signed(change);
-    final color = change < 0 ? _green : (change > 0 ? _red : _muted);
-    return _cell(text, color: color, align: pw.Alignment.center);
+    final color = change < 0 ? PdfStyle.green : (change > 0 ? PdfStyle.red : PdfStyle.muted);
+    return PdfStyle.cell(text, color: color, align: pw.Alignment.center);
   }
 
   static pw.Widget _attention(CarsResult current) {
@@ -342,7 +314,7 @@ class CarsPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _title('Areas worth discussing with the doctor'),
+        PdfStyle.title('Areas worth discussing with the doctor'),
         pw.Text(
           names.isEmpty
               ? 'No area was rated moderately or severely different.'
@@ -357,38 +329,28 @@ class CarsPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _title('How each area is scored'),
+        PdfStyle.title('How each area is scored'),
         for (final level in CarsQuestionnaire.levels)
           pw.Padding(
             padding: const pw.EdgeInsets.only(bottom: 2),
             child: pw.Text(
               '${level.score} = ${level.label}: ${level.description}',
-              style: const pw.TextStyle(fontSize: 9.5, color: _muted),
+              style: const pw.TextStyle(fontSize: 9.5, color: PdfStyle.muted),
             ),
           ),
         pw.SizedBox(height: 4),
         pw.Text(
           'Total: below 30 typical range, 30 to 36 mild to moderate '
           'differences, 37 and above many differences.',
-          style: const pw.TextStyle(fontSize: 9.5, color: _muted),
+          style: const pw.TextStyle(fontSize: 9.5, color: PdfStyle.muted),
         ),
       ],
     );
   }
 
-  static pw.Widget _disclaimer() {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(10),
-      decoration: pw.BoxDecoration(
-        color: PdfColor.fromInt(0xFFFFF4DB),
-        borderRadius: pw.BorderRadius.circular(8),
-      ),
-      child: pw.Text(
-        'This report is based on a parent’s observations. It is not a '
+  static pw.Widget _disclaimer() => PdfStyle.notice(
+        'This report is based on a parent\u2019s observations. It is not a '
         'diagnosis and does not replace a professional assessment. Please '
         'share it with a qualified clinician.',
-        style: const pw.TextStyle(fontSize: 9.5, color: _amber),
-      ),
-    );
-  }
+      );
 }
