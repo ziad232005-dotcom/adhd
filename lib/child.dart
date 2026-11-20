@@ -869,7 +869,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _primaryButton('Let’s Go!', Icons.rocket_launch_rounded, login),
+                  _primaryButton('Let’s Go!', Icons.arrow_forward_rounded, login),
                   const SizedBox(height: 12),
                   const Text('Ask your parent if you forgot your PIN.',
                       style: TextStyle(fontSize: 12, color: Colors.black45)),
@@ -1816,7 +1816,7 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: _primaryButton(
                 'Save My Mood',
-                Icons.favorite_rounded,
+                Icons.check_rounded,
                 selectedMood == null
                     ? null
                     : () {
@@ -2228,7 +2228,7 @@ class ChildRewardsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      Icons.favorite_rounded,
+                      Icons.info_outline_rounded,
                       color: childPrimary,
                       size: 28,
                     ),
@@ -2706,7 +2706,7 @@ Widget _buildMoodHistory(ChildAppState data) {
         const Row(
           children: [
             Icon(
-              Icons.favorite_rounded,
+              Icons.mood_rounded,
               color: childPrimary,
             ),
             SizedBox(width: 8),
@@ -2736,7 +2736,7 @@ Widget _buildMoodHistory(ChildAppState data) {
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.favorite_rounded, size: 36, color: childPrimary),
+                  Icon(Icons.mood_rounded, size: 36, color: childPrimary),
                   SizedBox(height: 8),
                   Text(
                     'Your mood journey starts here!',
@@ -2827,7 +2827,7 @@ Widget _buildMoodHistory(ChildAppState data) {
     case 'Worried':
       return ('Worried', Icons.sentiment_neutral_rounded);
     default:
-      return ('Unknown', Icons.favorite_rounded);
+      return ('Unknown', Icons.help_outline_rounded);
   }
 }
 

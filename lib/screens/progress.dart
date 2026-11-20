@@ -344,7 +344,7 @@ class ProgressScreen extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(Icons.favorite_rounded, color: ParentUi.purple, size: 29),
+          Icon(Icons.info_outline_rounded, color: ParentUi.purple, size: 29),
           SizedBox(width: 13),
           Expanded(
             child: Column(

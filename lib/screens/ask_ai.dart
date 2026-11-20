@@ -144,7 +144,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.auto_awesome_rounded,
+                            Icons.chat_bubble_outline_rounded,
                             size: 58,
                             color: purple,
                           ),
