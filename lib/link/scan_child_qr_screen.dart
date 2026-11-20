@@ -5,6 +5,7 @@ import '../child.dart';
 import '../parent/parent_store.dart';
 import 'child_device.dart';
 import 'child_link.dart';
+import '../core/api_client.dart';
 import 'link_api.dart';
 import 'linked_child_home.dart';
 
@@ -41,7 +42,7 @@ class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
       if (!mounted) return;
       setState(() => _busy = false);
       await _accept(payload);
-    } on LinkException catch (e) {
+    } on ApiException catch (e) {
       if (mounted) {
         setState(() {
           _busy = false;

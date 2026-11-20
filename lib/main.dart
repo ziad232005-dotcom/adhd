@@ -13,10 +13,7 @@ import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
 import 'parent/parent_store.dart';
-import 'shadow/role_choice_screen.dart';
-import 'shadow/shadow_gate.dart';
-import 'shadow/shadow_models.dart';
-import 'shadow/shadow_store.dart';
+import 'shadows/shadow_apply_screen.dart';
 
 
 
@@ -24,7 +21,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ParentStore.instance.load();
-  await ShadowStore.instance.load();
   await ChildDevice.instance.load();
   await ChildAppState.instance.loadData(
     childId: ChildDevice.instance.childId ??
@@ -141,6 +137,13 @@ class WelcomeScreen extends StatelessWidget {
             ),
             child: const Text('I am a child - scan my code'),
           ),
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ShadowApplyScreen()),
+            ),
+            child: const Text('I am a Shadow Teacher - join the list'),
+          ),
           const SizedBox(height: 48),
         ],
       ),
@@ -244,23 +247,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       ),
     );
 
-    // Ask whether this person is a parent or a Shadow Teacher, then
-    // continue with the normal verification.
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RoleChoiceScreen(
-          onContinue: (chosen) {
-            ShadowStore.instance.setRole(chosen);
-            _continueAfterRole();
-          },
-        ),
-      ),
-    );
+    _continueToVerification();
   }
 
   // Moves on to email (or SMS) verification.
-  void _continueAfterRole() {
+  void _continueToVerification() {
     if (!AppFeatures.smsVerification) {
       Navigator.push(
         context,
@@ -759,10 +750,7 @@ if (response.statusCode >= 200 &&
 
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(
-      builder: (_) =>
-          ShadowStore.instance.role == ShadowRole.shadowTeacher
-              ? const ShadowTeacherGate()
-              : const ParentDashboardScreen(),
+      builder: (_) => const ParentDashboardScreen(),
     ),
     (route) => false,
   );

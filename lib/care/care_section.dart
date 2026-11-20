@@ -65,7 +65,7 @@ class _CareSectionState extends State<CareSection> {
         ),
         _Tile(
           icon: Icons.school_rounded,
-          title: 'From school',
+          title: 'School notes',
           onTap: () => _open(SchoolNotesScreen(child: child)),
         ),
       ],

@@ -10,7 +10,7 @@ import '../child.dart';
 import '../link/child_qr_screen.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
-import '../shadow/support_team_section.dart';
+import '../shadows/shadow_directory_screen.dart';
 import '../tova/tova_hub_screen.dart';
 import 'add_child_screen.dart';
 import 'parent_insights.dart';
@@ -618,8 +618,27 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       _moods(),
                       _title('Care'),
                       CareSection(child: child),
-                      _title('Support Team'),
-                      SupportTeamSection(child: child),
+                      _title('Shadow Teachers'),
+                      ParentCard(
+                        onTap: () => _open(const ShadowDirectoryScreen()),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.school_rounded, color: ParentUi.purple),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Find a verified Shadow Teacher',
+                                style: TextStyle(
+                                  color: ParentUi.dark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded,
+                                color: ParentUi.muted),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 22),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(

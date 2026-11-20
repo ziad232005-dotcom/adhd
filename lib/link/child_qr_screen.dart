@@ -7,6 +7,7 @@ import '../child.dart';
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
 import 'child_link.dart';
+import '../core/api_client.dart';
 import 'link_api.dart';
 
 /// The parent's side: shows the QR code the child scans on their own phone.
@@ -63,7 +64,7 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
     try {
       final code = await const LinkApi().create(payload);
       if (mounted) setState(() => _shortCode = code);
-    } on LinkException catch (e) {
+    } on ApiException catch (e) {
       if (mounted) setState(() => _codeError = e.message);
     } finally {
       if (mounted) setState(() => _gettingCode = false);

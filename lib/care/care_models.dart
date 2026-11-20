@@ -201,7 +201,7 @@ class TriggerEntry {
   }
 }
 
-/// A note a Shadow Teacher wrote about the child at school.
+/// A note about the child from a teacher or the school, written by the parent.
 class SchoolNote {
   SchoolNote({
     String? id,
@@ -230,7 +230,7 @@ class SchoolNote {
 
     return SchoolNote(
       id: json['id'] as String?,
-      teacherName: json['teacherName'] as String? ?? 'Shadow Teacher',
+      teacherName: json['teacherName'] as String? ?? 'School',
       text: text,
       writtenAt: at,
     );

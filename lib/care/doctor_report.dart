@@ -133,7 +133,7 @@ class DoctorReport {
     }
 
     if (d.schoolNotes.isNotEmpty) {
-      _section(b, 'From school (Shadow Teacher)');
+      _section(b, 'School notes');
       for (final n in d.schoolNotes.take(5)) {
         b.writeln('- ${formatDate(n.writtenAt)}, ${n.teacherName}: ${n.text}');
       }

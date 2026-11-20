@@ -307,7 +307,7 @@ class WeeklyPdf {
         line('Before hard moments: ${week.triggerTexts.join('; ')}.'),
       if (week.noteTexts.isNotEmpty) ...[
         pw.SizedBox(height: 4),
-        PdfStyle.title('From school'),
+        PdfStyle.title('School notes'),
         for (final note in week.noteTexts) line('- $note'),
       ],
     ];
