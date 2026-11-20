@@ -33,7 +33,7 @@ class ParentChild {
     required this.grade,
     this.imagePath,
     required this.pin,
-  }) : _savedAge = savedAge;
+  }) : _savedAge = savedAge; // ignore: prefer_initializing_formals
 
   /// A new random PIN. A fixed or guessable PIN would let anyone open a
   /// child's screen.
