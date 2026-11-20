@@ -17,13 +17,17 @@ class ChildTask {
   final IconData icon;
   final int points;
 
+  /// How long the parent expects the task to take. Any length from 1 to 180.
+  final int? minutes;
+
   const ChildTask(
     this.id,
     this.title,
     this.subtitle,
     this.icon,
-    this.points,
-  );
+    this.points, {
+    this.minutes,
+  });
 }
 
 class TaskCompletion {
@@ -418,6 +422,7 @@ _updateAchievedRewards();
               map['subtitle'] as String,
               Icons.task_alt_rounded,
               map['points'] as int,
+              minutes: map['minutes'] as int?,
             );
           }));
       }
@@ -489,6 +494,7 @@ Future<void> _saveData() async {
           'title': task.title,
           'subtitle': task.subtitle,
           'points': task.points,
+          'minutes': task.minutes,
         }).toList(),
 
     'lastCompletedAt': _lastCompletedAt.map(
@@ -624,6 +630,7 @@ _updateAchievedRewards();
     required String title,
     required String subtitle,
     required int points,
+    int? minutes,
   }) {
     tasks.add(
       ChildTask(
@@ -632,6 +639,7 @@ _updateAchievedRewards();
         subtitle,
         Icons.task_alt_rounded,
         points,
+        minutes: minutes,
       ),
     );
 
@@ -1072,7 +1080,8 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                     subtitle: Text(
   done
       ? 'Completed! Available again in 24 hours.'
-      : '${task.subtitle}\n+${task.points} points',
+      : '${task.subtitle}\n+${task.points} points'
+          '${task.minutes == null ? '' : ' • ${task.minutes} min'}',
 ),
                     isThreeLine: true,
                     trailing: IconButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'child.dart';
 
 const Color taskPurple = Color(0xFF7566D9);
@@ -20,6 +21,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   String _category = 'Study';
   String _when = 'Today';
+  static const List<int> _presetMinutes = [5, 10, 15, 20, 30, 45, 60];
+
+  final _minutesController = TextEditingController(text: '15');
   int _minutes = 15;
 
   bool _isSaving = false;
@@ -28,8 +32,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _minutesController.dispose();
     _pointsController.dispose();
     super.dispose();
+  }
+
+  void _setMinutes(int minutes) {
+    setState(() {
+      _minutes = minutes;
+      _minutesController.text = '$minutes';
+    });
   }
 
   Future<void> _saveTask() async {
@@ -48,6 +60,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ? 'Complete this task to earn points.'
             : _descriptionController.text.trim(),
         points: points,
+        minutes: _minutes,
       );
 
       if (!mounted) return;
@@ -227,29 +240,53 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       color: taskPurple,
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
+                    const Expanded(
                       child: Text(
-                        '$_minutes minutes',
-                        style: const TextStyle(
+                        'Choose any time from 1 to 180 minutes',
+                        style: TextStyle(
                           color: taskDarkPurple,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: _minutes > 5
-                          ? () => setState(() => _minutes -= 5)
-                          : null,
-                      icon: const Icon(Icons.remove_circle_outline),
-                    ),
-                    IconButton(
-                      onPressed: _minutes < 120
-                          ? () => setState(() => _minutes += 5)
-                          : null,
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final minutes in _presetMinutes)
+                    ChoiceChip(
+                      label: Text('$minutes min'),
+                      selected: _minutes == minutes,
+                      onSelected: (_) => _setMinutes(minutes),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _minutesController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: _decoration(
+                  hint: 'Or type the minutes',
+                  icon: Icons.edit_outlined,
+                ),
+                onChanged: (text) {
+                  final minutes = int.tryParse(text.trim());
+                  if (minutes != null && minutes >= 1 && minutes <= 180) {
+                    setState(() => _minutes = minutes);
+                  }
+                },
+                validator: (text) {
+                  final minutes = int.tryParse((text ?? '').trim());
+                  if (minutes == null || minutes < 1 || minutes > 180) {
+                    return 'Enter a whole number from 1 to 180.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
