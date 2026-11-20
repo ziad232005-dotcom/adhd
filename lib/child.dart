@@ -933,7 +933,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             ),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Hi, ${widget.child.name}! ✨', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                Text('Hi, ${widget.child.name}!', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 const Text('Small steps make big progress.', style: TextStyle(color: Colors.white, height: 1.4)),
               ])),
@@ -1063,7 +1063,7 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
 ),
                     subtitle: Text(
   done
-      ? '🔒 Completed! Available again in 24 hours.'
+      ? 'Completed! Available again in 24 hours.'
       : '${task.subtitle}\n+${task.points} points',
 ),
                     isThreeLine: true,
@@ -1077,7 +1077,7 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Awesome! +${task.points} points 🎉',
+                                      'Awesome! +${task.points} points',
                                     ),
                                   ),
                                 );
@@ -1335,7 +1335,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Your Focus Time ✨',
+                          'Your Focus Time',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 23,
@@ -1611,7 +1611,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                   if (isFinished) ...[
                     const SizedBox(height: 18),
                     const Text(
-                      'Take a little break. You did great! 🌟',
+                      'Take a little break. You did great!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: childText,
@@ -1694,11 +1694,13 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
   String? selectedMood;
 
   final moods = const [
-    ('Happy', '😊', 'Something made me smile.'),
-    ('Calm', '😌', 'I feel peaceful.'),
-    ('Sad', '😢', 'I feel a little down.'),
-    ('Angry', '😠', 'I feel upset.'),
-    ('Worried', '😟', 'Something is on my mind.'),
+    ('Happy', Icons.sentiment_very_satisfied_rounded,
+        'Something made me smile.'),
+    ('Calm', Icons.self_improvement_rounded, 'I feel peaceful.'),
+    ('Sad', Icons.sentiment_dissatisfied_rounded, 'I feel a little down.'),
+    ('Angry', Icons.local_fire_department_rounded, 'I feel upset.'),
+    ('Worried', Icons.sentiment_neutral_rounded,
+        'Something is on my mind.'),
   ];
 
   @override
@@ -1771,10 +1773,7 @@ class _ChildCheckInScreenState extends State<ChildCheckInScreen> {
                         ),
                         child: Row(
                           children: [
-                            Text(
-                              mood.$2,
-                              style: const TextStyle(fontSize: 32),
-                            ),
+                            Icon(mood.$2, size: 34, color: childPrimary),
                             const SizedBox(width: 14),
                             Expanded(
                               child: Column(
@@ -1956,7 +1955,7 @@ class ChildRewardsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Your next goal 🎯',
+                      'Your next goal',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
@@ -1981,7 +1980,7 @@ class ChildRewardsScreen extends StatelessWidget {
                       ),
                     ] else if (nextReward == null) ...[
                       const Text(
-                        'Amazing! You achieved every reward! 🏆',
+                        'Amazing! You achieved every reward!',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -2063,7 +2062,7 @@ class ChildRewardsScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               const Text(
-                'Your Rewards 🏆',
+                'Your Rewards',
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
@@ -2188,7 +2187,7 @@ class ChildRewardsScreen extends StatelessWidget {
                                 ),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Reward achieved! 🎉',
+                                  'Reward achieved!',
                                   style: TextStyle(
                                     color: Color(0xFF27966F),
                                     fontWeight: FontWeight.w700,
@@ -2239,7 +2238,7 @@ class ChildRewardsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Every step matters! 💜',
+                            'Every step matters!',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -2342,7 +2341,7 @@ class ChildProgressScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Look how far you’ve come! 🌟',
+                      'Look how far you’ve come!',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -2435,7 +2434,7 @@ const SizedBox(height: 22),
 
               // Weekly activity
               const Text(
-                'Your Last 7 Days 📅',
+                'Your Last 7 Days',
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
@@ -2541,7 +2540,7 @@ const SizedBox(height: 22),
 
               // Recent focus history
               const Text(
-                'Focus Journey ⏱️',
+                'Focus Journey',
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
@@ -2595,7 +2594,7 @@ const SizedBox(height: 22),
               const SizedBox(height: 20),
 
               const Text(
-                'Progress is about trying, not being perfect. 🌱',
+                'Progress is about trying, not being perfect.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.black54,
@@ -2737,10 +2736,7 @@ Widget _buildMoodHistory(ChildAppState data) {
             child: Center(
               child: Column(
                 children: [
-                  Text(
-                    '💜',
-                    style: TextStyle(fontSize: 36),
-                  ),
+                  Icon(Icons.favorite_rounded, size: 36, color: childPrimary),
                   SizedBox(height: 8),
                   Text(
                     'Your mood journey starts here!',
@@ -2784,10 +2780,7 @@ Widget _buildMoodHistory(ChildAppState data) {
                       color: childPrimary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Text(
-                      moodInfo.$2,
-                      style: const TextStyle(fontSize: 25),
-                    ),
+                    child: Icon(moodInfo.$2, size: 26, color: childPrimary),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -2821,20 +2814,20 @@ Widget _buildMoodHistory(ChildAppState data) {
   );
 }
 
-(String, String) _moodDetails(String mood) {
+(String, IconData) _moodDetails(String mood) {
   switch (mood) {
     case 'Happy':
-      return ('Happy', '😊');
+      return ('Happy', Icons.sentiment_very_satisfied_rounded);
     case 'Calm':
-      return ('Calm', '😌');
+      return ('Calm', Icons.self_improvement_rounded);
     case 'Sad':
-      return ('Sad', '😢');
+      return ('Sad', Icons.sentiment_dissatisfied_rounded);
     case 'Angry':
-      return ('Angry', '😠');
+      return ('Angry', Icons.local_fire_department_rounded);
     case 'Worried':
-      return ('Worried', '😟');
+      return ('Worried', Icons.sentiment_neutral_rounded);
     default:
-      return ('Unknown', '💜');
+      return ('Unknown', Icons.favorite_rounded);
   }
 }
 

@@ -764,7 +764,7 @@ errorBuilder: (_, _, _) => const Icon(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$greeting! 👋',
+          '$greeting!',
           style: const TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.w800,
