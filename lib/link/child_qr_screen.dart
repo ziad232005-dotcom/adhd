@@ -7,6 +7,7 @@ import '../child.dart';
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
 import 'child_link.dart';
+import 'link_api.dart';
 
 /// The parent's side: shows the QR code the child scans on their own phone.
 class ChildQrScreen extends StatefulWidget {
@@ -20,6 +21,9 @@ class ChildQrScreen extends StatefulWidget {
 
 class _ChildQrScreenState extends State<ChildQrScreen> {
   ChildLink? _link;
+  ShortCode? _shortCode;
+  bool _gettingCode = false;
+  String? _codeError;
 
   String get _codeKey => 'mazid_child_unlock_${widget.child.id}';
 
@@ -49,6 +53,21 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
         data: ChildAppState.instance.linkData(),
       );
     });
+  }
+
+  Future<void> _getShortCode(String payload) async {
+    setState(() {
+      _gettingCode = true;
+      _codeError = null;
+    });
+    try {
+      final code = await const LinkApi().create(payload);
+      if (mounted) setState(() => _shortCode = code);
+    } on LinkException catch (e) {
+      if (mounted) setState(() => _codeError = e.message);
+    } finally {
+      if (mounted) setState(() => _gettingCode = false);
+    }
   }
 
   @override
@@ -123,6 +142,69 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
                       'Anything you add later needs a new scan until the '
                       'online sync is built.',
                       style: TextStyle(color: ParentUi.muted, height: 1.4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ParentCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'No camera? Use a short code',
+                          style: TextStyle(
+                            color: ParentUi.dark,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (_shortCode == null) ...[
+                          const Text(
+                            'The child types it on their phone. It works '
+                            'once and lasts 10 minutes. Both phones need '
+                            'the internet.',
+                            style: TextStyle(
+                              color: ParentUi.muted,
+                              height: 1.4,
+                            ),
+                          ),
+                          if (_codeError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _codeError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          FilledButton(
+                            onPressed: _gettingCode
+                                ? null
+                                : () => _getShortCode(text),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: ParentUi.purple,
+                              minimumSize: const Size.fromHeight(46),
+                            ),
+                            child: Text(
+                              _gettingCode ? 'Please wait...' : 'Get a code',
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            _shortCode!.pretty,
+                            style: const TextStyle(
+                              color: ParentUi.purple,
+                              fontSize: 30,
+                              letterSpacing: 4,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Valid for ${_shortCode!.lifetime.inMinutes} '
+                            'minutes, one use.',
+                            style: const TextStyle(color: ParentUi.muted),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),

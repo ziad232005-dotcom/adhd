@@ -5,6 +5,7 @@ import '../child.dart';
 import '../parent/parent_store.dart';
 import 'child_device.dart';
 import 'child_link.dart';
+import 'link_api.dart';
 import 'linked_child_home.dart';
 
 /// The child's side: scans the parent's QR code and turns this phone into
@@ -17,14 +18,37 @@ class ScanChildQrScreen extends StatefulWidget {
 }
 
 class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
+  final _shortController = TextEditingController();
   final _pasteController = TextEditingController();
   bool _busy = false;
   String? _error;
 
   @override
   void dispose() {
+    _shortController.dispose();
     _pasteController.dispose();
     super.dispose();
+  }
+
+  Future<void> _useShortCode() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final payload = await const LinkApi().claim(_shortController.text);
+      if (!mounted) return;
+      setState(() => _busy = false);
+      await _accept(payload);
+    } on LinkException catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = e.message;
+        });
+      }
+    }
   }
 
   Future<void> _accept(String text) async {
@@ -90,6 +114,18 @@ class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _shortController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: 'Or type the short code (ABCD-EFGH)',
+                      suffixIcon: IconButton(
+                        onPressed: _useShortCode,
+                        icon: const Icon(Icons.check_rounded),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _pasteController,
