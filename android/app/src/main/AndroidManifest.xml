@@ -2,6 +2,9 @@
     <!-- Release builds need this to reach the backend; only the debug build
          had it. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- The child scans the parent's QR code. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
 
     <application
         android:label="adhd"

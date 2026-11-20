@@ -377,6 +377,21 @@ class ParentStore extends ChangeNotifier {
     _syncChildData();
   }
 
+  /// Adds a child received from the parent's phone (the child's own phone),
+  /// keeping the id it has there. The PIN is new, since it is not sent.
+  void adoptLinkedChild(ParentChild child) {
+    final index = children.indexWhere((c) => c.id == child.id);
+    if (index == -1) {
+      children.add(child);
+      selectedChildIndex = children.length - 1;
+    } else {
+      children[index] = child;
+      selectedChildIndex = index;
+    }
+    if (child.id >= _nextChildId) _nextChildId = child.id + 1;
+    _changed();
+  }
+
   void updateChild(ParentChild updated) {
     final index = children.indexWhere((c) => c.id == updated.id);
     if (index == -1) return;

@@ -5,6 +5,9 @@ import 'dart:async';
 import 'package:pinput/pinput.dart';
 import 'parent.dart';
 import 'child.dart';
+import 'link/child_device.dart';
+import 'link/linked_child_home.dart';
+import 'link/scan_child_qr_screen.dart';
 import 'core/api_config.dart';
 import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
@@ -22,8 +25,10 @@ Future<void> main() async {
 
   await ParentStore.instance.load();
   await ShadowStore.instance.load();
+  await ChildDevice.instance.load();
   await ChildAppState.instance.loadData(
-    childId: ParentStore.instance.selectedChild?.id,
+    childId: ChildDevice.instance.childId ??
+        ParentStore.instance.selectedChild?.id,
   );
 
   runApp(const ADHDCompanionApp());
@@ -42,8 +47,20 @@ class ADHDCompanionApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: MazidBrand.name,
       theme: MazidTheme.light(),
-      home: const WelcomeScreen(),
+      home: _firstScreen(),
     );
+  }
+
+  /// A phone linked to a child opens on that child's screen only.
+  Widget _firstScreen() {
+    final linkedId = ChildDevice.instance.childId;
+    if (linkedId != null) {
+      final linked = ParentStore.instance.children
+          .where((c) => c.id == linkedId)
+          .firstOrNull;
+      if (linked != null) return LinkedChildHome(child: linked);
+    }
+    return const WelcomeScreen();
   }
 }
 
@@ -116,7 +133,15 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 60),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ScanChildQrScreen()),
+            ),
+            child: const Text('I am a child - scan my code'),
+          ),
+          const SizedBox(height: 48),
         ],
       ),
     );

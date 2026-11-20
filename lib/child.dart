@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/pin_guard.dart';
+import 'link/child_device.dart';
 import 'tova/tova_screens.dart';
 import 'parent/parent_store.dart';
 
@@ -481,6 +482,40 @@ notifyListeners();
   }
   
 
+List<Map<String, dynamic>> _tasksJson() => tasks
+    .map((task) => {
+          'id': task.id,
+          'title': task.title,
+          'subtitle': task.subtitle,
+          'points': task.points,
+          'minutes': task.minutes,
+        })
+    .toList();
+
+/// The tasks and rewards of the loaded child, to copy to the child's phone.
+Map<String, dynamic> linkData() => {
+      'tasks': _tasksJson(),
+      'rewards': rewards.map((reward) => reward.toJson()).toList(),
+      'nextTaskId': _nextTaskId,
+      'nextRewardId': _nextRewardId,
+    };
+
+/// Stores tasks and rewards received from the parent's phone as the data of
+/// [childId], then loads that child.
+Future<void> importLinkData(int childId, Map<String, dynamic> data) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(
+    '${_storageKey}_child_$childId',
+    jsonEncode({
+      'tasks': data['tasks'],
+      'rewards': data['rewards'],
+      'nextTaskId': data['nextTaskId'],
+      'nextRewardId': data['nextRewardId'],
+    }),
+  );
+  await loadData(childId: childId);
+}
+
 Future<void> _saveData() async {
   final prefs = await SharedPreferences.getInstance();
 
@@ -489,13 +524,7 @@ Future<void> _saveData() async {
     'nextTaskId': _nextTaskId,
     'mood': _mood,
 'moodHistory': moodHistory.map((entry) => entry.toJson()).toList(),
-    'tasks': tasks.map((task) => {
-          'id': task.id,
-          'title': task.title,
-          'subtitle': task.subtitle,
-          'points': task.points,
-          'minutes': task.minutes,
-        }).toList(),
+    'tasks': _tasksJson(),
 
     'lastCompletedAt': _lastCompletedAt.map(
       (key, value) => MapEntry(key.toString(), value.toIso8601String()),
@@ -891,9 +920,17 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
 }
 
 class ChildDashboardScreen extends StatefulWidget {
-  const ChildDashboardScreen({super.key, required this.child});
+  const ChildDashboardScreen({
+    super.key,
+    required this.child,
+    this.onUnlock,
+  });
 
   final ParentChild child;
+
+  /// Set when this phone is the child's own. The leave button then asks for
+  /// the parent's code, and [onUnlock] runs once it is right.
+  final VoidCallback? onUnlock;
   @override
   State<ChildDashboardScreen> createState() => _ChildDashboardScreenState();
 }
@@ -904,6 +941,45 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
   Future<void> open(Widget screen) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     if (mounted) setState(() {});
+  }
+
+  Future<void> _askParentCode() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Parent code'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          decoration: const InputDecoration(
+            hintText: 'The 6 digits shown on the parent phone',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Leave child mode'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (code == null || !mounted) return;
+
+    if (await ChildDevice.instance.unlock(code)) {
+      widget.onUnlock?.call();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That code is not right.')),
+      );
+    }
   }
 
   @override
@@ -919,8 +995,10 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            tooltip: 'Back to parent',
-            onPressed: () => Navigator.pop(context),
+            tooltip: widget.onUnlock == null ? 'Back to parent' : 'Parent only',
+            onPressed: widget.onUnlock == null
+                ? () => Navigator.pop(context)
+                : _askParentCode,
             icon: const Icon(Icons.logout_rounded, color: childPrimary),
           ),
           IconButton(
