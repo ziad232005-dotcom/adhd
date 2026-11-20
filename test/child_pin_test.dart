@@ -11,11 +11,29 @@ void main() {
       expect(ParentChild.isValidPin('12a4'), isFalse);
     });
 
-    test('older children without a PIN get the default one', () {
+    test('older children without a PIN get a random valid one', () {
       final child = ParentChild.fromJson({
         'id': 1,
         'name': 'Omar',
         'grade': 'Grade 3',
+      });
+
+      expect(ParentChild.isValidPin(child.pin), isTrue);
+    });
+
+    test('random PINs are four digits and not all the same', () {
+      final pins = {for (var i = 0; i < 30; i++) ParentChild.randomPin()};
+
+      expect(pins.every(ParentChild.isValidPin), isTrue);
+      expect(pins.length, greaterThan(1));
+    });
+
+    test('a damaged saved PIN is replaced', () {
+      final child = ParentChild.fromJson({
+        'id': 1,
+        'name': 'Omar',
+        'grade': 'Grade 3',
+        'pin': 'abcd',
       });
 
       expect(ParentChild.isValidPin(child.pin), isTrue);

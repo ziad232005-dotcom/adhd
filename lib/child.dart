@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'core/pin_guard.dart';
 import 'parent/parent_store.dart';
 
 const Color childPrimary = Color(0xFF7566D9);
@@ -799,11 +800,17 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
 
   void login() {
     final text = pinController.text;
-    final message = text.length != 4
-        ? 'Please enter your 4-digit PIN'
-        : text != widget.child.pin
-            ? 'That PIN is not right. Try again.'
-            : null;
+    final guard = PinGuard.forChild(widget.child.id);
+    final locked = guard.lockRemaining();
+
+    final message = locked != null
+        ? 'Too many tries. Wait ${locked.inSeconds + 1} seconds, or ask '
+            'your parent.'
+        : text.length != 4
+            ? 'Please enter your 4-digit PIN'
+            : !guard.attempt(text, widget.child.pin)
+                ? 'That PIN is not right. Try again.'
+                : null;
 
     if (message != null) {
       pinController.clear();

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,11 +32,16 @@ class ParentChild {
     int? savedAge,
     required this.grade,
     this.imagePath,
-    String? pin,
-  })  : _savedAge = savedAge,
-        pin = pin ?? _defaultPin;
+    required this.pin,
+  }) : _savedAge = savedAge;
 
-  static const _defaultPin = '1234';
+  /// A new random PIN. A fixed or guessable PIN would let anyone open a
+  /// child's screen.
+  static String randomPin() =>
+      Random.secure().nextInt(10000).toString().padLeft(4, '0');
+
+  static String? _savedPin(Object? value) =>
+      value is String && isValidPin(value) ? value : null;
 
   /// True for exactly four digits.
   static bool isValidPin(String value) => RegExp(r'^\d{4}$').hasMatch(value);
@@ -95,7 +101,7 @@ class ParentChild {
       savedAge: json['age'] as int?,
       grade: json['grade'] as String? ?? '',
       imagePath: json['imagePath'] as String?,
-      pin: json['pin'] as String?,
+      pin: _savedPin(json['pin']) ?? randomPin(),
     );
   }
 }
@@ -298,6 +304,12 @@ class ParentStore extends ChangeNotifier {
       notificationsReadAt = readAt == null ? null : DateTime.tryParse(readAt);
 
       notifyListeners();
+
+      // Children saved before PINs existed just got a random one: keep it.
+      final needsSave = (json['children'] as List<dynamic>? ?? []).any(
+        (item) => item is Map && !ParentChild.isValidPin('${item['pin']}'),
+      );
+      if (needsSave) await _save();
     } catch (e) {
       debugPrint('Could not load parent data: $e');
     }
@@ -357,6 +369,7 @@ class ParentStore extends ChangeNotifier {
         birthDate: birthDate,
         grade: grade,
         imagePath: imagePath,
+        pin: ParentChild.randomPin(),
       ),
     );
     selectedChildIndex = children.length - 1;

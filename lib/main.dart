@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:pinput/pinput.dart';
 import 'parent.dart';
 import 'child.dart';
+import 'core/api_config.dart';
 import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
@@ -512,10 +513,6 @@ class _OTPVerificationScreenState
     extends State<OTPVerificationScreen> {
   final codeController = TextEditingController();
 
-  // Android Emulator uses this address to reach the computer hosting
-  // the ASP.NET Core backend.
-  static const String baseUrl = 'http://10.0.2.2:5187';
-
   bool get _isEmail => widget.method == 'Email';
 
   // The backend has separate endpoints for email and SMS codes.
@@ -557,6 +554,9 @@ void dispose() {
       SnackBar(content: Text(message)),
     );
   }
+
+  static const _insecureServerMessage =
+      'This version only connects to a secure (https) server.';
 
   String getErrorMessage(http.Response response) {
     try {
@@ -615,6 +615,11 @@ void startResendCountdown() {
   Future<void> sendOtp() async {
     if (isSending || isVerifying) return;
 
+    if (!ApiConfig.canConnect) {
+      showMessage(_insecureServerMessage);
+      return;
+    }
+
     setState(() {
       isSending = true;
     });
@@ -622,7 +627,7 @@ void startResendCountdown() {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl$_sendPath'),
+            ApiConfig.uri(_sendPath),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -676,6 +681,11 @@ if (response.statusCode >= 200 &&
 
     if (isSending || isVerifying) return;
 
+    if (!ApiConfig.canConnect) {
+      showMessage(_insecureServerMessage);
+      return;
+    }
+
     setState(() {
       isVerifying = true;
     });
@@ -683,7 +693,7 @@ if (response.statusCode >= 200 &&
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl$_verifyPath'),
+            ApiConfig.uri(_verifyPath),
             headers: {
               'Content-Type': 'application/json',
             },

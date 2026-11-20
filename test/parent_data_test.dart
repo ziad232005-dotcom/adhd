@@ -93,6 +93,7 @@ void main() {
         name: 'Alex',
         savedAge: 8,
         grade: 'Grade 3',
+        pin: '1234',
       );
 
       expect(legacy.age, 8);

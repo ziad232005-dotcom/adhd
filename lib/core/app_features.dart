@@ -9,6 +9,13 @@ class AppFeatures {
 
   /// Demo helpers for the graduation demo: an "Admin review" entry on the
   /// role screen and a button that lets a sample teacher accept a request.
-  /// Set to false when a real backend handles reviews and accounts.
-  static const bool demoMode = true;
+  ///
+  /// They let anyone approve themselves as a verified Shadow Teacher, so
+  /// they exist only in debug builds. For a demo from a release build run
+  /// with `--dart-define=DEMO_MODE=true`. Remove them when a real backend
+  /// handles reviews and accounts.
+  static const bool demoMode = bool.fromEnvironment(
+    'DEMO_MODE',
+    defaultValue: !bool.fromEnvironment('dart.vm.product'),
+  );
 }
