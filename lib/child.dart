@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'child_tests.dart';
 import 'core/pin_guard.dart';
+import 'assessments/cars_screen.dart';
 import 'link/child_device.dart';
 import 'tova/tova_screens.dart';
 import 'parent/parent_store.dart';
@@ -943,7 +945,10 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _askParentCode() async {
+  int _tab = 0;
+
+  /// Asks for the parent's 6 digits. Returns what was typed, or null.
+  Future<String?> _readParentCode(String action) async {
     final controller = TextEditingController();
     final code = await showDialog<String>(
       context: context,
@@ -965,12 +970,17 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Leave child mode'),
+            child: Text(action),
           ),
         ],
       ),
     );
     controller.dispose();
+    return code;
+  }
+
+  Future<void> _askParentCode() async {
+    final code = await _readParentCode('Leave child mode');
     if (code == null || !mounted) return;
 
     if (await ChildDevice.instance.unlock(code)) {
@@ -982,6 +992,33 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
     }
   }
 
+  /// Only a parent may open a test that the parent answers.
+  Future<bool> _parentAllowed() async {
+    if (widget.onUnlock == null) return true;
+    final code = await _readParentCode('Open');
+    if (code == null || !mounted) return false;
+
+    if (ChildDevice.instance.checkCode(code)) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('That code is not right.')),
+    );
+    return false;
+  }
+
+  Widget _otherTab() {
+    if (_tab == 1) return const ChildTasksScreen(showBack: false);
+
+    return ChildTestsScreen(
+      child: widget.child,
+      onOpenTova: () => open(TovaWelcomeScreen(childId: widget.child.id)),
+      onOpenCars: () async {
+        if (await _parentAllowed()) {
+          await open(CarsScreen(child: widget.child));
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = data.tasks.isEmpty
@@ -989,7 +1026,31 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
     : data.completedCount / data.tasks.length;
     return Scaffold(
       backgroundColor: childBackground,
-      appBar: AppBar(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        backgroundColor: Colors.white,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.checklist_outlined),
+            selectedIcon: Icon(Icons.checklist_rounded),
+            label: 'Tasks',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.fact_check_outlined),
+            selectedIcon: Icon(Icons.fact_check_rounded),
+            label: 'Tests',
+          ),
+        ],
+      ),
+      appBar: _tab != 0
+          ? null
+          : AppBar(
         title: const Text('MAZID', style: TextStyle(color: childText, fontWeight: FontWeight.bold)),
         backgroundColor: childBackground,
         elevation: 0,
@@ -1009,7 +1070,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
+      body: _tab != 0 ? _otherTab() : ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
           Container(
@@ -1073,7 +1134,10 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
 
 
 class ChildTasksScreen extends StatefulWidget {
-  const ChildTasksScreen({super.key});
+  const ChildTasksScreen({super.key, this.showBack = true});
+
+  /// False when the screen is a tab, where going back would leave the app.
+  final bool showBack;
 
   @override
   State<ChildTasksScreen> createState() => _ChildTasksScreenState();
@@ -1091,6 +1155,7 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
           backgroundColor: childBackground,
           appBar: AppBar(
             title: const Text('My Tasks'),
+            automaticallyImplyLeading: widget.showBack,
             backgroundColor: childBackground,
             elevation: 0,
           ),

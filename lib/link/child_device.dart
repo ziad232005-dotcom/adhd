@@ -37,6 +37,10 @@ class ChildDevice extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Whether [code] is the parent's code. Changes nothing.
+  bool checkCode(String code) =>
+      _unlockCode != null && code.trim() == _unlockCode;
+
   /// Leaves child mode when [code] is right. Returns whether it was.
   Future<bool> unlock(String code) async {
     if (_unlockCode == null || code.trim() != _unlockCode) return false;
