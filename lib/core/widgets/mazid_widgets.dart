@@ -564,7 +564,9 @@ class MazidPasswordChecklist extends StatelessWidget {
             color: color,
           ),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
+          Expanded(
+            child: Text(label, style: TextStyle(fontSize: 12, color: color)),
+          ),
         ],
       ),
     );

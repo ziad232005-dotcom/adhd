@@ -413,8 +413,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               onPressed: continueToVerification,
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text(
                   'Already have an account?',
@@ -1088,8 +1089,9 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
               onPressed: () => socialSignIn('Apple'),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text(
                   "Don't have an account?",

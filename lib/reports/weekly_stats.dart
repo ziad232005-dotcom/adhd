@@ -263,7 +263,8 @@ class WeeklyComparison {
     final metrics = [
       metric('Tasks completed', '', (s) => s.tasksDone.toDouble(),
           tolerance: 1),
-      metric('Days with a task done', ' days', (s) => s.activeDays.toDouble()),
+      metric('Days with a task done', ' days', (s) => s.activeDays.toDouble(),
+          tolerance: 1),
       metric('Focus time', ' min', (s) => s.focusMinutes.toDouble(),
           tolerance: 10),
       metric('Happy or calm moods', '%', (s) => s.positiveMoodPercent,
