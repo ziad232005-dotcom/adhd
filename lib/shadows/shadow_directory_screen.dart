@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/api_client.dart';
 import '../parent/parent_ui.dart';
 import 'shadow_api.dart';
+import 'shadow_application.dart';
 import 'shadow_models.dart';
 
 /// The parent's list of approved Shadow Teachers, with their details and
@@ -53,7 +54,7 @@ class _ShadowDirectoryScreenState extends State<ShadowDirectoryScreen> {
             final all = snapshot.data ?? const <ShadowListing>[];
             final shown = _focus == null
                 ? all
-                : all.where((s) => s.focus.contains(_focus)).toList();
+                : all.where((s) => s.skills.contains(_focus)).toList();
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
@@ -73,7 +74,7 @@ class _ShadowDirectoryScreenState extends State<ShadowDirectoryScreen> {
                       selected: _focus == null,
                       onSelected: (_) => setState(() => _focus = null),
                     ),
-                    for (final area in ShadowApplication.focusAreas)
+                    for (final area in ShadowApplication.skillOptions)
                       ChoiceChip(
                         label: Text(area),
                         selected: _focus == area,
@@ -165,36 +166,37 @@ class _ListingCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             [
-              if (s.city.isNotEmpty) s.city,
-              '${s.yearsExperience} years of experience',
-              if (s.pricePerSession != null)
-                '${s.pricePerSession} EGP per session',
+              if (s.governorate.isNotEmpty) s.governorate,
+              if (s.yearsExperience.isNotEmpty)
+                '${s.yearsExperience} years of experience',
             ].join(' | '),
             style: const TextStyle(color: ParentUi.muted, fontSize: 13),
           ),
-          if (s.focus.isNotEmpty) ...[
+          if (s.skills.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final area in s.focus)
+                for (final skill in s.skills)
                   Chip(
-                    label: Text(area, style: const TextStyle(fontSize: 12)),
+                    label: Text(skill, style: const TextStyle(fontSize: 12)),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
             ),
           ],
-          if (s.education.isNotEmpty) _line('Degree', s.education),
-          if (s.availability.isNotEmpty) _line('Available', s.availability),
-          if (s.bio.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              s.bio,
-              style: const TextStyle(color: ParentUi.dark, height: 1.4),
+          if (s.qualification.isNotEmpty)
+            _line(
+              'Degree',
+              [s.qualification, if (s.university.isNotEmpty) s.university]
+                  .join(', '),
             ),
-          ],
+          if (s.currentWorkplace.isNotEmpty)
+            _line('Works at', s.currentWorkplace),
+          if (s.childExperience.isNotEmpty)
+            _line('With children', s.childExperience),
+          if (s.adhdExperience.isNotEmpty) _line('ADHD', s.adhdExperience),
           if (s.hasContact) ...[
             const SizedBox(height: 10),
             const Divider(height: 1),

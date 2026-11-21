@@ -458,13 +458,6 @@ Future<void> _saveActivities() async {
         color: const Color(0xFFFFEAF1),
         onTap: () => open(const WeeklyReportScreen()),
       ),
-      ParentAction(
-        title: 'Child View',
-        subtitle: 'Open the app as your child sees it',
-        icon: Icons.child_care_rounded,
-        color: const Color(0xFFECE8FF),
-        onTap: () => open(ChildTasksScreen()),
-      ),
     ];
   }
 
@@ -619,22 +612,7 @@ _buildObservationCard(),
               ? const ProgressScreen(showBack: false)
               : ParentProfileScreen(activities: activities),
 ),
-floatingActionButton: selectedNavIndex == 0
-    ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChildTasksScreen(),
-            ),
-          );
-        },
-        backgroundColor: const Color(0xFF7566D9),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.child_care_rounded),
-        label: const Text('Child View'),
-      )
-    : selectedNavIndex == 1
+floatingActionButton: selectedNavIndex == 1
         ? FloatingActionButton.extended(
             onPressed: () {
               Navigator.push(

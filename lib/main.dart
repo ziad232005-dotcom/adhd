@@ -13,7 +13,8 @@ import 'core/app_features.dart';
 import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
 import 'parent/parent_store.dart';
-import 'shadows/shadow_apply_screen.dart';
+import 'shadows/shadow_draft_store.dart';
+import 'shadows/verification_form_screen.dart';
 
 
 
@@ -22,6 +23,7 @@ Future<void> main() async {
 
   await ParentStore.instance.load();
   await ChildDevice.instance.load();
+  await ShadowDraftStore.instance.load();
   await ChildAppState.instance.loadData(
     childId: ChildDevice.instance.childId ??
         ParentStore.instance.selectedChild?.id,
@@ -140,7 +142,7 @@ class WelcomeScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShadowApplyScreen()),
+              MaterialPageRoute(builder: (_) => const VerificationFormScreen()),
             ),
             child: const Text('I am a Shadow Teacher - join the list'),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:adhd/shadows/shadow_application.dart';
 import 'package:adhd/shadows/shadow_models.dart';
 
 void main() {
@@ -8,23 +9,22 @@ void main() {
       final listing = ShadowListing.fromJson({
         'id': 3,
         'name': ' Mona Hassan ',
-        'city': 'Cairo',
-        'yearsExperience': 5,
-        'focus': ['ADHD', 'Autism'],
-        'education': 'Special education',
-        'availability': 'Weekdays',
-        'bio': 'I work with children.',
-        'pricePerSession': 300,
+        'governorate': 'Cairo',
+        'yearsExperience': '5',
+        'qualification': 'Bachelor’s degree',
+        'university': 'Cairo University',
+        'currentWorkplace': 'A school',
+        'childExperience': '3–5 yrs',
+        'adhdExperience': 'Some',
+        'skills': ['Behavior support', 'Focus training'],
         'phone': '01000000000',
-        'whatsapp': '',
-        'email': null,
+        'email': '',
       })!;
 
       expect(listing.name, 'Mona Hassan');
-      expect(listing.focus, ['ADHD', 'Autism']);
-      expect(listing.pricePerSession, 300);
+      expect(listing.skills, ['Behavior support', 'Focus training']);
       expect(listing.phone, '01000000000');
-      expect(listing.whatsapp, isNull);
+      expect(listing.email, isNull);
       expect(listing.hasContact, isTrue);
     });
 
@@ -34,40 +34,49 @@ void main() {
       expect(ShadowListing.fromJson('nope'), isNull);
     });
 
-    test('missing optional fields get safe values', () {
+    test('missing fields get safe values', () {
       final listing = ShadowListing.fromJson({'id': 1, 'name': 'Sara'})!;
-      expect(listing.focus, isEmpty);
-      expect(listing.yearsExperience, 0);
+      expect(listing.skills, isEmpty);
+      expect(listing.governorate, '');
       expect(listing.hasContact, isFalse);
     });
   });
 
   group('ShadowApplication', () {
-    ShadowApplication application({String? phone, String? email}) =>
-        ShadowApplication(
-          name: 'Sara Ali',
-          city: 'Giza',
-          yearsExperience: 2,
-          focus: const ['ADHD'],
-          education: 'Psychology',
-          availability: 'Evenings',
-          bio: 'Patient and organized teacher.',
-          certificateBase64: 'AAAA',
-          phone: phone,
-          email: email,
-        );
+    test('keeps its answers when saved and loaded', () {
+      final app = ShadowApplication(
+        fullName: 'Sara Ali',
+        birthDate: DateTime(1998, 4, 2),
+        mobile: '01000000000',
+        email: 'sara@mail.com',
+        governorate: 'Giza',
+        skills: ['Social skills'],
+        documents: {
+          DocumentKind.degree.key: const ShadowDocument(
+            kind: 'degree',
+            fileName: 'degree.pdf',
+            sizeBytes: 2048,
+            path: '/tmp/degree.pdf',
+          ),
+        },
+      );
 
-    test('needs at least one way to be reached', () {
-      expect(application().hasContact, isFalse);
-      expect(application(phone: '01000000000').hasContact, isTrue);
-      expect(application(email: 'a@b.com').hasContact, isTrue);
+      final loaded = ShadowApplication.fromJson(app.toJson());
+      expect(loaded.fullName, 'Sara Ali');
+      expect(loaded.birthDate, DateTime(1998, 4, 2));
+      expect(loaded.skills, ['Social skills']);
+      expect(loaded.hasDegree, isTrue);
+      expect(loaded.documents['degree']!.fileName, 'degree.pdf');
     });
 
-    test('is sent with the certificate', () {
-      final json = application(phone: '01000000000').toJson();
-      expect(json['certificate'], 'AAAA');
-      expect(json['phone'], '01000000000');
-      expect(json['focus'], ['ADHD']);
+    test('a form without a degree is not complete', () {
+      expect(ShadowApplication().hasDegree, isFalse);
+    });
+
+    test('a damaged draft gives an empty form instead of failing', () {
+      final loaded = ShadowApplication.fromJson({'documents': 'oops'});
+      expect(loaded.fullName, '');
+      expect(loaded.documents, isEmpty);
     });
   });
 }
