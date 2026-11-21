@@ -17,6 +17,7 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   shared_preferences: ^2.5.6
+  path_provider: ^2.1.5
   file_picker: ^8.3.7
   pdf: ">=3.11.3 <3.13.0" # 3.13 needs xml 7, which flutter_local_notifications 19 cannot use
   printing: ^5.12.0

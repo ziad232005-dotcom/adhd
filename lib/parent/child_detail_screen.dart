@@ -16,7 +16,7 @@ import 'add_child_screen.dart';
 import 'parent_insights.dart';
 import 'parent_store.dart';
 import 'parent_ui.dart';
-import 'weekly_report_screen.dart';
+import '../reports/reports_screen.dart';
 
 /// Everything about one child: tasks, points, rewards, observations
 /// and mood. Opening it selects the child, so every other tab follows.
@@ -649,9 +649,9 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () => _open(const WeeklyReportScreen()),
-                        icon: const Icon(Icons.insights_rounded),
-                        label: Text("${child.name}'s weekly report"),
+                        onPressed: () => _open(ReportsScreen(child: child)),
+                        icon: const Icon(Icons.folder_rounded),
+                        label: Text("${child.name}'s reports"),
                       ),
                     ],
                   ),

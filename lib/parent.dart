@@ -25,7 +25,7 @@ import 'parent/parent_ui.dart';
 import 'parent/quick_actions_screen.dart';
 import 'parent/reminder_form_screen.dart';
 import 'parent/reminders_screen.dart';
-import 'parent/weekly_report_screen.dart';
+import 'reports/reports_screen.dart';
 //اللوان ال انا مستخدمها في Dashboard parent
 const Color primaryPurple = Color(0xFF7566D9);
 const Color dashboardBackground = Color(0xFFFAF8FF);
@@ -452,11 +452,11 @@ Future<void> _saveActivities() async {
         onTap: () => openReminderForm(context),
       ),
       ParentAction(
-        title: 'Weekly Report',
-        subtitle: 'Your child’s progress this week',
+        title: 'Reports',
+        subtitle: 'All your child’s reports in one folder',
         icon: Icons.insights_rounded,
         color: const Color(0xFFFFEAF1),
-        onTap: () => open(const WeeklyReportScreen()),
+        onTap: () => openSelectedChildReports(context),
       ),
     ];
   }
@@ -578,13 +578,8 @@ _buildObservationCard(),
                   const SizedBox(height: 28),
                   _buildSectionTitle(
                     'Progress Highlights',
-                    'Weekly report',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const WeeklyReportScreen(),
-                      ),
-                    ),
+                    'Reports',
+                    onTap: () => openSelectedChildReports(context),
                   ),
                   const SizedBox(height: 14),
                   _buildProgressCard(),

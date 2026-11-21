@@ -9,6 +9,7 @@ import '../core/widgets/mazid_widgets.dart';
 import '../assessments/tova_record.dart';
 import '../assessments/tova_report_screen.dart';
 import '../parent/parent_store.dart';
+import '../reports/report_builder.dart';
 
 /// A mobile-friendly TOVA-style attention activity.
 ///
@@ -636,6 +637,13 @@ void _respond() {
       commissionPct: summary.commissionPct,
     );
     tovaStore.add(childId, record);
+    // Keep the PDF in the child's reports folder.
+    unawaited(ReportBuilder.saveTova(
+      childId,
+      widget.childName,
+      widget.childAge,
+      record,
+    ));
     return record;
   }
 

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
+import '../reports/report_builder.dart';
 import '../parent/parent_ui.dart';
 import 'cars_comparison.dart';
 import 'cars_models.dart';
@@ -50,6 +53,8 @@ class _CarsScreenState extends State<CarsScreen> {
     );
 
     await carsStore.add(widget.child.id, result);
+    // Keep the PDF in the child's reports folder.
+    unawaited(ReportBuilder.saveCars(widget.child, result));
     if (!mounted) return;
 
     setState(() => _result = result);

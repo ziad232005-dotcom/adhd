@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
-import '../reports/weekly_report_screen.dart';
+import '../reports/reports_screen.dart';
 import 'care_stores.dart';
 import 'daily_log_screen.dart';
-import 'doctor_report_screen.dart';
 import 'medications_screen.dart';
 import 'school_notes_screen.dart';
 import 'triggers_screen.dart';
 
-/// "Care" block of a child's page: everyday logs and the doctor report.
+/// "Care" block of a child's page: everyday logs and the reports folder.
 class CareSection extends StatefulWidget {
   const CareSection({super.key, required this.child});
 
@@ -54,14 +53,9 @@ class _CareSectionState extends State<CareSection> {
           onTap: () => _open(TriggersScreen(child: child)),
         ),
         _Tile(
-          icon: Icons.insights_rounded,
-          title: 'Weekly report (PDF)',
-          onTap: () => _open(WeeklyReportScreen(child: child)),
-        ),
-        _Tile(
-          icon: Icons.description_rounded,
-          title: 'Doctor report',
-          onTap: () => _open(DoctorReportScreen(child: child)),
+          icon: Icons.folder_rounded,
+          title: 'Reports',
+          onTap: () => _open(ReportsScreen(child: child)),
         ),
         _Tile(
           icon: Icons.school_rounded,

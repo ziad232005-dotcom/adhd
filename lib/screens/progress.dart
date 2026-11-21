@@ -4,7 +4,7 @@ import '../child.dart';
 import '../parent/parent_insights.dart';
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
-import '../parent/weekly_report_screen.dart';
+import '../reports/reports_screen.dart';
 
 /// Child progress for the parent, calculated from the child's real
 /// activity (completed tasks, points, streak and focus sessions).
@@ -27,14 +27,9 @@ class ProgressScreen extends StatelessWidget {
         showBack: showBack,
         actions: [
           IconButton(
-            tooltip: 'Weekly report',
-            icon: const Icon(Icons.insights_rounded, color: ParentUi.dark),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const WeeklyReportScreen(),
-              ),
-            ),
+            tooltip: 'Reports',
+            icon: const Icon(Icons.folder_rounded, color: ParentUi.dark),
+            onPressed: () => openSelectedChildReports(context),
           ),
         ],
       ),
