@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../care/medications_screen.dart' show formatDate;
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import '../core/api_client.dart';
+import '../sync/result_sync.dart';
 import 'report_builder.dart';
 import 'report_library.dart';
 import 'saved_report_screen.dart';
@@ -40,6 +42,7 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   bool _ready = false;
   bool _busy = false;
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -51,6 +54,34 @@ class _ReportsScreenState extends State<ReportsScreen> {
     await ReportBuilder.prepare(widget.child);
     await ReportBuilder.saveWeekly(widget.child);
     if (mounted) setState(() => _ready = true);
+    await _sync(quiet: true);
+  }
+
+  /// Fetches what the child's phone sent. [quiet] hides "nothing new" and
+  /// connection problems, for the automatic check when the page opens.
+  Future<void> _sync({bool quiet = false}) async {
+    if (_syncing) return;
+    setState(() => _syncing = true);
+
+    String? message;
+    try {
+      final added = await ResultSync.instance.pull(widget.child);
+      message = added == 0
+          ? 'Nothing new from ${widget.child.name}\'s phone.'
+          : '$added new result${added == 1 ? '' : 's'} from '
+              '${widget.child.name}\'s phone.';
+      if (quiet && added == 0) message = null;
+    } on ApiException catch (error) {
+      if (!quiet) message = error.message;
+    }
+
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
 
   Future<void> _makeDoctorReport() async {
@@ -119,7 +150,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       backgroundColor: ParentUi.background,
-      appBar: parentAppBar(context, "${child.name}'s reports"),
+      appBar: parentAppBar(
+        context,
+        "${child.name}'s reports",
+        actions: [
+          IconButton(
+            tooltip: 'Check for new results from ${child.name}\'s phone',
+            onPressed: _syncing ? null : () => _sync(),
+            icon: _syncing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync_rounded, color: ParentUi.dark),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: !_ready
             ? const Center(child: CircularProgressIndicator())

@@ -61,4 +61,23 @@ void main() {
       expect(ChildLink.newUnlockCode(), matches(RegExp(r'^\d{6}$')));
     }
   });
+
+  test('the sync key travels in the code and a bad one is ignored', () {
+    final link = ChildLink(
+      child: sample().child,
+      unlockCode: '123456',
+      data: sample().data,
+      syncKey: 'abcdefghijklmnopqrstuv',
+    );
+    expect(ChildLink.decode(link.encode())!.syncKey, 'abcdefghijklmnopqrstuv');
+    expect(ChildLink.decode(sample().encode())!.syncKey, isNull);
+
+    final bad = ChildLink(
+      child: sample().child,
+      unlockCode: '123456',
+      data: sample().data,
+      syncKey: 'short key!',
+    );
+    expect(ChildLink.decode(bad.encode())!.syncKey, isNull);
+  });
 }

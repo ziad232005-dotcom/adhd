@@ -14,6 +14,7 @@ class ChildLink {
     required this.child,
     required this.unlockCode,
     required this.data,
+    this.syncKey,
   });
 
   static const _prefix = 'mazid1.';
@@ -30,6 +31,9 @@ class ChildLink {
   /// Tasks and rewards as saved by the child's data store.
   final Map<String, dynamic> data;
 
+  /// Secret that lets the child's phone send test results to the parent's.
+  final String? syncKey;
+
   static String newUnlockCode() =>
       Random.secure().nextInt(1000000).toString().padLeft(6, '0');
 
@@ -45,6 +49,7 @@ class ChildLink {
             jsonEncode({
               'v': _version,
               'unlock': unlockCode,
+              if (syncKey != null) 'sync': syncKey,
               'child': {
                 'id': child.id,
                 'name': child.name,
@@ -93,6 +98,7 @@ class ChildLink {
         return null;
       }
 
+      final sync = json['sync'];
       final name = childJson['name'];
       if (childJson['id'] is! int ||
           name is! String ||
@@ -105,6 +111,9 @@ class ChildLink {
         child: ParentChild.fromJson(childJson),
         unlockCode: code,
         data: data,
+        syncKey: sync is String && RegExp(r'^[A-Za-z0-9_-]{20,64}$').hasMatch(sync)
+            ? sync
+            : null,
       );
     } catch (_) {
       return null;

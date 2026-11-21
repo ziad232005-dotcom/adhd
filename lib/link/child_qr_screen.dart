@@ -8,6 +8,7 @@ import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
 import 'child_link.dart';
 import '../core/api_client.dart';
+import '../sync/result_sync.dart';
 import 'link_api.dart';
 
 /// The parent's side: shows the QR code the child scans on their own phone.
@@ -46,11 +47,14 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
       await prefs.setString(_codeKey, code);
     }
 
+    final syncKey = await SyncKeys.forChild(child.id);
+
     if (!mounted) return;
     final link = ChildLink(
       child: child,
       unlockCode: code,
       data: ChildAppState.instance.linkData(),
+      syncKey: syncKey,
     );
     setState(() => _link = link);
     _getShortCode(link.encode());

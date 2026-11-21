@@ -10,6 +10,7 @@ import '../assessments/tova_record.dart';
 import '../assessments/tova_report_screen.dart';
 import '../parent/parent_store.dart';
 import '../reports/report_builder.dart';
+import '../sync/result_sync.dart';
 
 /// A mobile-friendly TOVA-style attention activity.
 ///
@@ -637,6 +638,13 @@ void _respond() {
       commissionPct: summary.commissionPct,
     );
     tovaStore.add(childId, record);
+    // On the child's own phone this also sends the result to the parent.
+    unawaited(ResultSync.instance.sendIfLinked(
+      childId: childId,
+      kind: 'tova',
+      takenAt: record.takenAt,
+      data: record.toJson(),
+    ));
     // Keep the PDF in the child's reports folder.
     unawaited(ReportBuilder.saveTova(
       childId,

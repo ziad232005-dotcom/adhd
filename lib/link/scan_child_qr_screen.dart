@@ -79,7 +79,11 @@ class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
     final child = link.child;
     ParentStore.instance.adoptLinkedChild(child);
     await ChildAppState.instance.importLinkData(child.id, link.data);
-    await ChildDevice.instance.link(child.id, link.unlockCode);
+    await ChildDevice.instance.link(
+      child.id,
+      link.unlockCode,
+      syncKey: link.syncKey,
+    );
 
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
