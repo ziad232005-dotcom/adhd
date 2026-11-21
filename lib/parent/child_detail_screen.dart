@@ -551,7 +551,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       ),
                       _title('Child mode'),
                       _childMode(child),
-                      _title('Assessments'),
+                      _title('Tests'),
                       ParentCard(
                         onTap: () =>
                             _open(AssessmentsScreen(child: child)),
@@ -574,7 +574,6 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                           ],
                         ),
                       ),
-                      _title('TOVA attention test'),
                       ParentCard(
                         onTap: () => _open(TovaHubScreen(child: child)),
                         child: const Row(
@@ -584,7 +583,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Start the test and see its reports',
+                                'TOVA attention test',
                                 style: TextStyle(
                                   color: ParentUi.dark,
                                   fontWeight: FontWeight.bold,

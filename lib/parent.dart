@@ -6,6 +6,7 @@ import 'child.dart';
 import 'tasks.dart';
 import 'screens/track_behavior.dart';
 import 'screens/ask_ai.dart';
+import 'assessments/tests_screen.dart';
 import 'screens/progress.dart';
 import 'add_routine.dart';
 import 'add_activity_page.dart';
@@ -604,8 +605,10 @@ _buildObservationCard(),
       : selectedNavIndex == 1
           ? const ParentTasksScreen()
           : selectedNavIndex == 2
-              ? const ProgressScreen(showBack: false)
-              : ParentProfileScreen(activities: activities),
+              ? const TestsScreen()
+              : selectedNavIndex == 3
+                  ? const ProgressScreen(showBack: false)
+                  : ParentProfileScreen(activities: activities),
 ),
 floatingActionButton: selectedNavIndex == 1
         ? FloatingActionButton.extended(
@@ -719,7 +722,7 @@ errorBuilder: (_, _, _) => const Icon(
         const SizedBox(width: 10),
         _circleButton(
           icon: Icons.person_outline_rounded,
-          onTap: () => _openTab(3),
+          onTap: () => _openTab(4),
         ),
       ],
     );
@@ -2172,6 +2175,11 @@ Widget _buildBottomNavigation() {
         icon: Icon(Icons.checklist_outlined),
         selectedIcon: Icon(Icons.checklist_rounded),
         label: 'Tasks',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.fact_check_outlined),
+        selectedIcon: Icon(Icons.fact_check_rounded),
+        label: 'Tests',
       ),
       NavigationDestination(
         icon: Icon(Icons.insights_outlined),
