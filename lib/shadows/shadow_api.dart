@@ -73,7 +73,7 @@ class ShadowApi {
     final body = await _client.get('/api/shadows');
     return [
       for (final item in body['shadows'] as List<dynamic>? ?? [])
-        if (ShadowListing.fromJson(item) case final listing?) listing,
+        ?ShadowListing.fromJson(item),
     ];
   }
 }

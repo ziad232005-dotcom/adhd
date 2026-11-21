@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 /// The kinds of documents a Shadow Teacher can upload.
 class DocumentKind {
   const DocumentKind(this.key, this.title, {this.required = false});
@@ -138,6 +135,14 @@ class ShadowApplication {
   ];
 
   String fullName;
+
+  /// Up to two capital letters of the name, shown when there is no photo.
+  String get initials {
+    final parts =
+        fullName.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    return parts.take(2).map((p) => p[0].toUpperCase()).join();
+  }
+
   DateTime? birthDate;
   String mobile;
   String email;

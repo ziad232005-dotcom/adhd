@@ -202,7 +202,6 @@ class _ListingCard extends StatelessWidget {
             const Divider(height: 1),
             const SizedBox(height: 6),
             if (s.phone != null) _contact(context, 'Phone', s.phone!),
-            if (s.whatsapp != null) _contact(context, 'WhatsApp', s.whatsapp!),
             if (s.email != null) _contact(context, 'Email', s.email!),
           ],
         ],

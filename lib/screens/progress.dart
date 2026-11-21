@@ -4,6 +4,7 @@ import '../child.dart';
 import '../parent/parent_insights.dart';
 import '../parent/parent_store.dart';
 import '../parent/parent_ui.dart';
+import '../parent/weekly_bar_chart.dart';
 import '../reports/reports_screen.dart';
 
 /// Child progress for the parent, calculated from the child's real
