@@ -47,13 +47,19 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
     }
 
     if (!mounted) return;
-    setState(() {
-      _link = ChildLink(
-        child: child,
-        unlockCode: code!,
-        data: ChildAppState.instance.linkData(),
-      );
-    });
+    final link = ChildLink(
+      child: child,
+      unlockCode: code,
+      data: ChildAppState.instance.linkData(),
+    );
+    setState(() => _link = link);
+    _getShortCode(link.encode());
+  }
+
+  Future<void> _copy(String text, String done) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(done)));
   }
 
   Future<void> _getShortCode(String payload) async {
@@ -86,8 +92,8 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
                 children: [
                   const Text(
-                    'On the child\'s phone, open MAZID and choose '
-                    '"I am a child", then scan this code.',
+                    'On the child\'s phone choose "I am a child", then scan '
+                    'the QR or type the code.',
                     style: TextStyle(color: ParentUi.muted, height: 1.45),
                   ),
                   const SizedBox(height: 16),
@@ -111,6 +117,78 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
+                          'Code to type',
+                          style: TextStyle(
+                            color: ParentUi.dark,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (_shortCode != null) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _shortCode!.pretty,
+                                  style: const TextStyle(
+                                    color: ParentUi.purple,
+                                    fontSize: 30,
+                                    letterSpacing: 4,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Copy',
+                                onPressed: () => _copy(
+                                  _shortCode!.pretty,
+                                  'Code copied.',
+                                ),
+                                icon: const Icon(Icons.copy_rounded),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'One use, valid for '
+                            '${_shortCode!.lifetime.inMinutes} minutes.',
+                            style: const TextStyle(color: ParentUi.muted),
+                          ),
+                        ] else if (_gettingCode) ...[
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: LinearProgressIndicator(),
+                          ),
+                        ] else ...[
+                          Text(
+                            _codeError ?? 'No code yet.',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              OutlinedButton(
+                                onPressed: () => _getShortCode(text),
+                                child: const Text('Try again'),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () => _copy(
+                                  text,
+                                  'Offline code copied.',
+                                ),
+                                child: const Text('Copy offline code'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  ParentCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
                           'Parent code',
                           style: TextStyle(
                             color: ParentUi.dark,
@@ -129,100 +207,11 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'You need it to take the child\'s phone out of '
-                          'child mode. Keep it to yourself.',
-                          style: TextStyle(color: ParentUi.muted, height: 1.4),
+                          'Needed to leave child mode on that phone.',
+                          style: TextStyle(color: ParentUi.muted),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const ParentCard(
-                    child: Text(
-                      'This copies the tasks and rewards as they are now. '
-                      'Anything you add later needs a new scan until the '
-                      'online sync is built.',
-                      style: TextStyle(color: ParentUi.muted, height: 1.4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ParentCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'No camera? Use a short code',
-                          style: TextStyle(
-                            color: ParentUi.dark,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (_shortCode == null) ...[
-                          const Text(
-                            'The child types it on their phone. It works '
-                            'once and lasts 10 minutes. Both phones need '
-                            'the internet.',
-                            style: TextStyle(
-                              color: ParentUi.muted,
-                              height: 1.4,
-                            ),
-                          ),
-                          if (_codeError != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              _codeError!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ],
-                          const SizedBox(height: 10),
-                          FilledButton(
-                            onPressed: _gettingCode
-                                ? null
-                                : () => _getShortCode(text),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: ParentUi.purple,
-                              minimumSize: const Size.fromHeight(46),
-                            ),
-                            child: Text(
-                              _gettingCode ? 'Please wait...' : 'Get a code',
-                            ),
-                          ),
-                        ] else ...[
-                          Text(
-                            _shortCode!.pretty,
-                            style: const TextStyle(
-                              color: ParentUi.purple,
-                              fontSize: 30,
-                              letterSpacing: 4,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Valid for ${_shortCode!.lifetime.inMinutes} '
-                            'minutes, one use.',
-                            style: const TextStyle(color: ParentUi.muted),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: text));
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Code copied.')),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: ParentUi.purple,
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    icon: const Icon(Icons.copy_rounded),
-                    label: const Text('Copy the code as text'),
                   ),
                 ],
               ),

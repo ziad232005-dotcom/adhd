@@ -19,26 +19,36 @@ class ScanChildQrScreen extends StatefulWidget {
 }
 
 class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
-  final _shortController = TextEditingController();
-  final _pasteController = TextEditingController();
+  final _codeController = TextEditingController();
   bool _busy = false;
   String? _error;
 
   @override
   void dispose() {
-    _shortController.dispose();
-    _pasteController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _useShortCode() async {
+  /// A short code is swapped for the data on the server; a long offline
+  /// code already carries it.
+  Future<void> _useTypedCode() async {
+    final text = _codeController.text.trim();
+    if (text.isEmpty) return;
+    if (text.startsWith('mazid1.')) {
+      await _accept(text);
+    } else {
+      await _useShortCode(text);
+    }
+  }
+
+  Future<void> _useShortCode(String text) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final payload = await const LinkApi().claim(_shortController.text);
+      final payload = await const LinkApi().claim(text);
       if (!mounted) return;
       setState(() => _busy = false);
       await _accept(payload);
@@ -117,26 +127,16 @@ class _ScanChildQrScreenState extends State<ScanChildQrScreen> {
                   ],
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _shortController,
+                    controller: _codeController,
                     textCapitalization: TextCapitalization.characters,
                     decoration: InputDecoration(
-                      hintText: 'Or type the short code (ABCD-EFGH)',
+                      hintText: 'Or type the code (ABCD-EFGH)',
                       suffixIcon: IconButton(
-                        onPressed: _useShortCode,
+                        onPressed: _useTypedCode,
                         icon: const Icon(Icons.check_rounded),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _pasteController,
-                    decoration: InputDecoration(
-                      hintText: 'Or paste the code as text',
-                      suffixIcon: IconButton(
-                        onPressed: () => _accept(_pasteController.text),
-                        icon: const Icon(Icons.check_rounded),
-                      ),
-                    ),
+                    onSubmitted: (_) => _useTypedCode(),
                   ),
                 ],
               ),
