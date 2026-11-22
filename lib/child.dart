@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'child_calm.dart';
+import 'child_focus_ring.dart';
+import 'child_goal_card.dart';
+import 'child_mascot.dart';
+import 'core/widgets/mazid_widgets.dart' show MazidMascot, MazidAssets;
+import 'package:flutter/services.dart';
 import 'child_now_card.dart';
 import 'child_tests.dart';
 import 'core/pin_guard.dart';
@@ -221,6 +226,22 @@ Set<int> get achievedRewardIds =>
 
   int _nextTaskId = 5;
   int points = 0;
+
+  /// A short message from the parent, shown on the child's home screen.
+  String parentNote = '';
+
+  static const maxNoteLength = 120;
+
+  /// Saves the parent's message ([note] may be empty to remove it).
+  void setParentNote(String note) {
+    parentNote = note.trim();
+    if (parentNote.length > maxNoteLength) {
+      parentNote = parentNote.substring(0, maxNoteLength);
+    }
+    _saveData();
+    notifyListeners();
+  }
+
   String? _mood;
 final List<MoodEntry> moodHistory = [];
   String? get mood => _mood;
@@ -341,6 +362,7 @@ void addObservation({
 
   void _resetToDefaults() {
     points = 0;
+    parentNote = '';
     _nextRewardId = 1;
     _nextTaskId = 5;
     _mood = null;
@@ -381,6 +403,7 @@ void addObservation({
       final json = jsonDecode(raw) as Map<String, dynamic>;
 
       points = json['points'] as int? ?? 0;
+      parentNote = json['parentNote'] as String? ?? '';
       _nextRewardId = json['nextRewardId'] as int? ?? 1;
 
 rewards
@@ -503,6 +526,7 @@ Map<String, dynamic> linkData() => {
       'rewards': rewards.map((reward) => reward.toJson()).toList(),
       'nextTaskId': _nextTaskId,
       'nextRewardId': _nextRewardId,
+      'note': parentNote,
     };
 
 /// Stores tasks and rewards received from the parent's phone as the data of
@@ -516,6 +540,7 @@ Future<void> importLinkData(int childId, Map<String, dynamic> data) async {
       'rewards': data['rewards'],
       'nextTaskId': data['nextTaskId'],
       'nextRewardId': data['nextRewardId'],
+      'parentNote': data['note'] is String ? data['note'] : '',
     }),
   );
   await loadData(childId: childId);
@@ -559,6 +584,8 @@ Future<void> applySyncedContent(Map<String, dynamic> data) async {
     _lastCompletedAt.removeWhere((id, _) => !ids.contains(id));
     _nextTaskId = data['nextTaskId'] as int? ?? _nextTaskId;
     _nextRewardId = data['nextRewardId'] as int? ?? _nextRewardId;
+    final note = data['note'];
+    parentNote = note is String && note.length <= maxNoteLength ? note : '';
     _updateAchievedRewards();
 
     await _saveData();
@@ -575,6 +602,7 @@ Future<void> _saveData() async {
 
   final json = {
     'points': points,
+    'parentNote': parentNote,
     'nextTaskId': _nextTaskId,
     'mood': _mood,
 'moodHistory': moodHistory.map((entry) => entry.toJson()).toList(),
@@ -1120,11 +1148,18 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             ),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Hi, ${widget.child.name}!', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                Text('${greetingFor(DateTime.now())}, ${widget.child.name}!', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 const Text('Small steps make big progress.', style: TextStyle(color: Colors.white, height: 1.4)),
               ])),
-              const Icon(Icons.emoji_events_rounded, size: 58, color: Colors.white),
+              MazidMascot(
+                asset: mascotFor(
+                  allDone: data.tasks.isNotEmpty &&
+                      data.completedCount == data.tasks.length,
+                  hasPoints: data.points > 0,
+                ),
+                size: 70,
+              ),
             ]),
           ),
           const SizedBox(height: 16),
@@ -1132,6 +1167,19 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             plan: NowNext.of(data.tasks, data.isCompleted),
             onOpen: () => open(const ChildTasksScreen()),
           ),
+          if (data.parentNote.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _parentNoteCard(data.parentNote),
+          ],
+          if (NextGoal.of(data.rewards, data.points, data.hasAchievedReward)
+              case final goal?) ...[
+            const SizedBox(height: 12),
+            NextGoalCard(
+              goal: goal,
+              points: data.points,
+              onOpen: () => open(const ChildRewardsScreen()),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: _statCard(Icons.stars_rounded,
@@ -1280,10 +1328,8 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
 
                               if (success && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Awesome! +${task.points} points',
-                                    ),
+                                  celebrationSnackBar(
+                                    'Awesome! +${task.points} points',
                                   ),
                                 );
                               }
@@ -1439,6 +1485,8 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
           });
 
           saveCompletedSession();
+          HapticFeedback.mediumImpact();
+          SystemSound.play(SystemSoundType.alert);
         } else {
           setState(() {
             remainingSeconds--;
@@ -1696,14 +1744,13 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
               ),
               child: Column(
                 children: [
-                  Icon(
-                    isFinished
-                        ? Icons.emoji_events_rounded
-                        : Icons.self_improvement_rounded,
-                    color: isFinished
-                        ? const Color(0xFFFFB547)
-                        : childPrimary,
-                    size: 56,
+                  MazidMascot(
+                    asset: isFinished
+                        ? MazidAssets.octopusCelebrate
+                        : isRunning
+                            ? MazidAssets.octopusIdea
+                            : MazidAssets.octopus,
+                    size: 80,
                   ),
 
                   const SizedBox(height: 12),
@@ -1736,26 +1783,9 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
                   const SizedBox(height: 24),
 
-                  Text(
-                    formattedTime,
-                    style: const TextStyle(
-                      fontSize: 58,
-                      fontWeight: FontWeight.bold,
-                      color: childPrimary,
-                      fontFeatures: [],
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 10,
-                      color: childPrimary,
-                      backgroundColor: childBackground,
-                    ),
+                  FocusRing(
+                    remaining: 1 - progress,
+                    label: formattedTime,
                   ),
 
                   const SizedBox(height: 24),
@@ -3061,6 +3091,19 @@ Widget _primaryButton(String label, IconData icon, VoidCallback? onPressed) =>
         ),
       ),
     );
+
+Widget _parentNoteCard(String note) => Container(
+  padding: const EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    color: const Color(0xFFFFF4E0),
+    borderRadius: BorderRadius.circular(20),
+  ),
+  child: Row(children: [
+    const Icon(Icons.favorite_rounded, color: Color(0xFFE88EB3)),
+    const SizedBox(width: 12),
+    Expanded(child: Text(note, style: const TextStyle(color: childText, fontSize: 15, height: 1.4))),
+  ]),
+);
 
 Widget _statCard(IconData icon, String value, String label, Color color) => Container(
   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),

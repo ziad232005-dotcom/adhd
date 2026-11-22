@@ -62,6 +62,7 @@ class ChildLink {
                 'rewards': rewards,
                 'nextTaskId': data['nextTaskId'],
                 'nextRewardId': data['nextRewardId'],
+                'note': data['note'],
               },
             }),
           ),
