@@ -530,22 +530,55 @@ class MazidPasswordChecklist extends StatelessWidget {
       builder: (context, value, _) {
         final text = value.text;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _rule(
-              'At least ${MazidPasswordPolicy.minLength} characters',
-              MazidPasswordPolicy.hasMinLength(text),
-            ),
-            _rule(
-              'Starts with a capital letter',
-              MazidPasswordPolicy.startsWithCapital(text),
-            ),
-            _rule(
-              'Has a special character (. # @ !)',
-              MazidPasswordPolicy.hasSpecialCharacter(text),
-            ),
-          ],
+        final rules = [
+          (
+            'At least ${MazidPasswordPolicy.minLength} characters',
+            MazidPasswordPolicy.hasMinLength(text),
+          ),
+          (
+            'Starts with a capital letter',
+            MazidPasswordPolicy.startsWithCapital(text),
+          ),
+          (
+            'Has a special character (. # @ !)',
+            MazidPasswordPolicy.hasSpecialCharacter(text),
+          ),
+        ];
+        final done = rules.where((r) => r.$2).length;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+          decoration: BoxDecoration(
+            color: MazidColors.success.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  for (var i = 0; i < rules.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 6),
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: i < done
+                              ? MazidColors.success
+                              : MazidColors.textMuted.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 4),
+              for (final rule in rules) _rule(rule.$1, rule.$2),
+            ],
+          ),
         );
       },
     );
@@ -555,17 +588,37 @@ class MazidPasswordChecklist extends StatelessWidget {
     final color = satisfied ? MazidColors.success : MazidColors.textMuted;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.only(top: 8),
       child: Row(
         children: [
-          Icon(
-            satisfied ? Icons.check_circle : Icons.radio_button_unchecked,
-            size: 16,
-            color: color,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: satisfied ? MazidColors.success : Colors.transparent,
+              border: Border.all(
+                color: satisfied
+                    ? MazidColors.success
+                    : MazidColors.textMuted.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+            ),
+            child: satisfied
+                ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                : null,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: 12, color: color)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: color,
+                fontWeight: satisfied ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
           ),
         ],
       ),
