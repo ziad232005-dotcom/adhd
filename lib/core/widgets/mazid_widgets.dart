@@ -585,36 +585,39 @@ class MazidPasswordChecklist extends StatelessWidget {
   }
 
   Widget _rule(String label, bool satisfied) {
-    final color = satisfied ? MazidColors.success : MazidColors.textMuted;
+    final color = satisfied ? MazidColors.success : Colors.black87;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 7),
       child: Row(
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: satisfied ? MazidColors.success : Colors.transparent,
-              border: Border.all(
-                color: satisfied
-                    ? MazidColors.success
-                    : MazidColors.textMuted.withValues(alpha: 0.4),
-                width: 1.5,
-              ),
+          // A solid dark dot, so it does not look like a choice to pick.
+          // It turns into a green check once the rule is met.
+          SizedBox(
+            width: 16,
+            child: Center(
+              child: satisfied
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: MazidColors.success,
+                    )
+                  : Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black87,
+                      ),
+                    ),
             ),
-            child: satisfied
-                ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
-                : null,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 11.5,
                 color: color,
                 fontWeight: satisfied ? FontWeight.w600 : FontWeight.normal,
               ),
