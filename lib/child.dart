@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'child_calm.dart';
-import 'child_ambient_button.dart';
-import 'core/ambient.dart';
 import 'core/chime.dart';
 import 'child_focus_ring.dart';
 import 'child_goal_card.dart';
@@ -1409,7 +1407,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
   @override
   void dispose() {
     timer?.cancel();
-    Ambient.instance.stop();
     _customMinutesController.dispose();
     super.dispose();
   }
@@ -1470,7 +1467,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
     setState(() {
       isRunning = true;
     });
-    Ambient.instance.start();
 
     timer = Timer.periodic(
       const Duration(seconds: 1),
@@ -1491,7 +1487,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
           saveCompletedSession();
           HapticFeedback.mediumImpact();
-          Ambient.instance.stop();
           Chime.play();
         } else {
           setState(() {
@@ -1504,7 +1499,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
   void pauseTimer() {
     timer?.cancel();
-    Ambient.instance.pause();
 
     setState(() {
       isRunning = false;
@@ -1513,7 +1507,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
   void resetTimer() {
     timer?.cancel();
-    Ambient.instance.stop();
 
     setState(() {
       remainingSeconds = selectedMinutes * 60;
@@ -1573,7 +1566,6 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
         backgroundColor: childBackground,
         foregroundColor: childText,
         elevation: 0,
-        actions: const [AmbientButton(), SizedBox(width: 8)],
       ),
       body: SafeArea(
         child: ListView(
