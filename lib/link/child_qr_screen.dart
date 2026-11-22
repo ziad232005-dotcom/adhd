@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -9,6 +11,7 @@ import '../parent/parent_ui.dart';
 import 'child_link.dart';
 import '../core/api_client.dart';
 import '../sync/result_sync.dart';
+import '../sync/task_sync.dart';
 import 'link_api.dart';
 
 /// The parent's side: shows the QR code the child scans on their own phone.
@@ -48,6 +51,7 @@ class _ChildQrScreenState extends State<ChildQrScreen> {
     }
 
     final syncKey = await SyncKeys.forChild(child.id);
+    unawaited(TaskSync.instance.push(child.id, ChildAppState.instance.linkData()));
 
     if (!mounted) return;
     final link = ChildLink(

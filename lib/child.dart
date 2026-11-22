@@ -519,7 +519,56 @@ Future<void> importLinkData(int childId, Map<String, dynamic> data) async {
   await loadData(childId: childId);
 }
 
+/// Called after the data is saved, with the child it belongs to and a copy
+/// of the tasks and rewards. The parent's phone uses it to send them on.
+void Function(int? childId, Map<String, dynamic> content)? onContentSaved;
+
+/// Replaces the tasks and rewards with the parent's newest copy. Points,
+/// moods and what the child already finished stay. Never throws.
+Future<void> applySyncedContent(Map<String, dynamic> data) async {
+  final taskItems = data['tasks'];
+  final rewardItems = data['rewards'];
+  if (taskItems is! List || rewardItems is! List) return;
+
+  try {
+    final newTasks = taskItems.map((item) {
+      final map = Map<String, dynamic>.from(item as Map);
+      return ChildTask(
+        map['id'] as int,
+        map['title'] as String,
+        map['subtitle'] as String,
+        Icons.task_alt_rounded,
+        map['points'] as int,
+        minutes: map['minutes'] as int?,
+      );
+    }).toList();
+    final newRewards = rewardItems
+        .map((item) => ChildReward.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+
+    tasks
+      ..clear()
+      ..addAll(newTasks);
+    rewards
+      ..clear()
+      ..addAll(newRewards);
+
+    final ids = tasks.map((task) => task.id).toSet();
+    _lastCompletedAt.removeWhere((id, _) => !ids.contains(id));
+    _nextTaskId = data['nextTaskId'] as int? ?? _nextTaskId;
+    _nextRewardId = data['nextRewardId'] as int? ?? _nextRewardId;
+    _updateAchievedRewards();
+
+    await _saveData();
+    notifyListeners();
+  } catch (e) {
+    debugPrint('Could not apply the parent\'s tasks: $e');
+  }
+}
+
 Future<void> _saveData() async {
+  final childId = _activeChildId;
+  final content = linkData();
   final prefs = await SharedPreferences.getInstance();
 
   final json = {
@@ -554,6 +603,7 @@ Future<void> _saveData() async {
  };
 
   await prefs.setString(_activeKey, jsonEncode(json));
+  onContentSaved?.call(childId, content);
 }
 
 void addFocusSession(int durationMinutes) {

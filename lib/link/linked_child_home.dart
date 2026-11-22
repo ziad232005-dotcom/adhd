@@ -4,6 +4,7 @@ import '../child.dart';
 import '../main.dart';
 import '../parent/parent_store.dart';
 import '../sync/result_sync.dart';
+import '../sync/task_sync.dart';
 
 /// The only screen of a phone that belongs to a child. Leaving it needs the
 /// parent's code.
@@ -16,12 +17,31 @@ class LinkedChildHome extends StatefulWidget {
   State<LinkedChildHome> createState() => _LinkedChildHomeState();
 }
 
-class _LinkedChildHomeState extends State<LinkedChildHome> {
+class _LinkedChildHomeState extends State<LinkedChildHome>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    // Results played without internet are sent now.
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+
+  /// Sends results played without internet and reads the parent's newest
+  /// tasks and rewards.
+  void _refresh() {
     ResultSync.instance.flush();
+    TaskSync.instance.pullIfLinked();
   }
 
   @override

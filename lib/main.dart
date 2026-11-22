@@ -14,6 +14,7 @@ import 'core/mazid_theme.dart';
 import 'core/widgets/mazid_widgets.dart';
 import 'parent/parent_store.dart';
 import 'shadows/shadow_draft_store.dart';
+import 'sync/task_sync.dart';
 import 'shadows/verification_form_screen.dart';
 
 
@@ -28,6 +29,8 @@ Future<void> main() async {
     childId: ChildDevice.instance.childId ??
         ParentStore.instance.selectedChild?.id,
   );
+
+  TaskSync.instance.start();
 
   runApp(const ADHDCompanionApp());
 }
