@@ -53,13 +53,13 @@ class SyncKeys {
 /// The parent's phone pulls them, adds them to the child's records and
 /// makes the PDF in the reports folder.
 class ResultSync {
-  ResultSync({ApiClient client = const ApiClient()}) : _client = client;
+  ResultSync({this.client = const ApiClient()});
 
   static final ResultSync instance = ResultSync();
 
   static const _pendingKey = 'mazid_sync_pending';
 
-  final ApiClient _client;
+  final ApiClient client;
   bool _flushing = false;
 
   // Child's phone ---------------------------------------------------------
@@ -101,7 +101,7 @@ class ResultSync {
       while (pending.isNotEmpty) {
         final item = jsonDecode(pending.first) as Map<String, dynamic>;
         try {
-          await _client.post('/api/sync/push', {'key': key, ...item});
+          await client.post('/api/sync/push', {'key': key, ...item});
         } on ApiException {
           break;
         }
@@ -125,7 +125,7 @@ class ResultSync {
     final key = await SyncKeys.existing(child.id);
     if (key == null) return 0;
 
-    final body = await _client.post('/api/sync/pull', {'key': key});
+    final body = await client.post('/api/sync/pull', {'key': key});
     final results = body['results'];
     if (results is! List) return 0;
 
