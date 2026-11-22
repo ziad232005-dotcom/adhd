@@ -6,6 +6,7 @@ import 'child_tests.dart';
 import 'core/pin_guard.dart';
 import 'assessments/cars_screen.dart';
 import 'link/child_device.dart';
+import 'link/parent_code_dialog.dart';
 import 'tova/tova_screens.dart';
 import 'parent/parent_store.dart';
 
@@ -947,37 +948,8 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
 
   int _tab = 0;
 
-  /// Asks for the parent's 6 digits. Returns what was typed, or null.
-  Future<String?> _readParentCode(String action) async {
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Parent code'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          maxLength: 6,
-          decoration: const InputDecoration(
-            hintText: 'The 6 digits shown on the parent phone',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(action),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    return code;
-  }
+  Future<String?> _readParentCode(String action) =>
+      ParentCodeDialog.show(context, action);
 
   Future<void> _askParentCode() async {
     final code = await _readParentCode('Leave child mode');
