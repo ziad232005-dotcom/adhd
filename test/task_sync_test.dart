@@ -37,7 +37,8 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({'mazid_child_sync_3': key});
-    await ChildDevice.instance.unlock('000000');
+    // Loading empty storage makes the phone not linked to any child.
+    await ChildDevice.instance.load();
   });
 
   test('the parent sends the copy once, and again only when it changes',
