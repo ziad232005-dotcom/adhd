@@ -11,8 +11,16 @@ class Chime {
 
   static AudioPlayer? _player;
 
+  /// The player looks inside an "assets/" folder unless told otherwise; the
+  /// sound is declared as "sounds/chime.wav" in pubspec.yaml.
+  static bool _ready = false;
+
   static Future<void> play() async {
     try {
+      if (!_ready) {
+        AudioCache.instance = AudioCache(prefix: '');
+        _ready = true;
+      }
       final player = _player ??= AudioPlayer();
       await player.stop();
       await player.play(AssetSource(asset), volume: 0.6);
