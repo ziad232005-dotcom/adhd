@@ -140,7 +140,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   static const _emptyText = {
     ReportKind.weekly: 'Created automatically every week.',
     ReportKind.cars: 'Saved here when you finish a CARS assessment.',
-    ReportKind.tova: 'Saved here when your child finishes a TOVA activity.',
+    ReportKind.tova: 'Saved here when your child finishes a TOVA test.',
     ReportKind.doctor: 'Tap "Make doctor report" above.',
   };
 

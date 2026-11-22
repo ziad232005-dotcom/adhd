@@ -27,7 +27,7 @@ extension TovaModeInfo on TovaMode {
         TovaMode.training2 => 'Training Level 2',
         TovaMode.training3 => 'Training Level 3',
         TovaMode.practice => 'Standard Practice',
-        TovaMode.full => 'Full Attention Activity',
+        TovaMode.full => 'Full Attention Test',
       };
 
   String get subtitle => switch (this) {
@@ -195,7 +195,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
         backgroundColor: _tovaBg,
         foregroundColor: _tovaStrong,
         elevation: 0,
-        title: const Text('Attention Activity'),
+        title: const Text('Attention Test'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -288,7 +288,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   _TovaSectionCard(
-                    title: 'Choose an activity',
+                    title: 'Choose a test',
                     child: Column(
                       children: TovaMode.values.map((mode) {
                         final selected = mode == _mode;
@@ -350,7 +350,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                       border: Border.all(color: _tovaWarn.withValues(alpha: 0.4)),
                     ),
                     child: const Text(
-                      'Important: this is a TOVA-style educational activity, not the licensed TOVA assessment. Its scores are approximate and must not be used to diagnose ADHD or replace a qualified clinician.',
+                      'Important: this is a TOVA-style educational test, not the licensed TOVA assessment. Its scores are approximate and must not be used to diagnose ADHD or replace a qualified clinician.',
                       style: TextStyle(color: _tovaInk, height: 1.55),
                     ),
                   ),
@@ -364,7 +364,7 @@ class _TovaWelcomeScreenState extends State<TovaWelcomeScreen> {
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     title: const Text(
-                      'A parent or guardian has reviewed this information and will supervise the activity.',
+                      'A parent or guardian has reviewed this information and will supervise the test.',
                       style: TextStyle(color: _tovaInk, height: 1.4),
                     ),
                   ),
@@ -807,7 +807,7 @@ void _respond() {
                               foregroundColor: Colors.white,
                               minimumSize: const Size.fromHeight(48),
                             ),
-                            child: const Text('Start activity'),
+                            child: const Text('Start test'),
                           ),
                           const SizedBox(height: 8),
                           TextButton(
@@ -890,7 +890,7 @@ void _respond() {
                           const Icon(Icons.pause_circle_outline,
                               size: 44, color: _tovaBrand),
                           const SizedBox(height: 12),
-                          const Text('Activity paused',
+                          const Text('Test paused',
                               style: TextStyle(
                                   color: _tovaStrong,
                                   fontSize: 23,
@@ -910,7 +910,7 @@ void _respond() {
                                   backgroundColor: _tovaBrand,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 14)),
-                              child: const Text('Resume activity'),
+                              child: const Text('Resume test'),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -928,7 +928,7 @@ void _respond() {
                           ),
                           TextButton(
                             onPressed: _abortRun,
-                            child: const Text('Discard activity',
+                            child: const Text('Discard test',
                                 style: TextStyle(color: _tovaBad)),
                           ),
                         ],
@@ -1044,7 +1044,7 @@ class TovaResultsScreen extends StatelessWidget {
         backgroundColor: _tovaBg,
         foregroundColor: _tovaStrong,
         elevation: 0,
-        title: const Text('Activity report'),
+        title: const Text('Test report'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -1158,7 +1158,7 @@ class TovaResultsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('Back to activity menu'),
+                    label: const Text('Back to test menu'),
                   ),
                 ],
               ),

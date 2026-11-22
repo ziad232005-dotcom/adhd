@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'child.dart' show childBackground, childPrimary, childText;
 import 'parent/parent_store.dart';
 
-/// The "Tests" tab on the child's own screen: the attention game, and the
+/// The "Tests" tab on the child's own screen: the attention test, and the
 /// questionnaire that only a parent can open.
 class ChildTestsScreen extends StatelessWidget {
   const ChildTestsScreen({
@@ -36,10 +36,10 @@ class ChildTestsScreen extends StatelessWidget {
           _TestCard(
             icon: Icons.center_focus_strong_rounded,
             color: const Color(0xFF5C9FE8),
-            title: 'Attention game (TOVA)',
-            text: 'A short game that needs your full attention. '
+            title: 'Attention test (TOVA)',
+            text: 'A short test that needs your full attention. '
                 'Tap when you see the signal.',
-            action: 'Play',
+            action: 'Start',
             onTap: onOpenTova,
           ),
           _TestCard(

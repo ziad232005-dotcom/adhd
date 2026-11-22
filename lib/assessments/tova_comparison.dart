@@ -108,7 +108,7 @@ class TovaComparison {
   }
 
   String get headline => switch (trend) {
-        TovaTrend.first => 'This is the first saved result for this activity.',
+        TovaTrend.first => 'This is the first saved result for this test.',
         TovaTrend.improved => 'Better than last time.',
         TovaTrend.mixed => 'Some measures are better and some are worse.',
         TovaTrend.stable => 'About the same as last time.',

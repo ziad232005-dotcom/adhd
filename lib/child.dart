@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'child_calm.dart';
+import 'child_now_card.dart';
 import 'child_tests.dart';
 import 'core/pin_guard.dart';
 import 'assessments/cars_screen.dart';
@@ -1126,6 +1128,11 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             ]),
           ),
           const SizedBox(height: 16),
+          NowNextCard(
+            plan: NowNext.of(data.tasks, data.isCompleted),
+            onOpen: () => open(const ChildTasksScreen()),
+          ),
+          const SizedBox(height: 16),
           Row(children: [
             Expanded(child: _statCard(Icons.stars_rounded,
              '${data.points}', 'My points', const Color(0xFFFFB547),
@@ -1154,12 +1161,13 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
 ),
 
           _navCard(
-            'TOVA Attention Activity',
-            'A short game that needs your full attention.',
+            'TOVA Attention Test',
+            'A short test that needs your full attention.',
             Icons.center_focus_strong_rounded,
             const Color(0xFF5C9FE8),
             () => open(TovaWelcomeScreen(childId: widget.child.id)),
           ),
+          _navCard('Calm Minute', 'Breathe slowly with the octopus.', Icons.self_improvement_rounded, const Color(0xFF7BC8A4), () => open(const CalmScreen())),
           _navCard('How Do I Feel?', data.mood == null ? 'Choose the feeling that fits you.' : 'Today I feel ${data.mood}.', Icons.mood_rounded, const Color(0xFFFFA45B), () => open(const ChildCheckInScreen())),
           _navCard('My Progress', 'See what you have achieved.', Icons.insights_rounded, const Color(0xFF5C9FE8), () => open(const ChildProgressScreen())),
           _navCard('My Rewards', 'Your points are worth celebrating!', Icons.card_giftcard_rounded, const Color(0xFFE88EB3), () => open(const ChildRewardsScreen())),

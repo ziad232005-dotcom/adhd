@@ -142,7 +142,7 @@ class _TovaHubScreenState extends State<TovaHubScreen> {
                 ],
                 const SizedBox(height: 12),
                 const Text(
-                  'This activity is not a diagnosis. Share the results with '
+                  'This test is not a diagnosis. Share the results with '
                   'a clinician.',
                   style: TextStyle(color: ParentUi.muted, fontSize: 12.5),
                 ),

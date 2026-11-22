@@ -51,7 +51,7 @@ class TovaPdf {
           _details(current),
           pw.SizedBox(height: 16),
           PdfStyle.notice(
-            'These are descriptive results from a short activity. They are '
+            'These are descriptive results from a short test. They are '
             'not official TOVA scores, do not show whether a child has ADHD, '
             'and should not be used to decide on treatment or medication. '
             'Share them with a clinician.',
@@ -72,7 +72,7 @@ class TovaPdf {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(
-              'Attention activity report',
+              'Attention test report',
               style: const pw.TextStyle(fontSize: 20, color: PdfStyle.dark),
             ),
             pw.SizedBox(height: 4),
@@ -196,7 +196,7 @@ class TovaPdf {
         if (c.previous != null) ...[
           pw.SizedBox(height: 3),
           pw.Text(
-            'Last activity: ${formatDate(c.previous!.takenAt)}',
+            'Last test: ${formatDate(c.previous!.takenAt)}',
             style: const pw.TextStyle(fontSize: 9.5, color: PdfStyle.muted),
           ),
           pw.SizedBox(height: 8),
