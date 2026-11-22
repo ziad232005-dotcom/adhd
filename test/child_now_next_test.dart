@@ -56,8 +56,9 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Breathe in'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 4));
-    // The next phase starts after the animation's future completes.
+    // The animation is done only after its full length has passed, so go a
+    // little further, then let the next phase start.
+    await tester.pump(const Duration(seconds: 4, milliseconds: 500));
     await tester.pump();
     expect(find.text('Breathe out'), findsOneWidget);
 
