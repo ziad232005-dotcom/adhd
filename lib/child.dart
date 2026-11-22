@@ -1023,7 +1023,22 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
       appBar: _tab != 0
           ? null
           : AppBar(
-        title: const Text('MAZID', style: TextStyle(color: childText, fontWeight: FontWeight.bold)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'images/image.png',
+              height: 36,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'MAZID',
+              style: TextStyle(color: childText, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
         backgroundColor: childBackground,
         elevation: 0,
         actions: [
