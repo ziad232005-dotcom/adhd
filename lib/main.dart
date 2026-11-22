@@ -52,14 +52,15 @@ class ADHDCompanionApp extends StatelessWidget {
     );
   }
 
-  /// A phone linked to a child opens on that child's screen only.
+  /// Every phone opens on the welcome screen. A phone linked to a child
+  /// shows only a button to the child's screen there.
   Widget _firstScreen() {
     final linkedId = ChildDevice.instance.childId;
     if (linkedId != null) {
       final linked = ParentStore.instance.children
           .where((c) => c.id == linkedId)
           .firstOrNull;
-      if (linked != null) return LinkedChildHome(child: linked);
+      if (linked != null) return WelcomeScreen(linkedChild: linked);
     }
     return const WelcomeScreen();
   }
@@ -68,7 +69,10 @@ class ADHDCompanionApp extends StatelessWidget {
 // ---------------- WELCOME SCREEN ----------------
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.linkedChild});
+
+  /// Set on a child's own phone: only the way into the child's screen shows.
+  final ParentChild? linkedChild;
 
   @override
   Widget build(BuildContext context) {
@@ -114,41 +118,53 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 40),
-          MazidPrimaryButton(
-            label: 'Get Started',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const CreateAccountScreen(),
+          if (linkedChild case final child?)
+            MazidPrimaryButton(
+              label: "Open ${child.name}'s space",
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LinkedChildHome(child: child),
+                ),
+              ),
+            )
+          else ...[
+            MazidPrimaryButton(
+              label: 'Get Started',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CreateAccountScreen(),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          MazidOutlineButton(
-            label: 'Sign In',
-            borderColor: MazidColors.primary,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const EmailSignInScreen(),
+            const SizedBox(height: 12),
+            MazidOutlineButton(
+              label: 'Sign In',
+              borderColor: MazidColors.primary,
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EmailSignInScreen(),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ScanChildQrScreen()),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ScanChildQrScreen()),
+              ),
+              child: const Text('I am a child - scan my code'),
             ),
-            child: const Text('I am a child - scan my code'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const VerificationFormScreen()),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VerificationFormScreen()),
+              ),
+              child: const Text('I am a Shadow Teacher - join the list'),
             ),
-            child: const Text('I am a Shadow Teacher - join the list'),
-          ),
+          ],
           const SizedBox(height: 48),
         ],
       ),
