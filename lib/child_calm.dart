@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'child.dart' show childBackground, childPrimary, childText;
+import 'core/chime.dart';
 import 'core/widgets/mazid_widgets.dart';
 
 /// A one-minute breathing exercise: the octopus grows while the child
@@ -53,6 +54,7 @@ class _CalmScreenState extends State<CalmScreen>
       setState(() => _round++);
     }
 
+    if (_running && mounted) Chime.play();
     if (mounted) setState(() => _running = false);
   }
 

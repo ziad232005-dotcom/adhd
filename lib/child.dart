@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'child_calm.dart';
+import 'core/chime.dart';
 import 'child_focus_ring.dart';
 import 'child_goal_card.dart';
 import 'child_mascot.dart';
@@ -1486,7 +1487,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
           saveCompletedSession();
           HapticFeedback.mediumImpact();
-          SystemSound.play(SystemSoundType.alert);
+          Chime.play();
         } else {
           setState(() {
             remainingSeconds--;
