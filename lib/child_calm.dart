@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'child.dart' show childBackground, childPrimary, childText;
+import 'child_ambient_button.dart';
+import 'core/ambient.dart';
 import 'core/chime.dart';
 import 'core/widgets/mazid_widgets.dart';
 
@@ -32,6 +34,7 @@ class _CalmScreenState extends State<CalmScreen>
 
   @override
   void dispose() {
+    Ambient.instance.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -41,6 +44,7 @@ class _CalmScreenState extends State<CalmScreen>
       _running = true;
       _round = 0;
     });
+    Ambient.instance.start();
 
     while (_running && _round < CalmScreen.rounds) {
       setState(() => _breathingIn = true);
@@ -54,11 +58,13 @@ class _CalmScreenState extends State<CalmScreen>
       setState(() => _round++);
     }
 
+    Ambient.instance.stop();
     if (_running && mounted) Chime.play();
     if (mounted) setState(() => _running = false);
   }
 
   void _stop() {
+    Ambient.instance.stop();
     _controller.stop();
     setState(() => _running = false);
   }
@@ -77,6 +83,7 @@ class _CalmScreenState extends State<CalmScreen>
         backgroundColor: childBackground,
         elevation: 0,
         iconTheme: const IconThemeData(color: childPrimary),
+        actions: const [AmbientButton(), SizedBox(width: 8)],
       ),
       body: SafeArea(
         child: Padding(
