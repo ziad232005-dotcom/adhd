@@ -228,21 +228,6 @@ Set<int> get achievedRewardIds =>
   int _nextTaskId = 5;
   int points = 0;
 
-  /// A short message from the parent, shown on the child's home screen.
-  String parentNote = '';
-
-  static const maxNoteLength = 120;
-
-  /// Saves the parent's message ([note] may be empty to remove it).
-  void setParentNote(String note) {
-    parentNote = note.trim();
-    if (parentNote.length > maxNoteLength) {
-      parentNote = parentNote.substring(0, maxNoteLength);
-    }
-    _saveData();
-    notifyListeners();
-  }
-
   String? _mood;
 final List<MoodEntry> moodHistory = [];
   String? get mood => _mood;
@@ -363,7 +348,6 @@ void addObservation({
 
   void _resetToDefaults() {
     points = 0;
-    parentNote = '';
     _nextRewardId = 1;
     _nextTaskId = 5;
     _mood = null;
@@ -404,7 +388,6 @@ void addObservation({
       final json = jsonDecode(raw) as Map<String, dynamic>;
 
       points = json['points'] as int? ?? 0;
-      parentNote = json['parentNote'] as String? ?? '';
       _nextRewardId = json['nextRewardId'] as int? ?? 1;
 
 rewards
@@ -527,7 +510,6 @@ Map<String, dynamic> linkData() => {
       'rewards': rewards.map((reward) => reward.toJson()).toList(),
       'nextTaskId': _nextTaskId,
       'nextRewardId': _nextRewardId,
-      'note': parentNote,
     };
 
 /// Stores tasks and rewards received from the parent's phone as the data of
@@ -541,7 +523,6 @@ Future<void> importLinkData(int childId, Map<String, dynamic> data) async {
       'rewards': data['rewards'],
       'nextTaskId': data['nextTaskId'],
       'nextRewardId': data['nextRewardId'],
-      'parentNote': data['note'] is String ? data['note'] : '',
     }),
   );
   await loadData(childId: childId);
@@ -585,8 +566,6 @@ Future<void> applySyncedContent(Map<String, dynamic> data) async {
     _lastCompletedAt.removeWhere((id, _) => !ids.contains(id));
     _nextTaskId = data['nextTaskId'] as int? ?? _nextTaskId;
     _nextRewardId = data['nextRewardId'] as int? ?? _nextRewardId;
-    final note = data['note'];
-    parentNote = note is String && note.length <= maxNoteLength ? note : '';
     _updateAchievedRewards();
 
     await _saveData();
@@ -603,7 +582,6 @@ Future<void> _saveData() async {
 
   final json = {
     'points': points,
-    'parentNote': parentNote,
     'nextTaskId': _nextTaskId,
     'mood': _mood,
 'moodHistory': moodHistory.map((entry) => entry.toJson()).toList(),
@@ -1168,10 +1146,6 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             plan: NowNext.of(data.tasks, data.isCompleted),
             onOpen: () => open(const ChildTasksScreen()),
           ),
-          if (data.parentNote.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _parentNoteCard(data.parentNote),
-          ],
           if (NextGoal.of(data.rewards, data.points, data.hasAchievedReward)
               case final goal?) ...[
             const SizedBox(height: 12),
@@ -3092,19 +3066,6 @@ Widget _primaryButton(String label, IconData icon, VoidCallback? onPressed) =>
         ),
       ),
     );
-
-Widget _parentNoteCard(String note) => Container(
-  padding: const EdgeInsets.all(16),
-  decoration: BoxDecoration(
-    color: const Color(0xFFFFF4E0),
-    borderRadius: BorderRadius.circular(20),
-  ),
-  child: Row(children: [
-    const Icon(Icons.favorite_rounded, color: Color(0xFFE88EB3)),
-    const SizedBox(width: 12),
-    Expanded(child: Text(note, style: const TextStyle(color: childText, fontSize: 15, height: 1.4))),
-  ]),
-);
 
 Widget _statCard(IconData icon, String value, String label, Color color) => Container(
   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),

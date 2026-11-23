@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:adhd/child.dart';
+import 'package:adhd/child.dart' show ChildReward;
 import 'package:adhd/child_focus_ring.dart';
 import 'package:adhd/child_goal_card.dart';
 import 'package:adhd/child_mascot.dart';
@@ -50,35 +49,5 @@ void main() {
     expect(find.text('Ice cream'), findsOneWidget);
     expect(find.text('30 points left'), findsOneWidget);
     expect(find.text('05:00'), findsOneWidget);
-  });
-
-  test('the parent\'s message is kept and shortened', () async {
-    SharedPreferences.setMockInitialValues({});
-    final data = ChildAppState.instance;
-
-    data.setParentNote('  Proud of you  ');
-    expect(data.parentNote, 'Proud of you');
-
-    data.setParentNote('x' * 500);
-    expect(data.parentNote.length, ChildAppState.maxNoteLength);
-
-    data.setParentNote('');
-    expect(data.parentNote, isEmpty);
-  });
-
-  test('the parent\'s message reaches the child with the synced copy',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    final data = ChildAppState.instance;
-
-    await data.applySyncedContent({
-      'tasks': <Map<String, dynamic>>[],
-      'rewards': <Map<String, dynamic>>[],
-      'nextTaskId': 1,
-      'nextRewardId': 1,
-      'note': 'Well done today',
-    });
-
-    expect(data.parentNote, 'Well done today');
   });
 }

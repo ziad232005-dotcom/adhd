@@ -13,7 +13,6 @@ import '../screens/track_behavior.dart';
 import '../shadows/shadow_directory_screen.dart';
 import '../tova/tova_hub_screen.dart';
 import 'add_child_screen.dart';
-import 'note_dialog.dart';
 import 'parent_insights.dart';
 import 'parent_store.dart';
 import 'parent_ui.dart';
@@ -103,16 +102,6 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
     _store.updateChild(child.copyWith(pin: pin));
   }
 
-  Future<void> _editNote(ParentChild child) async {
-    final note = await NoteDialog.show(
-      context,
-      current: _data.parentNote,
-      name: child.name,
-    );
-    if (note == null || !mounted) return;
-    _data.setParentNote(note);
-  }
-
   /// Where the parent hands the phone to the child: shows the child's
   /// PIN and opens the child's own screen.
   Widget _childMode(ParentChild child) {
@@ -163,20 +152,6 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
             onPressed: () => _open(ChildQrScreen(child: child)),
             icon: const Icon(Icons.qr_code_2_rounded),
             label: Text('QR for ${child.name}’s own phone'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: ParentUi.purple,
-              minimumSize: const Size.fromHeight(50),
-              side: const BorderSide(color: ParentUi.purple),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            onPressed: () => _editNote(child),
-            icon: const Icon(Icons.favorite_border_rounded),
-            label: Text('Message for ${child.name}'),
           ),
         ],
       ),
