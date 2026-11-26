@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'child.dart';
+import 'task_catalog_picker.dart';
 
 const Color taskPurple = Color(0xFF7566D9);
 const Color taskDarkPurple = Color(0xFF30285E);
@@ -140,6 +141,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
               const SizedBox(height: 26),
+
+              _label('READY TASKS'),
+              const SizedBox(height: 9),
+              const TaskCatalogPicker(),
+              const SizedBox(height: 18),
+              const Divider(),
+              const SizedBox(height: 10),
+              _label('OR CREATE YOUR OWN'),
+              const SizedBox(height: 18),
 
               _label('TASK NAME'),
               const SizedBox(height: 9),

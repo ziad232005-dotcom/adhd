@@ -510,6 +510,15 @@ Map<String, dynamic> linkData() => {
       'rewards': rewards.map((reward) => reward.toJson()).toList(),
       'nextTaskId': _nextTaskId,
       'nextRewardId': _nextRewardId,
+      // The parent confirms tasks, so the child's phone gets the result.
+      'points': points,
+      'lastCompletedAt': _lastCompletedAt.map(
+        (key, value) => MapEntry(key.toString(), value.toIso8601String()),
+      ),
+      'completionHistory': weeklyCompletions
+          .take(40)
+          .map((record) => record.toJson())
+          .toList(),
     };
 
 /// Stores tasks and rewards received from the parent's phone as the data of
@@ -532,8 +541,8 @@ Future<void> importLinkData(int childId, Map<String, dynamic> data) async {
 /// of the tasks and rewards. The parent's phone uses it to send them on.
 void Function(int? childId, Map<String, dynamic> content)? onContentSaved;
 
-/// Replaces the tasks and rewards with the parent's newest copy. Points,
-/// moods and what the child already finished stay. Never throws.
+/// Replaces the tasks, rewards, points and finished tasks with the parent's
+/// newest copy. Moods stay. Never throws.
 Future<void> applySyncedContent(Map<String, dynamic> data) async {
   final taskItems = data['tasks'];
   final rewardItems = data['rewards'];
@@ -561,6 +570,26 @@ Future<void> applySyncedContent(Map<String, dynamic> data) async {
     rewards
       ..clear()
       ..addAll(newRewards);
+
+    // What the parent confirmed. Older copies do not carry it.
+    final syncedPoints = data['points'];
+    if (syncedPoints is int) points = syncedPoints;
+    final syncedDone = data['lastCompletedAt'];
+    if (syncedDone is Map) {
+      _lastCompletedAt
+        ..clear()
+        ..addAll(syncedDone.map(
+          (key, value) =>
+              MapEntry(int.parse(key.toString()), DateTime.parse('$value')),
+        ));
+    }
+    final syncedHistory = data['completionHistory'];
+    if (syncedHistory is List) {
+      completionHistory
+        ..clear()
+        ..addAll(syncedHistory.map((item) =>
+            TaskCompletion.fromJson(Map<String, dynamic>.from(item as Map))));
+    }
 
     final ids = tasks.map((task) => task.id).toSet();
     _lastCompletedAt.removeWhere((id, _) => !ids.contains(id));
@@ -1252,6 +1281,11 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
                 ),
               ),
 
+              const SizedBox(height: 8),
+              const Text(
+                'Your parent checks a task when it is done.',
+                style: TextStyle(color: Color(0xFF6B6687), fontSize: 13),
+              ),
               const SizedBox(height: 14),
 
               ...data.tasks.map((task) {
@@ -1295,29 +1329,12 @@ class _ChildTasksScreenState extends State<ChildTasksScreen> {
           '${task.minutes == null ? '' : ' • ${task.minutes} min'}',
 ),
                     isThreeLine: true,
-                    trailing: IconButton(
-                      onPressed: done
-                          ? null
-                          : () {
-                              final success = data.completeTask(task);
-
-                              if (success && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  celebrationSnackBar(
-                                    'Awesome! +${task.points} points',
-                                  ),
-                                );
-                              }
-                            },
-                      icon: Icon(
-                        done
-                            ? Icons.check_circle_rounded
-                            : Icons.circle_outlined,
-                        size: 30,
-                        color: done
-                            ? const Color(0xFF43B89C)
-                            : childPrimary,
-                      ),
+                    trailing: Icon(
+                      done
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      size: 30,
+                      color: done ? const Color(0xFF43B89C) : childPrimary,
                     ),
                   ),
                 );
