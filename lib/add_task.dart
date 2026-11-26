@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'child.dart';
-import 'core/app_features.dart';
 import 'task_catalog_picker.dart';
 
 const Color taskPurple = Color(0xFF7566D9);
@@ -149,9 +148,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               const SizedBox(height: 18),
               const Divider(),
               const SizedBox(height: 10),
-              if (!AppFeatures.customTasks)
-                const _ComingSoonCard()
-              else ...[
               _label('OR CREATE YOUR OWN'),
               const SizedBox(height: 18),
 
@@ -394,7 +390,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         ),
                 ),
               ),
-              ],
             ],
           ),
         ),
@@ -438,36 +433,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: taskPurple, width: 1.5),
-      ),
-    );
-  }
-}
-
-class _ComingSoonCard extends StatelessWidget {
-  const _ComingSoonCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0EDFF),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.schedule_rounded, color: taskPurple),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Custom tasks - coming soon',
-              style: TextStyle(
-                color: taskDarkPurple,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:adhd/add_task.dart';
 import 'package:adhd/child.dart';
 import 'package:adhd/task_catalog.dart';
 import 'package:adhd/task_catalog_picker.dart';
@@ -52,13 +51,6 @@ void main() {
     expect(data.tasks.length, before + 1);
     expect(data.tasks.last.title, first.title);
     expect(find.byTooltip('Add ${first.title}'), findsNothing);
-  });
-
-  testWidgets('custom tasks show as coming soon', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: AddTaskScreen()));
-
-    expect(find.text('Custom tasks - coming soon'), findsOneWidget);
-    expect(find.text('Save Task'), findsNothing);
   });
 
   testWidgets('the child cannot mark a task as done', (tester) async {
