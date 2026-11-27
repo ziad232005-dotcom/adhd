@@ -177,8 +177,8 @@ class BreathMouthPainter extends CustomPainter {
     // The smile sits here inside the octopus image (374 x 364).
     final cx = size.width * 0.545;
     final cy = size.height * 0.515;
-    final w = size.width * (0.105 + 0.03 * open);
-    final h = size.width * 0.15 * open;
+    final w = size.width * (0.105 + 0.012 * open);
+    final h = size.width * 0.06 * open;
     final left = Offset(cx - w / 2, cy - 2);
     final right = Offset(cx + w / 2, cy - 2);
     const dark = Color(0xFF3A1B5C);
