@@ -89,9 +89,22 @@ class _CalmScreenState extends State<CalmScreen>
                     animation: _controller,
                     builder: (_, child) => Transform.scale(
                       scale: 0.7 + 0.5 * _controller.value,
-                      child: child,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          child!,
+                          // The mouth opens while breathing in, closes out.
+                          SizedBox(
+                            width: _mascotSize,
+                            height: _mascotSize,
+                            child: CustomPaint(
+                              painter: BreathMouthPainter(_controller.value),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const MazidMascot(size: 190),
+                    child: const MazidMascot(size: _mascotSize),
                   ),
                 ),
               ),
@@ -135,4 +148,35 @@ class _CalmScreenState extends State<CalmScreen>
       ),
     );
   }
+}
+
+const double _mascotSize = 190;
+
+/// Draws an animated mouth over the octopus smile.
+/// [open] is 0 (closed smile) to 1 (fully open).
+class BreathMouthPainter extends CustomPainter {
+  const BreathMouthPainter(this.open);
+
+  final double open;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Smile position inside the octopus image (374 x 364).
+    final center = Offset(size.width * 0.548, size.height * 0.515);
+    final w = size.width * 0.115;
+    final h = size.width * 0.13 * open;
+    const dark = Color(0xFF3A1B5C);
+    if (h < 1.5) return; // the drawn smile in the image stays visible
+    final mouth = Rect.fromCenter(center: center.translate(0, h / 2 - 2), width: w * (0.9 + 0.3 * open), height: h);
+    canvas.drawOval(mouth, Paint()..color = dark);
+    final tongue = Rect.fromCenter(
+      center: mouth.center.translate(0, h * 0.22),
+      width: mouth.width * 0.6,
+      height: h * 0.45,
+    );
+    canvas.drawOval(tongue, Paint()..color = const Color(0xFFFF8FB1));
+  }
+
+  @override
+  bool shouldRepaint(BreathMouthPainter old) => old.open != open;
 }
