@@ -7,6 +7,7 @@ import '../add_task.dart';
 import '../assessments/assessments_screen.dart';
 import '../care/care_section.dart';
 import '../child.dart';
+import '../core/app_features.dart';
 import '../link/child_qr_screen.dart';
 import '../manage_rewards.dart';
 import '../screens/track_behavior.dart';
@@ -143,20 +144,22 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
             icon: const Icon(Icons.child_care_rounded),
             label: Text('Open ${child.name}’s screen'),
           ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: ParentUi.purple,
-              minimumSize: const Size.fromHeight(50),
-              side: const BorderSide(color: ParentUi.purple),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+          if (AppFeatures.parentChildQr) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: ParentUi.purple,
+                minimumSize: const Size.fromHeight(50),
+                side: const BorderSide(color: ParentUi.purple),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
+              onPressed: () => _open(ChildQrScreen(child: child)),
+              icon: const Icon(Icons.qr_code_2_rounded),
+              label: Text('QR for ${child.name}’s own phone'),
             ),
-            onPressed: () => _open(ChildQrScreen(child: child)),
-            icon: const Icon(Icons.qr_code_2_rounded),
-            label: Text('QR for ${child.name}’s own phone'),
-          ),
+          ],
         ],
       ),
     );
