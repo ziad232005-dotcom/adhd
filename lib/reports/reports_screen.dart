@@ -53,14 +53,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _prepare() async {
     await ReportBuilder.prepare(widget.child);
     await ReportBuilder.saveWeekly(widget.child);
-    if (mounted) setState(() => _ready = true);
+    if (!mounted) return;
+    setState(() => _ready = true);
     await _sync(quiet: true);
   }
 
   /// Fetches what the child's phone sent. [quiet] hides "nothing new" and
   /// connection problems, for the automatic check when the page opens.
   Future<void> _sync({bool quiet = false}) async {
-    if (_syncing) return;
+    if (_syncing || !mounted) return;
     setState(() => _syncing = true);
 
     String? message;
