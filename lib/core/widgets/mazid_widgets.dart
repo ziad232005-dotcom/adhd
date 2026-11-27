@@ -8,6 +8,8 @@ class MazidAssets {
   const MazidAssets._();
 
   static const String octopus = 'images/mazid/octopus.png';
+  /// Octopus without a mouth, so the Calm screen can animate its own.
+  static const String octopusCalm = 'images/mazid/octopus_calm.png';
   static const String octopusHeart = 'images/mazid/octopus_heart.png';
   static const String octopusCelebrate = 'images/mazid/octopus_celebrate.png';
   static const String octopusIdea = 'images/mazid/octopus_idea.png';

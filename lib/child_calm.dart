@@ -92,6 +92,17 @@ class _CalmScreenState extends State<CalmScreen>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          // Soft halo that grows with the breath.
+                          Container(
+                            width: _mascotSize * (0.9 + 0.25 * _controller.value),
+                            height: _mascotSize * (0.9 + 0.25 * _controller.value),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: childPrimary.withValues(
+                                alpha: 0.08 + 0.12 * _controller.value,
+                              ),
+                            ),
+                          ),
                           child!,
                           // The mouth opens while breathing in, closes out.
                           SizedBox(
@@ -104,7 +115,10 @@ class _CalmScreenState extends State<CalmScreen>
                         ],
                       ),
                     ),
-                    child: const MazidMascot(size: _mascotSize),
+                    child: const MazidMascot(
+                      asset: MazidAssets.octopusCalm,
+                      size: _mascotSize,
+                    ),
                   ),
                 ),
               ),
@@ -152,8 +166,7 @@ class _CalmScreenState extends State<CalmScreen>
 
 const double _mascotSize = 190;
 
-/// Draws an animated mouth over the octopus smile.
-/// [open] is 0 (closed smile) to 1 (fully open).
+/// Draws the octopus mouth. [open] is 0 (a closed smile) to 1 (fully open).
 class BreathMouthPainter extends CustomPainter {
   const BreathMouthPainter(this.open);
 
@@ -161,20 +174,60 @@ class BreathMouthPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Smile position inside the octopus image (374 x 364).
-    final center = Offset(size.width * 0.548, size.height * 0.515);
-    final w = size.width * 0.115;
-    final h = size.width * 0.13 * open;
+    // The smile sits here inside the octopus image (374 x 364).
+    final cx = size.width * 0.545;
+    final cy = size.height * 0.515;
+    final w = size.width * (0.105 + 0.03 * open);
+    final h = size.width * 0.15 * open;
+    final left = Offset(cx - w / 2, cy - 2);
+    final right = Offset(cx + w / 2, cy - 2);
     const dark = Color(0xFF3A1B5C);
-    if (h < 1.5) return; // the drawn smile in the image stays visible
-    final mouth = Rect.fromCenter(center: center.translate(0, h / 2 - 2), width: w * (0.9 + 0.3 * open), height: h);
-    canvas.drawOval(mouth, Paint()..color = dark);
-    final tongue = Rect.fromCenter(
-      center: mouth.center.translate(0, h * 0.22),
-      width: mouth.width * 0.6,
-      height: h * 0.45,
+
+    // Lower lip drops with [open]; at 0 it is just the smile curve.
+    final depth = size.width * 0.045 + h;
+    final path = Path()
+      ..moveTo(left.dx, left.dy)
+      ..quadraticBezierTo(cx, cy - 2 + size.width * 0.01 * (1 - open), right.dx, right.dy)
+      ..cubicTo(
+        right.dx - w * 0.05, cy + depth * 1.25,
+        left.dx + w * 0.05, cy + depth * 1.25,
+        left.dx, left.dy,
+      );
+
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      path.getBounds(),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF2A1043), Color(0xFF5B2A86)],
+        ).createShader(path.getBounds()),
     );
-    canvas.drawOval(tongue, Paint()..color = const Color(0xFFFF8FB1));
+    // Tongue, only visible once the mouth is open enough.
+    if (open > 0.3) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(cx, cy + depth * 0.95),
+          width: w * 0.62,
+          height: h * 0.55,
+        ),
+        Paint()..color = const Color(0xFFFF8FB1),
+      );
+    }
+    canvas.restore();
+
+    // Rounded lip line keeps the closed mouth looking like the smile.
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..color = dark,
+    );
   }
 
   @override
