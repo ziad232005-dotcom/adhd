@@ -41,6 +41,11 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final index = _store.children.indexWhere((c) => c.id == widget.childId);
       if (index != -1) _store.selectChild(index);
+
+      // Selecting does nothing when this child is already the selected one,
+      // so make sure this child's data is loaded. Without it the screen
+      // would wait on the loading circle for good.
+      _data.switchChild(widget.childId);
     });
   }
 
